@@ -166,7 +166,7 @@ export function GamePage() {
       </div>
 
       <div
-        className="game-immersive-engine h-[100dvh] min-w-0 shrink-0 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(48px+env(safe-area-inset-bottom))] lg:overflow-visible lg:pb-0 [&_.game-layout]:!min-h-0 [&_.game-layout]:h-full"
+        className="game-immersive-engine h-[100dvh] min-w-0 shrink-0 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(48px+env(safe-area-inset-bottom))] lg:overflow-visible lg:pb-0 lg:[&_.game-layout]:!min-h-0 lg:[&_.game-layout]:h-full"
       >
         <GameEngine key={game.id} game={game} />
       </div>

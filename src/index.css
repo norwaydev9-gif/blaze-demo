@@ -681,6 +681,12 @@ input[type='number'] {
     min-height: 44px;
   }
 
+  /* valores rápidos (50/100/200/500) não herdam os 44px genéricos;
+     APOSTAR/CASHOUT e todos os .action-* continuam com 44px */
+  .game-stage button.quick-bet {
+    min-height: 32px;
+  }
+
   input[type='range'] {
     height: 44px;
     background: linear-gradient(#222938, #222938) center / 100% 6px no-repeat;
@@ -764,7 +770,7 @@ input[type='number'] {
     max-height: 130px;
   }
   .crash-bet-panel.bet-bar {
-    padding: 10px;
+    padding: 8px;
   }
 
   /* evita que cartas largas empurrem o tabuleiro para fora do ecrã */
@@ -920,4 +926,25 @@ input[type='number'] {
 }
 .game-immersive-engine .game-stage::after {
   border-radius: 0;
+}
+
+/* P0 — mobile (<1024px): o scroller é o engine/página, não o palco.
+   Declarado depois das regras imersivas base para vencer na cascata. */
+@media (max-width: 1023px) {
+  .game-immersive-engine .game-layout {
+    grid-template-rows: auto;
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  /* `clip` mantém o corte horizontal sem criar scroll aninhado:
+     com overflow-x:hidden a especificação forçaria overflow-y:auto. */
+  .game-immersive-engine .game-stage {
+    overflow-x: clip;
+    overflow-y: visible;
+    overscroll-behavior: auto;
+    -webkit-overflow-scrolling: auto;
+    scroll-padding-bottom: 0;
+    padding-bottom: 0;
+  }
 }
