@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, fmtMult, clamp } from '../lib/format'
-import { crashFromSeed, hashHex, uid } from '../lib/rng'
+import { crashFromSeed, hashHex, uid, verifyCrash } from '../lib/rng'
 import { BOT_STYLE_LABEL, botCashout, botStatus, crashVariant, makeBotRound } from '../lib/crashBots'
+import type { BotStatus } from '../lib/crashBots'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { playCrashCue } from '../lib/crashSound'
+import { ActionButton, AutoBetControl, AutoControl, GameLayout, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
+import { load, save } from '../lib/storage'
 import { Icon } from '../components/Icon'
 
 type Phase = 'betting' | 'flying' | 'crashed'
+type Tier = 'low' | 'mid' | 'high'
 
 interface Slot {
   amount: number
@@ -19,7 +23,42 @@ interface Slot {
   auto: boolean
 }
 
+/** Aposta real do utilizador na ronda actual (os bots nunca entram aqui). */
+interface PlayerBet {
+  idx: number
+  amount: number
+  cashedAt: number | null
+}
+
+/** Registo de saídas para a ZONA D — bots são demonstração, «Tu» usa a carteira. */
+interface CashoutEntry {
+  id: string
+  name: string
+  kind: 'bot' | 'player'
+  mult: number
+  bet: number
+  won: number
+  round: number
+}
+
+interface FxState {
+  kind: 'cashout' | 'crash'
+  key: string
+  mult: number
+  amount: number
+}
+
 const EMPTY_SLOT = (min: number): Slot => ({ amount: min, autoCash: 2, active: false, cashedAt: null, auto: false })
+const EDGE = 0.03
+
+/** fmtMult é a fonte; a vírgula garante a leitura pt-PT (1,24×) também quando fmtMult usa ponto. */
+const fmtCrash = (n: number) => fmtMult(n).replace('.', ',')
+const tierOf = (m: number): Tier => (m < 2 ? 'low' : m < 10 ? 'mid' : 'high')
+const TIER_CLASS: Record<Tier, string> = {
+  low: 'border-brand/35 bg-brand/10 text-[#ff8a5c]',
+  mid: 'border-[#6f9bff]/40 bg-[#6f9bff]/10 text-[#9bb4ff]',
+  high: 'border-good/40 bg-gradient-to-br from-good/15 to-gold/10 text-good',
+}
 
 export function CrashGame({ game }: { game: Game }) {
   const min = game.minBet
@@ -30,18 +69,35 @@ export function CrashGame({ game }: { game: Game }) {
   const slotCount = Number.isFinite(configuredSlots) ? clamp(Math.floor(configuredSlots), 1, 3) : 2
   const variant = useMemo(() => crashVariant(game.id), [game.id])
   const { balance, placeBet, payout } = useWallet()
-  const { play } = useSound()
+  const { play, enabled: soundEnabled } = useSound()
+  const soundRef = useRef(soundEnabled)
+  soundRef.current = soundEnabled
 
   const [phase, setPhase] = useState<Phase>('betting')
   const [countdown, setCountdown] = useState(7)
   const [mult, setMult] = useState(1)
   const [slots, setSlots] = useState<Slot[]>(() => Array.from({ length: slotCount }, () => EMPTY_SLOT(min)))
-  const [history, setHistory] = useState<number[]>([])
+  const historyKey = `blaze.crash.history.${game.id}`
+  const [history, setHistory] = useState<number[]>(() => {
+    // Só números finitos e positivos: nada de resultados inventados vindos do storage.
+    const stored = load<unknown>(historyKey, [])
+    if (!Array.isArray(stored)) return []
+    return stored
+      .filter((v): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0)
+      .slice(0, 200)
+  })
+  const [playerBets, setPlayerBets] = useState<PlayerBet[]>([])
+  const [cashouts, setCashouts] = useState<CashoutEntry[]>([])
+  const [fx, setFx] = useState<FxState | null>(null)
+  const [betAmount, setBetAmount] = useState(() => clamp(Math.max(min, 100), min, max))
+  const [lastCrash, setLastCrash] = useState<number | null>(null)
   const [autoReplay, setAutoReplay] = useState(false)
   const [seed, setSeed] = useState(() => hashHex(uid()))
   const [botSeed, setBotSeed] = useState(seed)
   const [nextIn, setNextIn] = useState(7)
   const seedRef = useRef(seed)
+  const roundRef = useRef(0)
+  const betRef = useRef<(idx: number) => void>(() => {})
 
   const phaseRef = useRef<Phase>('betting')
   const multRef = useRef(1)
@@ -71,6 +127,72 @@ export function CrashGame({ game }: { game: Game }) {
   })
   const cashedBots = botViews.filter((bot) => bot.status === 'cashed')
   const simulatedCashouts = cashedBots.reduce((sum, bot) => sum + bot.simulatedPayout, 0)
+
+  const addCashouts = useCallback((entries: CashoutEntry[]) => {
+    if (entries.length === 0) return
+    setCashouts((prev) => [...entries, ...prev].slice(0, 60))
+  }, [])
+
+  /** Só a carteira real paga; cada índice tem o seu próprio guarda contra retirada dupla. */
+  const bet = useCallback((idx: number) => {
+    const s = slotsRef.current[idx]
+    if (!s || phaseRef.current !== 'betting' || s.active) return
+    if (placeBet(s.amount, game.name, game.id, 'Aposta crash')) {
+      paidRef.current.delete(idx)
+      setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: true, cashedAt: null } : x)))
+      setPlayerBets((prev) =>
+        prev.some((p) => p.idx === idx) ? prev : [...prev, { idx, amount: s.amount, cashedAt: null }],
+      )
+      play('click')
+    }
+  }, [placeBet, game.name, game.id, play])
+
+  const cashout = useCallback((idx: number) => {
+    const s = slotsRef.current[idx]
+    if (!s || phaseRef.current !== 'flying' || !s.active) return
+    if (paidRef.current.has(idx)) return
+    const at = multRef.current
+    paidRef.current.add(idx)
+    const won = s.amount * at
+    payout(won, game.name, game.id, `Retirada ${fmtCrash(at)}`)
+    setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: false, cashedAt: at } : x)))
+    setPlayerBets((prev) => prev.map((p) => (p.idx === idx ? { ...p, cashedAt: at } : p)))
+    addCashouts([{ id: uid(), name: 'Tu', kind: 'player', mult: at, bet: s.amount, won, round: roundRef.current }])
+    setFx({ kind: 'cashout', key: uid(), mult: at, amount: won })
+    play('cashout')
+    playCrashCue(game.id, 'cashout', soundRef.current)
+  }, [addCashouts, payout, game.name, game.id, play])
+
+  betRef.current = bet
+
+  const setSlot = (idx: number, patch: Partial<Slot>) => {
+    setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, ...patch } : x)))
+  }
+
+  /** Valor partilhado pelos slots ainda por colocar; quick picks sempre dentro de min/max. */
+  const setAmount = (n: number) => {
+    const value = clamp(Math.round(n * 100) / 100, min, max)
+    setBetAmount(value)
+    setSlots((prev) => prev.map((s) => (s.active ? s : { ...s, amount: value })))
+  }
+
+  const betAll = () => {
+    slotsRef.current.forEach((s, idx) => {
+      if (!s.active) betRef.current(idx)
+    })
+  }
+
+  const cashoutAll = () => {
+    slotsRef.current.forEach((s, idx) => {
+      if (s.active) cashout(idx)
+    })
+  }
+
+  const cancelAuto = () => {
+    setAutoReplay(false)
+    setSlots((prev) => prev.map((s) => ({ ...s, auto: false })))
+    play('tick')
+  }
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -317,6 +439,9 @@ export function CrashGame({ game }: { game: Game }) {
     nextTotalRef.current = 7
     setNextIn(7)
     setSlots((prev) => prev.map((s) => ({ ...s, active: false, cashedAt: null })))
+    setPlayerBets([])
+    setFx(null)
+    setLastCrash(null)
     paidRef.current = new Set()
     play('click')
   }, [play])
@@ -328,9 +453,27 @@ export function CrashGame({ game }: { game: Game }) {
     setPhase('crashed')
     multRef.current = crash
     setMult(crash)
+    setLastCrash(crash)
     play('crash')
-    setHistory((h) => [crash, ...h].slice(0, 18))
+    playCrashCue(game.id, 'crash', soundRef.current)
+    setHistory((h) => [crash, ...h].slice(0, 200))
     setSlots((prev) => prev.map((s) => (s.active ? { ...s, active: false, cashedAt: null } : s)))
+    // Cashouts de bots são apenas registo visual: derivados da semente, nunca da carteira.
+    const roundBots = makeBotRound(seedRef.current, min, max, variant)
+    addCashouts(
+      roundBots
+        .filter((bot) => botStatus(bot, 'crashed', crash, crash) === 'cashed')
+        .map((bot) => ({
+          id: uid(),
+          name: bot.name,
+          kind: 'bot' as const,
+          mult: bot.target,
+          bet: bot.bet,
+          won: botCashout(bot, 'cashed'),
+          round: roundRef.current,
+        })),
+    )
+    setFx({ kind: 'crash', key: uid(), mult: crash, amount: 0 })
     nextAtRef.current = performance.now() + 3600
     nextTotalRef.current = 3.6
     if (resetTimerRef.current) window.clearTimeout(resetTimerRef.current)
@@ -338,7 +481,7 @@ export function CrashGame({ game }: { game: Game }) {
       resetTimerRef.current = null
       resetRef.current()
     }, 3600)
-  }, [play])
+  }, [play, min, max, variant, addCashouts, game.id])
 
   endRef.current = end
   resetRef.current = reset
@@ -358,6 +501,11 @@ export function CrashGame({ game }: { game: Game }) {
       nextTimerRef.current = null
     }
   }, [])
+
+  // histórico por jogo: carregado no mount e gravado a cada ronda concluída
+  useEffect(() => {
+    save(historyKey, history.slice(0, 200))
+  }, [historyKey, history])
 
   // next-round clock keeps ticking through betting, flight and crash
   useEffect(() => {
@@ -410,7 +558,8 @@ export function CrashGame({ game }: { game: Game }) {
       if (remaining <= 0) {
         if (countdownRef.current !== null) clearInterval(countdownRef.current)
         countdownRef.current = null
-        crashRef.current = crashFromSeed(seedRef.current, 0.03, maxMult)
+        crashRef.current = crashFromSeed(seedRef.current, EDGE, maxMult)
+        roundRef.current += 1
         const flightSeconds = Math.max(0.2, Math.log(Math.max(1.01, crashRef.current)) / growth)
         nextAtRef.current = performance.now() + (flightSeconds + 3.6) * 1000
         nextTotalRef.current = flightSeconds + 3.6
@@ -423,51 +572,22 @@ export function CrashGame({ game }: { game: Game }) {
         setPhase('flying')
         setMult(1)
         play('click')
+        playCrashCue(game.id, 'launch', soundRef.current)
       }
     }, 1000)
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current)
       countdownRef.current = null
     }
-  }, [phase, maxMult, growth, play])
+  }, [phase, maxMult, growth, play, game.id])
 
-  // auto-bet when a new betting round opens
+  // auto-bet when a new betting round opens (via ref: o efeito não se repete a cada render)
   useEffect(() => {
     if (phase !== 'betting') return
     slotsRef.current.forEach((s, idx) => {
-      if (s.auto && !s.active) {
-        if (placeBet(s.amount, game.name, game.id, 'Auto-aposta')) {
-          setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: true, cashedAt: null } : x)))
-        }
-      }
+      if (s.auto && !s.active) betRef.current(idx)
     })
-  }, [phase, placeBet, game.name, game.id])
-
-  const bet = (idx: number) => {
-    const s = slots[idx]
-    if (!s || phase !== 'betting') return
-    if (s.active) return
-    if (placeBet(s.amount, game.name, game.id, 'Aposta crash')) {
-      paidRef.current.delete(idx)
-      setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: true, cashedAt: null } : x)))
-      play('click')
-    }
-  }
-
-  const cashout = (idx: number) => {
-    const s = slots[idx]
-    if (!s || phase !== 'flying' || !s.active) return
-    const at = multRef.current
-    if (paidRef.current.has(idx)) return
-    paidRef.current.add(idx)
-    payout(s.amount * at, game.name, game.id, `Retirada ${fmtMult(at)}`)
-    setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: false, cashedAt: at } : x)))
-    play('cashout')
-  }
-
-  const setSlot = (idx: number, patch: Partial<Slot>) => {
-    setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, ...patch } : x)))
-  }
+  }, [phase])
 
   const autoSlots = [0, 1, 2].map((i) => slots[i] ?? EMPTY_SLOT(min))
   useAutoCashout({ active: slotCount > 0 && autoSlots[0].active, value: mult, target: autoSlots[0].autoCash, enabled: slotCount > 0 && autoSlots[0].auto, onCashout: () => cashout(0) })
@@ -476,29 +596,66 @@ export function CrashGame({ game }: { game: Game }) {
   useAutoReplay({
     idle: phase === 'betting',
     enabled: autoReplay,
-    onStart: () => {
-      slotsRef.current.forEach((s, idx) => {
-        if (!s.active) bet(idx)
-      })
-    },
+    onStart: betAll,
   })
 
   const proof = phase === 'crashed' ? seed : hashHex(seed)
+  const verified = phase === 'crashed' && verifyCrash(seed, lastCrash ?? crashRef.current, EDGE, maxMult)
   const statusColor = phase === 'crashed' ? 'text-brand' : phase === 'flying' ? 'text-good' : 'text-gold'
+  const anyActive = slots.some((s) => s.active)
+  const anyCashed = slots.some((s) => s.cashedAt !== null) || playerBets.some((p) => p.cashedAt !== null)
+  const primaryLabel =
+    phase === 'crashed'
+      ? anyCashed
+        ? 'GANHO CONFIRMADO'
+        : playerBets.length > 0
+          ? 'APOSTA PERDIDA'
+          : 'APOSTAR'
+      : phase === 'flying' && anyActive
+        ? 'CASHOUT'
+        : 'APOSTAR'
+  const primaryTone = primaryLabel === 'CASHOUT' || primaryLabel === 'GANHO CONFIRMADO' ? 'cashout' : 'bet'
+  const primaryDisabled =
+    primaryLabel === 'CASHOUT'
+      ? !anyActive
+      : primaryLabel === 'APOSTAR'
+        ? phase !== 'betting' || slots.every((s) => s.active)
+        : true
 
   return (
     <GameLayout
+      dock={false}
       stage={
         <Stage className="overflow-hidden">
+          {/* ZONA A — uma entrada por ronda concluída, mais recente primeiro; nunca apostas individuais */}
+          <div className="crash-history-strip no-scrollbar flex items-center gap-1.5 overflow-x-auto border-b border-line/70 bg-black/35 px-3 py-2">
+            <span className="shrink-0 pr-1 text-[9px] font-bold uppercase tracking-[.16em] text-white/35">Histórico</span>
+            {history.length === 0 && <span className="shrink-0 text-[10px] text-white/30">Sem rondas concluídas</span>}
+            {history.map((h, i) => {
+              const tier = tierOf(h)
+              return (
+                <span
+                  key={`${i}-${h}`}
+                  className={`crash-history-item shrink-0 animate-riseIn rounded-md border px-2 py-1 text-[10px] font-extrabold tabular ${TIER_CLASS[tier]}`}
+                  data-tier={tier}
+                >
+                  {fmtCrash(h)}
+                </span>
+              )
+            })}
+          </div>
+
+          {/* ZONA B — palco dominante: canvas grande e leituras, sem botões nem listas sobrepostas */}
+          <div className="crash-main">
           <div className="relative">
-            <canvas ref={canvasRef} className="block aspect-[4/3] w-full sm:aspect-[16/9]" />
+            <canvas ref={canvasRef} className="block aspect-[4/3] w-full min-h-[280px] sm:aspect-[16/9] sm:min-h-[360px]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
                 <p className={`crash-mult font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
-                  {phase === 'betting' ? `${countdown}s` : fmtMult(phase === 'crashed' ? crashRef.current : mult)}
+                  {phase === 'betting' ? `${countdown}s` : fmtCrash(phase === 'crashed' ? crashRef.current : mult)}
                 </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">
-                  {phase === 'betting' ? 'A ronda começa' : phase === 'flying' ? 'Multiplicador atual' : 'Crash!'}
+                <p className="crash-status mt-1 text-[11px] font-semibold uppercase tracking-[.22em] text-white/45">
+                  {phase === 'betting' ? 'A ronda começa' : phase === 'flying' ? 'Multiplicador atual' : 'Crash confirmado'}
                 </p>
               </div>
             </div>
@@ -539,15 +696,30 @@ export function CrashGame({ game }: { game: Game }) {
                 />
               </span>
             </div>
-            <div className="absolute left-3 top-3 flex items-center gap-2">
+            {/* animação de crash / cashout, sem controlos dentro do palco */}
+            <div className="crash-fx pointer-events-none absolute inset-0 z-20 grid place-items-center overflow-hidden" aria-live="polite">
+              {fx && (
+                <span
+                  key={fx.key}
+                  className={`animate-popIn rounded-xl border px-4 py-2 text-center font-display text-sm font-extrabold tabular drop-shadow-[0_4px_18px_rgba(0,0,0,.8)] ${
+                    fx.kind === 'cashout' ? 'border-good/50 bg-good/15 text-good' : 'border-brand/50 bg-brand/15 text-brand'
+                  }`}
+                >
+                  {fx.kind === 'cashout'
+                    ? `+${fmt(fx.amount)} B$ · ${fmtCrash(fx.mult)} ${variant.glyph}`
+                    : `CRASH ${fmtCrash(fx.mult)} 💥`}
+                </span>
+              )}
+            </div>
+            <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
               <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                 phase === 'betting' ? 'border-gold/30 bg-gold/10 text-gold' : phase === 'flying' ? 'border-good/30 bg-good/10 text-good' : 'border-brand/30 bg-brand/10 text-brand'
               }`}>
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
                 {phase === 'betting' ? 'Apostas abertas' : phase === 'flying' ? 'Em voo' : 'Caiu'}
               </span>
-              <span className="rounded-full border border-line bg-black/40 px-2.5 py-1 text-[10px] font-semibold text-white/40">
-                Prova: {proof.slice(0, 10)}…
+              <span className="rounded-full border border-white/10 bg-black/45 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider" style={{ color: variant.accent }}>
+                {variant.glyph} BLAZE {variant.signature}
               </span>
             </div>
           </div>
@@ -563,16 +735,104 @@ export function CrashGame({ game }: { game: Game }) {
               }
             />
           </div>
-          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {slots.map((s, i) => (
-                <div key={i} className={`rounded-xl border p-3 transition ${s.active ? 'border-brand/40 bg-brand/[.06]' : 'border-line/70 bg-white/[.02]'}`}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Aposta {i + 1}</span>
-                    {s.cashedAt !== null && <span className="text-[10px] font-bold text-good">Retirado {fmtMult(s.cashedAt)}</span>}
-                    {s.active && <span className="text-[10px] font-bold text-good">Em jogo</span>}
-                  </div>
-                  <div className="flex items-center gap-2">
+          </div>
+
+          {/* PAINEL DE APOSTAS — apenas controlos de aposta, sempre dentro do Stage */}
+          <div className="crash-bet-panel bet-bar relative z-10 mt-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[.14em] text-white/75">Painel de aposta</p>
+                <p className="text-[9px] uppercase tracking-wider text-white/35">
+                  Limites {fmt(min)}–{fmt(max)} B$ · saldo {fmt(balance)} B$ · {slotCount} aposta{slotCount === 1 ? '' : 's'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {phase === 'betting' && (autoReplay || slots.some((s) => s.auto)) && (
+                  <ActionButton tone="ghost" size="compact" onClick={cancelAuto}>Cancelar auto</ActionButton>
+                )}
+                <span className="rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: variant.accent }}>
+                  {variant.glyph} {variant.signature}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div>
+                <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-black/40 focus-within:border-brand/50">
+                  <button type="button" aria-label="Diminuir valor da aposta" onClick={() => setAmount(betAmount - 10)} className="h-11 w-11 shrink-0 text-lg text-white/60 transition hover:bg-white/5 hover:text-white">−</button>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={betAmount}
+                    min={min}
+                    max={max}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="w-full bg-transparent py-2.5 text-center text-base font-bold tabular text-white outline-none"
+                  />
+                  <button type="button" aria-label="Aumentar valor da aposta" onClick={() => setAmount(betAmount + 10)} className="h-11 w-11 shrink-0 text-lg text-white/60 transition hover:bg-white/5 hover:text-white">+</button>
+                </div>
+                <div className="mt-2 grid grid-cols-4 gap-1.5">
+                  {[50, 100, 200, 500].map((n) => {
+                    const value = clamp(n, min, max)
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setAmount(n)}
+                        className={`h-10 rounded-lg border px-1 text-[11px] font-bold tabular transition ${
+                          betAmount === value
+                            ? 'border-brand/50 bg-brand/10 text-white'
+                            : 'border-line bg-white/[.02] text-white/50 hover:border-white/25 hover:text-white'
+                        }`}
+                      >
+                        {fmt(n).replace(',00', '')}
+                      </button>
+                    )
+                  })}
+                </div>
+                <ActionButton
+                  tone={primaryTone}
+                  onClick={() => (primaryLabel === 'CASHOUT' ? cashoutAll() : betAll())}
+                  disabled={primaryDisabled}
+                  className="mt-3 min-h-[48px]"
+                >
+                  {primaryLabel}
+                </ActionButton>
+              </div>
+              <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {slots.map((s, i) => {
+                const p = playerBets.find((b) => b.idx === i)
+                const wonAt = s.cashedAt ?? p?.cashedAt ?? null
+                const lost = phase === 'crashed' && !!p && wonAt === null
+                const slotState = wonAt !== null ? 'win' : lost ? 'lose' : s.active ? (phase === 'betting' ? 'placed' : 'flying') : 'idle'
+                const stateLabel = wonAt !== null
+                  ? `Ganho ${fmtCrash(wonAt)}`
+                  : lost
+                    ? 'Aposta perdida'
+                    : s.active
+                      ? phase === 'betting' ? 'Apostado' : 'Em voo'
+                      : 'Pronta'
+                return (
+                  <div
+                    key={i}
+                    className={`crash-slot rounded-xl border p-2.5 transition-colors duration-300 ${
+                      wonAt !== null
+                        ? 'border-good/40 bg-good/[.06]'
+                        : lost
+                          ? 'border-brand/30 bg-brand/[.05]'
+                          : s.active
+                            ? 'border-brand/40 bg-brand/[.06]'
+                            : 'border-line/70 bg-white/[.02]'
+                    }`}
+                    data-state={slotState}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Aposta {i + 1}</span>
+                      <span className={`text-[10px] font-bold ${wonAt !== null ? 'text-good' : lost ? 'text-brand' : s.active ? 'text-good' : 'text-white/35'}`}>{stateLabel}</span>
+                    </div>
                     <input
                       type="number"
                       value={s.amount}
@@ -582,152 +842,190 @@ export function CrashGame({ game }: { game: Game }) {
                       onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
                       className="input w-full py-2 text-center text-sm tabular"
                     />
+                    {/* rápidos por slot, sempre dentro de min/max */}
+                    <div className="mt-1.5 grid grid-cols-4 gap-1">
+                      {[50, 100, 200, 500].map((n) => {
+                        const value = clamp(n, min, max)
+                        return (
+                          <button
+                            key={n}
+                            type="button"
+                            disabled={s.active || phase !== 'betting'}
+                            onClick={() => setSlot(i, { amount: value })}
+                            className={`h-8 rounded-md border px-0.5 text-[9px] font-bold tabular transition disabled:opacity-40 ${
+                              s.amount === value
+                                ? 'border-brand/50 bg-brand/10 text-white'
+                                : 'border-line bg-white/[.02] text-white/45 hover:border-white/25 hover:text-white'
+                            }`}
+                          >
+                            {fmt(n).replace(',00', '')}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <ActionButton tone={s.active ? 'placed' : 'bet'} size="compact" onClick={() => bet(i)} disabled={phase !== 'betting' || s.active} className="w-full">
+                        {s.active ? 'APOSTADO' : 'APOSTAR'}
+                      </ActionButton>
+                      <ActionButton tone="cashout" size="compact" onClick={() => cashout(i)} disabled={phase !== 'flying' || !s.active} className="w-full">
+                        {phase === 'flying' && s.active ? `CASHOUT ${fmtCrash(mult)}` : 'CASHOUT'}
+                      </ActionButton>
+                    </div>
+                    <AutoControl
+                      value={s.autoCash}
+                      onValueChange={(n) => setSlot(i, { autoCash: n })}
+                      active={s.auto}
+                      onToggle={() => setSlot(i, { auto: !s.auto })}
+                      current={phase === 'flying' ? mult : phase === 'crashed' ? crashRef.current : 1}
+                      currentLabel="Multiplicador do voo"
+                    />
+                    {wonAt !== null && <p className="mt-1.5 text-[10px] font-bold tabular text-good">Recebido {fmt(s.amount * wonAt)} B$</p>}
                   </div>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <ActionButton
-                      tone={s.active ? 'placed' : 'bet'}
-                      icon={s.active ? 'check' : 'bolt'}
-                      size="compact"
-                      onClick={() => bet(i)}
-                      disabled={phase !== 'betting' || s.active}
-                      className="w-full"
-                    >
-                      {s.active ? 'Apostado' : 'Apostar'}
-                    </ActionButton>
-                    <ActionButton
-                      tone="cashout"
-                      icon="check"
-                      size="compact"
-                      onClick={() => cashout(i)}
-                      disabled={phase !== 'flying' || !s.active}
-                      className="w-full"
-                    >
-                      {phase === 'flying' && s.active ? `Retirar ${fmtMult(mult)}` : 'Retirar'}
-                    </ActionButton>
-                  </div>
-                  <AutoControl
-                    value={s.autoCash}
-                    onValueChange={(n) => setSlot(i, { autoCash: n })}
-                    active={s.auto}
-                    onToggle={() => setSlot(i, { auto: !s.auto })}
-                    current={phase === 'flying' ? mult : phase === 'crashed' ? crashRef.current : 1}
-                    currentLabel="Multiplicador do voo"
-                  />
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Sessão de crash" icon="info">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg bg-black/25 p-2.5">
-                <p className="text-[9px] uppercase tracking-wider text-white/30">Saldo</p>
-                <p className="text-sm font-bold tabular">{fmt(balance)} B$</p>
-              </div>
-              <div className="rounded-lg bg-black/25 p-2.5">
-                <p className="text-[9px] uppercase tracking-wider text-white/30">Crescimento</p>
-                <p className="text-sm font-bold tabular text-gold">{(growth * 100).toFixed(1)}%/s</p>
-              </div>
+          {/* ZONA C — jogadores e todas as apostas, dentro do Stage; bots sempre DEMONSTRAÇÃO */}
+          <div className="crash-live mt-3 rounded-2xl border border-line/70 bg-[#05060a]/80 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <h3 className="text-[11px] font-bold uppercase tracking-[.16em] text-white/75">LIVE PLAYERS / ALL BETS</h3>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-gold/80">DEMONSTRAÇÃO · bots sem carteira real</span>
             </div>
-            <div className="crash-history mt-3">
-              <RecentStrip
-                items={history.map((h) => fmtMult(h))}
-                colorFor={(v) => {
-                  const n = parseFloat(String(v))
-                  return n >= 10 ? 'text-gold border-gold/30' : n >= 2 ? 'text-good border-good/30' : 'text-brand border-brand/30'
-                }}
-              />
-            </div>
-            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
-            <div className="mt-4 rounded-xl border border-line/60 bg-black/20 p-3">
-              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/40">
-                <Icon name="shield" size={12} /> Prova da ronda
-              </p>
-              <p className="mt-1.5 break-all font-mono text-[10px] leading-relaxed text-white/35">{proof}</p>
-              <p className="mt-2 text-[10px] leading-snug text-white/30">
-                O ponto de crash é derivado da semente da ronda. O hash é mostrado antes do voo e a semente é revelada no crash, para que possas verificar o resultado.
-              </p>
-            </div>
-          </SidePanel>
-          <SidePanel title={`Mecânica · ${variant.name}`} icon="info">
-            <div className="flex items-center gap-2">
-              <span
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xl"
-                style={{ background: variant.wash }}
-              >
-                {variant.glyph}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-[11px] font-bold text-white/85">{variant.mechanicLabel}</p>
-                <p className="truncate text-[9px] uppercase tracking-wider text-white/35">
-                  {(growth * 100).toFixed(1)}%/s · teto {fmtMult(maxMult)}
-                </p>
-              </div>
-            </div>
-            <div className="mt-2.5 space-y-1.5 text-[10px] leading-snug">
-              <p className="rounded-lg border border-good/25 bg-good/[.06] px-2.5 py-2 text-good">
-                <span className="font-bold">Vantagem:</span> {variant.perk}
-              </p>
-              <p className="rounded-lg border border-brand/25 bg-brand/[.06] px-2.5 py-2 text-brand/90">
-                <span className="font-bold">Desvantagem:</span> {variant.drawback}
-              </p>
-            </div>
-          </SidePanel>
-          <SidePanel title="Participantes · DEMONSTRAÇÃO" icon="info">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gold">Simulação · sem carteira real</span>
-              <span className="text-[10px] tabular text-white/40">
-                {cashedBots.length}/{bots.length} retiradas · {fmt(simulatedCashouts)} B$ simulado
-              </span>
-            </div>
-            <div className="crash-bots space-y-1.5">
+            <div className="crash-bots no-scrollbar max-h-[212px] space-y-1.5 overflow-y-auto pr-1">
+              {playerBets.length === 0 && bots.length === 0 && (
+                <p className="text-[10px] text-white/30">Sem participantes nesta ronda.</p>
+              )}
+              {playerBets.map((p) => {
+                const status: BotStatus = p.cashedAt !== null
+                  ? 'cashed'
+                  : phase === 'betting'
+                    ? 'waiting'
+                    : phase === 'flying'
+                      ? 'flying'
+                      : 'crashed'
+                return (
+                  <div
+                    key={`player-${p.idx}-${status}`}
+                    className="crash-bot flex min-w-0 animate-riseIn items-center gap-2 rounded-lg border border-good/25 bg-good/[.05] px-2.5 py-1.5 transition-colors duration-300"
+                    data-kind="player"
+                    data-status={status}
+                  >
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[11px] font-extrabold text-ink" style={{ background: `linear-gradient(135deg, ${variant.line}, #22e3a0)` }}>T</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[11px] font-bold text-good">Tu <span className="font-medium text-white/40">· aposta {p.idx + 1}</span></p>
+                      <p className="truncate text-[9px] uppercase tracking-wider text-white/35">Carteira real B$ · {fmt(p.amount)} B$</p>
+                    </div>
+                    <span className={`shrink-0 text-right text-[10px] font-bold ${status === 'cashed' ? 'text-good' : status === 'crashed' ? 'text-brand' : 'text-white/50'}`}>
+                      <span className="block">{status === 'waiting' ? 'à espera' : status === 'flying' ? 'a voar' : status === 'cashed' ? `saída ${fmtCrash(p.cashedAt ?? 1)}` : 'perdeu'}</span>
+                      {status === 'cashed' && <span className="block tabular text-good">+{fmt(p.amount * (p.cashedAt ?? 1))} B$</span>}
+                    </span>
+                  </div>
+                )
+              })}
               {botViews.map((bot) => (
                 <div
-                  key={bot.id}
-                  className="crash-bot flex min-w-0 items-center gap-2 rounded-lg border border-line/60 bg-black/25 px-2.5 py-1.5"
+                  key={`${bot.id}-${bot.status}`}
+                  className="crash-bot flex min-w-0 animate-riseIn items-center gap-2 rounded-lg border border-line/60 bg-black/25 px-2.5 py-1.5 transition-colors duration-300"
+                  data-kind="bot"
                   data-status={bot.status}
                 >
-                  <span
-                    className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[11px] font-extrabold text-ink"
-                    style={{ background: `linear-gradient(135deg, ${variant.line}, ${variant.accent})` }}
-                  >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[11px] font-extrabold text-ink" style={{ background: `linear-gradient(135deg, ${variant.line}, ${variant.accent})` }}>
                     {bot.name.slice(4, 5)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-bold text-white/85">{bot.name}</p>
+                    <p className="truncate text-[11px] font-bold text-white/85">
+                      {bot.name} <span className="ml-1 rounded bg-white/10 px-1 text-[8px] font-bold uppercase tracking-wider text-white/45">DEMO</span>
+                    </p>
                     <p className="truncate text-[9px] uppercase tracking-wider text-white/35">
-                      {BOT_STYLE_LABEL[bot.style]} · aposta {fmt(bot.bet)} B$ · alvo {fmtMult(bot.target)}
+                      {BOT_STYLE_LABEL[bot.style]} · aposta {fmt(bot.bet)} B$ · alvo {fmtCrash(bot.target)}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 text-right text-[10px] font-bold ${
-                      bot.status === 'cashed' ? 'text-good' : bot.status === 'crashed' ? 'text-brand' : 'text-white/45'
-                    }`}
-                  >
-                    {bot.status === 'waiting'
-                      ? 'à espera'
-                      : bot.status === 'flying'
-                        ? 'a voar'
-                        : bot.status === 'cashed'
-                          ? `retirado ${fmtMult(bot.target)}`
-                          : 'quebrou'}
+                  <span className={`shrink-0 text-right text-[10px] font-bold ${
+                    bot.status === 'cashed' ? 'text-good' : bot.status === 'crashed' ? 'text-brand' : 'text-white/45'
+                  }`}>
+                    <span className="block">{bot.status === 'waiting' ? 'à espera' : bot.status === 'flying' ? 'a voar' : bot.status === 'cashed' ? `retirado ${fmtCrash(bot.target)}` : 'quebrou'}</span>
+                    {bot.status === 'cashed' && <span className="block tabular text-good">+{fmt(bot.simulatedPayout)} B$ simulado</span>}
                   </span>
                 </div>
               ))}
             </div>
             <p className="mt-2 text-[9px] leading-snug text-white/30">
-              Bots visuais de demonstração: apostas e retiradas simuladas, sem ligação à tua carteira BLAZE.
+              {cashedBots.length}/{bots.length} retiradas simuladas · {fmt(simulatedCashouts)} B$ de demonstração, sem ligação à carteira BLAZE.
             </p>
+          </div>
+
+          {/* ZONA D — registo de cashouts, separado do histórico (A) e da lista ao vivo (C) */}
+          <div className="crash-activity mt-3 rounded-2xl border border-line/70 bg-[#05060a]/80 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-[11px] font-bold uppercase tracking-[.16em] text-white/75">CASH OUT ACTIVITY</h3>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-gold/80">DEMONSTRAÇÃO para bots</span>
+            </div>
+            <div className="no-scrollbar max-h-[190px] space-y-1 overflow-y-auto pr-1">
+              {cashouts.length === 0 && <p className="text-[10px] text-white/30">Ainda sem cashouts nesta sessão.</p>}
+              {cashouts.map((c) => (
+                <div key={c.id} className="crash-cashout-item flex animate-riseIn items-center gap-2 rounded-lg border border-line/60 bg-white/[.02] px-2 py-1.5" data-kind={c.kind}>
+                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-md text-[10px] font-extrabold ${c.kind === 'player' ? 'bg-good/20 text-good' : 'bg-white/10 text-white/60'}`}>
+                    {c.kind === 'player' ? 'T' : 'B'}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-white/80">
+                    {c.name}
+                    {c.kind === 'bot' && <span className="ml-1 rounded bg-white/10 px-1 text-[8px] font-bold uppercase text-white/40">demo</span>}
+                  </span>
+                  <span className="shrink-0 text-[10px] font-extrabold tabular text-good">{fmtCrash(c.mult)}</span>
+                  <span className="shrink-0 text-[9px] tabular text-white/35">{fmt(c.bet)} B$</span>
+                  <span className="shrink-0 text-[10px] font-bold tabular text-good">+{fmt(c.won)} B$</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[9px] text-white/30">Saídas de bots são simuladas; só as linhas «Tu» usam saldo real B$ (créditos fictícios).</p>
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Prova verificável" icon="info">
+            <div className="rounded-xl border border-line/60 bg-black/25 p-3">
+              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/40">
+                <Icon name="shield" size={12} />
+                {phase === 'crashed' ? 'Semente revelada' : 'Compromisso (hash) antes do voo'}
+              </p>
+              <p className="mt-1.5 break-all font-mono text-[10px] leading-relaxed text-white/60">{proof}</p>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className={`text-[10px] font-bold ${verified ? 'text-good' : 'text-brand'}`}>
+                  {phase === 'crashed' ? (verified ? 'Verificado' : 'Falha na verificação') : 'Aguardando crash'}
+                </span>
+                {phase === 'crashed' && lastCrash !== null && (
+                  <span className="text-[10px] font-bold tabular text-white/60">crash {fmtCrash(lastCrash)}</span>
+                )}
+              </div>
+            </div>
+            <p className="mt-2 text-[10px] leading-snug text-white/35">
+              O ponto vem apenas de <code>crashFromSeed(semente, 0.03, teto)</code>. Recalcula localmente e compara: prova sem servidor nem autoridade de operador.
+            </p>
+            <p className="mt-2 text-[9px] leading-snug text-white/25">B$ são créditos fictícios de demonstração — nunca dinheiro real.</p>
           </SidePanel>
-          <SidePanel title="Como jogar">
-            <p className="text-[11px] leading-relaxed text-white/40">{game.rules}</p>
-            <ul className="mt-2 space-y-1 text-[10px] text-white/30">
-              <li>• Aposta mínima de {min} B$ e máxima de {fmt(max)} B$.</li>
-              <li>• Retira antes do crash para garantir o multiplicador.</li>
-              <li>• {slotCount} aposta{slotCount === 1 ? '' : 's'} independente{slotCount === 1 ? '' : 's'} por ronda.</li>
+          <SidePanel title={`Regras · BLAZE ${variant.name}`} icon="info">
+            <div className="flex items-center gap-2">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xl" style={{ background: variant.wash, color: variant.accent }}>
+                {variant.glyph}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[11px] font-bold text-white/85">{variant.mechanicLabel}</p>
+                <p className="truncate text-[9px] uppercase tracking-wider text-white/35">
+                  {variant.signature} · {(growth * 100).toFixed(1)}%/s · teto {fmtCrash(maxMult)}
+                </p>
+              </div>
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-white/40">{game.rules}</p>
+            <ul className="mt-2 space-y-1.5 text-[10px] leading-snug">
+              <li className="rounded-lg border border-good/25 bg-good/[.06] px-2.5 py-2 text-good">
+                <span className="font-bold">Vantagem:</span> {variant.perk}
+              </li>
+              <li className="rounded-lg border border-brand/25 bg-brand/[.06] px-2.5 py-2 text-brand/90">
+                <span className="font-bold">Desvantagem:</span> {variant.drawback}
+              </li>
+              <li className="text-white/35">• Mín. {fmt(min)} B$ / máx. {fmt(max)} B$ · {slotCount} aposta{slotCount === 1 ? '' : 's'} independente{slotCount === 1 ? '' : 's'}.</li>
+              <li className="text-white/35">• Retira antes do crash para garantir o multiplicador.</li>
             </ul>
           </SidePanel>
         </div>

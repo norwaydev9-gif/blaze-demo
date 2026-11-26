@@ -15,6 +15,8 @@ export interface CrashVariant {
   wash: string
   mechanic: Mechanic
   mechanicLabel: string
+  /** Etiqueta curta da identidade BLAZE da variante (glifo/cor/efeito próprios). */
+  signature: string
   perk: string
   drawback: string
   dash: number[]
@@ -49,6 +51,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,107,61,.12)',
     mechanic: 'classic',
     mechanicLabel: 'Curva clássica, sem extras',
+    signature: 'CLÁSSICO',
     perk: 'Subida equilibrada e teto elevado.',
     drawback: 'Sem mecânica de proteção extra.',
     dash: [],
@@ -63,6 +66,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,77,109,.13)',
     mechanic: 'trail',
     mechanicLabel: 'Rastro duplo atrás do avião',
+    signature: 'RASTRO',
     perk: 'O rastro duplo ajuda a ler a trajetória.',
     drawback: 'O rastro não abranda a queda.',
     dash: [],
@@ -77,6 +81,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(91,140,255,.14)',
     mechanic: 'jump',
     mechanicLabel: 'Salto visual orbital',
+    signature: 'SALTO',
     perk: 'O salto destaca bem cada trecho da subida.',
     drawback: 'O salto é estético: o risco é o mesmo.',
     dash: [11, 5],
@@ -91,6 +96,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,138,43,.14)',
     mechanic: 'boost',
     mechanicLabel: 'Boost visual extra após 3 s',
+    signature: 'BOOST',
     perk: 'Sobe depressa e o boost é muito visível.',
     drawback: 'Crescer rápido também significa quebrar cedo.',
     dash: [],
@@ -105,6 +111,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(79,209,255,.12)',
     mechanic: 'wind',
     mechanicLabel: 'Vento lateral no céu',
+    signature: 'VENTO',
     perk: 'Curva suave e vento a dar contexto ao voo.',
     drawback: 'Crescimento lento exige mais paciência.',
     dash: [],
@@ -119,6 +126,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(167,107,255,.14)',
     mechanic: 'orbit',
     mechanicLabel: 'Órbita instável em torno do disco',
+    signature: 'ÓRBITA',
     perk: 'Órbita vistosa e teto generoso.',
     drawback: 'Quedas bruscas podem apanhar-te desprevenido.',
     dash: [8, 4],
@@ -133,6 +141,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,61,77,.14)',
     mechanic: 'turbo',
     mechanicLabel: 'Turbo: raios de velocidade',
+    signature: 'TURBO',
     perk: 'Rondas rápidas, decisões rápidas.',
     drawback: 'Teto baixo e risco elevado.',
     dash: [],
@@ -147,6 +156,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,179,71,.13)',
     mechanic: 'jet',
     mechanicLabel: 'Jato com escapes gémeos',
+    signature: 'JATO',
     perk: 'Dois slots independentes para jogar.',
     drawback: 'Aceleração média, sem proteção adicional.',
     dash: [],
@@ -161,6 +171,7 @@ const VARIANTS: Record<string, CrashVariant> = {
     wash: 'rgba(255,215,106,.13)',
     mechanic: 'tower',
     mechanicLabel: 'Torre de níveis no enquadramento',
+    signature: 'TORRE',
     perk: 'Teto muito elevado e subida constante.',
     drawback: 'O crescimento lento pede retiradas cedo.',
     dash: [],

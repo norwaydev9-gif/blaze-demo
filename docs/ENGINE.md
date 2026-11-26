@@ -10,5 +10,8 @@ Os jogos e a `GameUI` consomem estas funções; nenhuma regra de aposta vive na 
 ## Créditos fictícios
 B$ são créditos de demonstração. Não há dinheiro real, depósitos, levantamentos, contas, pagamentos nem prémios. Saldo, bónus e histórico ficam no navegador e podem ser repostos ou apagados.
 
+## Prova do crash — compromisso e revelação locais
+Cada ronda usa uma semente nova de entropia local: antes do voo mostra-se o hash compromisso (`hashHex`) e, após o crash, a semente é revelada e `verifyCrash(semente, ponto, 0.03, teto)` confirma o resultado no próprio navegador. Não há servidor, nem registo de auditoria, nem autoridade de operador: um cliente modificado poderia alterar o código. Um operador licenciado exigiria seed e compromisso gerados no servidor, revelação assinada, auditoria imutável, KYC/AML, limites de risco e pagamentos regulados — nada disso existe nesta demo, onde B$ são apenas créditos fictícios.
+
 ## O que exigiria um backend licenciado
 Validação no servidor (saldo, limites e odds antes da ronda), seed do servidor publicado como hash e revelado depois, registo de auditoria imutável, KYC/AML, limites e gestão de risco, e pagamentos regulados. Esta demo não faz nada disso: corre inteiramente no frontend e nenhuma operação é uma transação financeira.
