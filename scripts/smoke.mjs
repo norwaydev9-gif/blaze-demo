@@ -75,6 +75,9 @@ for (const component of ['ActionButton', 'AutoControl', 'AutoBetControl']) {
 }
 check(read('src/index.css').includes('.app-immersive'), 'index.css: falta o modo jogo em ecrã inteiro')
 check(read('src/pages/GamePage.tsx').includes('game-immersive-engine'), 'GamePage.tsx: falta o palco imersivo')
+check(read('src/pages/GamePage.tsx').includes('<GameEngine key={game.id}'), 'GamePage.tsx: o motor deve ser remontado ao trocar de jogo')
+check(gameUi.includes('saldo insuficiente'), 'GameUI.tsx: falta a guarda de saldo insuficiente no BetInput')
+check(existsSync(new URL('docs/UI_REFERENCES.md', root)), 'Falta docs/UI_REFERENCES.md com as referências visuais')
 
 /* -------------------------------- marca ---------------------------------- */
 

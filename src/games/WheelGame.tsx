@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt } from '../lib/format'
 import { shuffle, randInt } from '../lib/rng'
@@ -38,7 +38,12 @@ export function WheelGame({ game }: { game: Game }) {
   const [result, setResult] = useState<number | null>(null)
   const [history, setHistory] = useState<number[]>([])
   const rotRef = useRef(0)
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const segAngle = 360 / n
+
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   const spin = () => {
     if (spinning) return
@@ -51,7 +56,8 @@ export function WheelGame({ game }: { game: Game }) {
     rotRef.current = next
     setRotation(next)
     play('spin')
-    setTimeout(() => {
+    settleTimer.current = setTimeout(() => {
+      settleTimer.current = null
       const mult = segments[index]
       setResult(mult)
       setSpinning(false)

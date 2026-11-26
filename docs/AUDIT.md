@@ -66,12 +66,43 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 - `ResultBanner` ganhou confetti e brilho (`animate-winFlash`) para realçar
   visualmente os ganhos; o Slots mantém o confetti próprio.
 - Os cartões passaram a usar ilustração vectorial em primeiro plano (por motor
-  e com variações por `id`), mantendo a fotografia licenciada como fundo.
+  e com variações por `id`). A fotografia licenciada deixou de ser sobreposta
+  no cartão, no hero e no palco: há **uma arte principal por jogo**, sem
+  empilhamento de fundos, marcas d'água gigantes e confetti ao mesmo tempo.
 - Cada jogo abre em modo imersivo: `app-immersive` esconde sidebar, topbar e
   navegação inferior; o tabuleiro ocupa toda a altura da viewport com aurora
   animada. A barra de controlo só aparece ao tocar/mover o ponteiro, mantendo
   uma saída discreta e acessível (`Esc` também funciona). Informações,
   desempenho e jogos semelhantes passaram para um painel `i`.
+
+## Quarta passagem — jogos que não funcionavam e limpeza visual
+
+- **Remontagem ao trocar de jogo:** `<GameEngine key={game.id}>` evita que duas
+  entradas com o mesmo motor (ex.: `crash` → `aviator`, ou os 14 slots) partilhem
+  apostas, timers e histórico da ronda anterior.
+- **Crash:** removido o auto-cashout duplicado dentro do `requestAnimationFrame`.
+  Ficou apenas `useAutoCashout`, que respeita o interruptor AUTO e paga o
+  multiplicador real (`multRef.current`), não o alvo configurado.
+- **Plinko:** a tabela de prémios é congelada no momento da queda (`Ball.table`);
+  mudar o risco com a bola no ar já não altera o pagamento. Botões de risco
+  bloqueados durante a queda e fallback para browsers sem `ctx.roundRect`.
+- **Timers/RAF:** Dice, Slots, Wheel, Roulette, Keno, Limbo, CoinFlip, Crash e
+  Plinko limpam intervalos/timeouts/RAF ao sair. Não há prémios creditados sem
+  o utilizador ver o resultado, nem animações órfãs depois do unmount.
+- **Regras:** ás do Baccarat vale 1 (antes valia 0); Dice congela direcção,
+  alvo e multiplicador durante a rolagem e bloqueia os botões ↑/↓; Hi-Lo usa o
+  baralho configurado e não repete cartas ao reiniciar; Scratch paga o prémio
+  gerado, não um recálculo; qualificações de Caribbean/Three Card Poker alinhadas
+  com os rótulos.
+- **Guardas de configuração:** baralhos vazios, `columns <= 1`, `mineOptions`
+  vazio, símbolos/linhas inválidos nos Slots — todos com fallback seguro.
+- **BetInput:** quando o saldo é inferior ao mínimo, a aposta fica bloqueada e
+  aparece “saldo insuficiente” em vez de um valor impossível.
+- **Espaçamentos:** Keno em 5 colunas com alvos de 44px em telemóvel; cartões
+  sem overlay central a tapar a arte; grelhas com `gap` consistente.
+- **`docs/UI_REFERENCES.md`:** referências reais de layout por tipo de jogo
+  (Aviator/Crash, Mines, Slots, Plinko, Roleta, Blackjack/Poker, Keno, Arcade),
+  usadas como inspiração de estrutura — nunca para copiar arte de terceiros.
 
 ## Verificações feitas
 
@@ -93,7 +124,7 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 2. **Jogo responsável no cliente.** Limites de perda/depósito/sessão só seriam válidos num operador licenciado, impostos pelo servidor.
 3. **Sports e Live Betting** continuam indisponíveis: exigem fornecedor de dados licenciado.
 4. **Prova do Crash é simplificada.** A verificação é local e não substitui um sistema provably-fair auditado.
-5. **Smoke check, não testes de UI.** `npm run check` valida catálogo, motores, rotas, marca e build. Recomenda-se Playwright para os fluxos críticos (apostar, retirar, bónus, navegação) e testes unitários para `wallet`, `rng` e `cards`.
+5. **Sem browser real nos testes.** `npm run check` valida catálogo, motores, rotas, marca e build; `npm run check:runtime` renderiza os 66 jogos em jsdom, clica nos controlos e confirma que a aposta é registada sem erros de render. Ainda assim, recomenda-se Playwright num Android real para fluxos críticos (apostar, retirar, bónus, navegação) e testes unitários para `wallet`, `rng` e `cards`.
 6. **Apenas português (pt-PT).** Não há i18n.
 
 ## Estrutura alterada

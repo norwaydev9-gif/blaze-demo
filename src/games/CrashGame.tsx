@@ -47,6 +47,9 @@ export function CrashGame({ game }: { game: Game }) {
   const endRef = useRef<() => void>(() => {})
   const resetRef = useRef<() => void>(() => {})
   const paidRef = useRef<Set<number>>(new Set())
+  const rafRef = useRef(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   slotsRef.current = slots
   seedRef.current = seed
@@ -162,6 +165,10 @@ export function CrashGame({ game }: { game: Game }) {
   }, [growth])
 
   const reset = useCallback(() => {
+    if (resetTimerRef.current) {
+      window.clearTimeout(resetTimerRef.current)
+      resetTimerRef.current = null
+    }
     setPhase('betting')
     phaseRef.current = 'betting'
     setCountdown(7)
@@ -186,15 +193,30 @@ export function CrashGame({ game }: { game: Game }) {
     play('crash')
     setHistory((h) => [crash, ...h].slice(0, 18))
     setSlots((prev) => prev.map((s) => (s.active ? { ...s, active: false, cashedAt: null } : s)))
-    window.setTimeout(() => resetRef.current(), 3600)
+    if (resetTimerRef.current) window.clearTimeout(resetTimerRef.current)
+    resetTimerRef.current = window.setTimeout(() => {
+      resetTimerRef.current = null
+      resetRef.current()
+    }, 3600)
   }, [play])
 
   endRef.current = end
   resetRef.current = reset
 
+  useEffect(() => () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current)
+      countdownRef.current = null
+    }
+    if (resetTimerRef.current) {
+      window.clearTimeout(resetTimerRef.current)
+      resetTimerRef.current = null
+    }
+  }, [])
+
   // main loop
   useEffect(() => {
-    let raf = 0
     let last = 0
     const loop = (now: number) => {
       if (phaseRef.current === 'flying') {
@@ -208,37 +230,29 @@ export function CrashGame({ game }: { game: Game }) {
             tickRef.current = Math.floor(m)
             play('tick')
           }
-          // auto cash-out
-          const current = slotsRef.current
-          current.forEach((s, idx) => {
-            if (s.active && s.autoCash > 0 && m >= s.autoCash && !paidRef.current.has(idx)) {
-              paidRef.current.add(idx)
-              payout(s.amount * s.autoCash, game.name, game.id, `Auto-retirada ${fmtMult(s.autoCash)}`)
-              setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, active: false, cashedAt: s.autoCash } : x)))
-            }
-          })
         }
         if (m >= crashRef.current) {
           endRef.current()
         }
       }
       draw()
-      raf = requestAnimationFrame(loop)
+      rafRef.current = requestAnimationFrame(loop)
     }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [draw, growth, play, payout, game.name, game.id])
+    rafRef.current = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [draw, growth, play])
 
   // betting countdown
   useEffect(() => {
     if (phase !== 'betting') return
     setCountdown(7)
     let remaining = 7
-    const t = setInterval(() => {
+    countdownRef.current = setInterval(() => {
       remaining -= 1
       setCountdown(remaining)
       if (remaining <= 0) {
-        clearInterval(t)
+        if (countdownRef.current !== null) clearInterval(countdownRef.current)
+        countdownRef.current = null
         crashRef.current = crashFromSeed(seedRef.current, 0.03, maxMult)
         startRef.current = performance.now()
         tickRef.current = 1
@@ -250,7 +264,10 @@ export function CrashGame({ game }: { game: Game }) {
         play('click')
       }
     }, 1000)
-    return () => clearInterval(t)
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current)
+      countdownRef.current = null
+    }
   }, [phase, maxMult, play])
 
   // auto-bet when a new betting round opens

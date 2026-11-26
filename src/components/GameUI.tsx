@@ -86,18 +86,24 @@ export function BetInput({
 }) {
   const { balance } = useWallet()
   const { play } = useSound()
+  const ceiling = Math.min(max, balance)
+  const canBet = ceiling >= min
+  const blocked = disabled || !canBet
   const set = (n: number) => {
+    if (!canBet) return
     play('tick')
-    onChange(clamp(Math.round(n * 100) / 100, min, Math.min(max, Math.max(min, balance))))
+    onChange(clamp(Math.round(n * 100) / 100, min, ceiling))
   }
   return (
     <div>
-      <div className="mb-1.5 flex items-center justify-between">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="label">{label}</span>
-        <span className="text-[10px] tabular text-white/30">máx. {fmt(Math.min(max, balance))}</span>
+        <span className={`text-[10px] tabular ${canBet ? 'text-white/30' : 'text-brand'}`}>
+          {canBet ? `máx. ${fmt(ceiling)}` : 'saldo insuficiente'}
+        </span>
       </div>
       <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-black/30 focus-within:border-brand/50">
-        <button type="button" disabled={disabled} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
+        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
           −
         </button>
         <div className="relative flex-1">
@@ -105,25 +111,28 @@ export function BetInput({
             type="number"
             inputMode="decimal"
             value={value}
-            disabled={disabled}
+            disabled={blocked}
             min={min}
-            max={max}
-            onChange={(e) => onChange(Number(e.target.value))}
+            max={ceiling}
+            onChange={(e) => {
+              const n = Number(e.target.value)
+              if (Number.isFinite(n)) onChange(n)
+            }}
             onBlur={() => set(Number.isFinite(value) ? value : min)}
             className="w-full bg-transparent py-2.5 text-center text-base font-bold tabular text-white outline-none disabled:opacity-50"
           />
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/25">B$</span>
         </div>
-        <button type="button" disabled={disabled} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
+        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
           +
         </button>
       </div>
       <div className="mt-2 grid grid-cols-4 gap-1.5">
-        {[min, 100, 500, Math.max(min, Math.min(max, Math.floor(balance / 2)))].map((n, i) => (
+        {[min, 100, 500, Math.floor(balance / 2)].map((n, i) => (
           <button
             key={`${n}-${i}`}
             type="button"
-            disabled={disabled}
+            disabled={blocked}
             onClick={() => set(n)}
             className="h-11 rounded-lg border border-line bg-white/[.02] px-1 text-[11px] font-semibold text-white/50 transition hover:border-white/20 hover:text-white disabled:opacity-40"
           >

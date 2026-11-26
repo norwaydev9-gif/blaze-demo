@@ -25,6 +25,14 @@ function isRoyal(cards: Card[]): boolean {
   return pokerScore(cards).name === 'Straight Flush' && cards.every((c) => c.r >= 10 || c.r === 14) && new Set(cards.map((c) => c.r)).size === 5
 }
 
+const FALLBACK_CARD: Card = { r: 2, s: '♠' }
+
+function safeDeck(decks: number): Card[] {
+  const count = Number.isFinite(decks) && decks >= 1 ? Math.floor(decks) : 1
+  const built = makeDeck(count)
+  return built.length > 0 ? built : [FALLBACK_CARD]
+}
+
 /* ------------------------------- Video Poker ------------------------------- */
 export function VideoPokerGame({ game }: { game: Game }) {
   const { balance, placeBet, payout } = useWallet()
@@ -39,8 +47,8 @@ export function VideoPokerGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = () => {
-    if (deck.current.length < 10) deck.current = makeDeck(1)
-    return deck.current.pop()!
+    if (deck.current.length < 10) deck.current = safeDeck(1)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const pay = (name: string, hand: Card[]): number => {
@@ -63,7 +71,7 @@ export function VideoPokerGame({ game }: { game: Game }) {
 
   const deal = () => {
     if (!placeBet(amount, game.name, game.id, 'Video Poker')) return
-    deck.current = makeDeck(1)
+    deck.current = safeDeck(1)
     setCards([draw(), draw(), draw(), draw(), draw()])
     setHolds([false, false, false, false, false])
     setPhase('draw')
@@ -185,8 +193,8 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
-    if (deck.current.length < 12) deck.current = makeDeck(1)
-    return deck.current.pop()!
+    if (deck.current.length < 12) deck.current = safeDeck(1)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const multiplierFor = (name: string): number => {
@@ -207,7 +215,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
 
   const deal = () => {
     if (!placeBet(amount, game.name, game.id, 'Caribbean Poker')) return
-    deck.current = makeDeck(1)
+    deck.current = safeDeck(1)
     setPlayer(Array.from({ length: 5 }, draw))
     setDealer(Array.from({ length: 5 }, draw))
     setPhase('decide')
@@ -228,7 +236,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
     const pScore = pokerScore(player)
     const dScore = pokerScore(dealer)
     const ranks = dealer.map((c) => c.r).sort((a, b) => b - a)
-    const qualifies = dScore.score >= 100 || (ranks[0] === 14 && ranks[1] === 13)
+    const qualifies = dScore.score >= 100 || ranks[0] >= 12
     setPhase('done')
     let total = 0
     if (!qualifies) {
@@ -298,6 +306,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
             <div className="mt-3 space-y-1.5">
               <Payout label="Aposta" value={`${fmt(amount)} B$`} />
               <Payout label="Par paga" value="2×" />
+              <Payout label="Dealer qualifica" value="Dama+ ou par" />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
@@ -340,13 +349,13 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
-    if (deck.current.length < 8) deck.current = makeDeck(1)
-    return deck.current.pop()!
+    if (deck.current.length < 8) deck.current = safeDeck(1)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const deal = () => {
     if (!placeBet(amount, game.name, game.id, 'Three Card Poker')) return
-    deck.current = makeDeck(1)
+    deck.current = safeDeck(1)
     setPlayer([draw(), draw(), draw()])
     setDealer([draw(), draw(), draw()])
     setPhase('decide')
@@ -366,7 +375,7 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
     if (!placeBet(amount, game.name, game.id, 'Play')) return
     const p = threeCardScore(player)
     const d = threeCardScore(dealer)
-    const qualifies = d.score >= 212 || (d.name === 'High Card' && d.score >= 112)
+    const qualifies = d.score >= 202 || (d.name === 'High Card' && d.score >= 112)
     setPhase('done')
     let total = 0
     if (!qualifies) {
@@ -436,7 +445,7 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase !== 'bet'} />
             <div className="mt-3 space-y-1.5">
               <Payout label="Ante" value={`${fmt(amount)} B$`} />
-              <Payout label="Dealer qualifica" value="Dama high+" />
+              <Payout label="Dealer qualifica" value="Dama high+ ou par" />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
@@ -481,13 +490,13 @@ export function TexasHoldemGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
-    if (deck.current.length < 10) deck.current = makeDeck(1)
-    return deck.current.pop()!
+    if (deck.current.length < 10) deck.current = safeDeck(1)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const deal = () => {
     if (!placeBet(amount, game.name, game.id, "Texas Hold'em")) return
-    deck.current = makeDeck(1)
+    deck.current = safeDeck(1)
     setPlayer([draw(), draw()])
     setDealer([draw(), draw()])
     setBoard([draw(), draw(), draw(), draw(), draw()])

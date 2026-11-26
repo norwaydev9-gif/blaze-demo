@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, fmtMult, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
@@ -21,6 +21,8 @@ export function LimboGame({ game }: { game: Game }) {
   const [won, setWon] = useState<boolean | null>(null)
   const [history, setHistory] = useState<number[]>([])
   const raf = useRef(0)
+
+  useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
   const chance = Math.min(99, 99 / target)
   const playRound = () => {

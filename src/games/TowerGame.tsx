@@ -9,7 +9,8 @@ import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 
 export function TowerGame({ game }: { game: Game }) {
   const rows = Number(game.config.rows ?? 8)
-  const cols = Number(game.config.columns ?? 3)
+  const configuredCols = Number(game.config.columns ?? 3)
+  const cols = configuredCols > 1 ? configuredCols : 3
   const { balance, placeBet, payout } = useWallet()
   const { play } = useSound()
   const [amount, setAmount] = useState(game.minBet)

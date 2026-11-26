@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt } from '../lib/format'
 import { randInt, uid } from '../lib/rng'
@@ -37,6 +37,11 @@ export function RouletteGame({ game }: { game: Game }) {
   const [rotation, setRotation] = useState(0)
   const [history, setHistory] = useState<number[]>([])
   const [lastWin, setLastWin] = useState(0)
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   const total = bets.reduce((s, b) => s + b.amount, 0)
 
@@ -63,7 +68,8 @@ export function RouletteGame({ game }: { game: Game }) {
     const outcome = randInt(0, pool - 1) // 37 = 00 on american
     setRotation((r) => r + 360 * 5 + randInt(0, 359))
     play('spin')
-    setTimeout(() => {
+    settleTimer.current = setTimeout(() => {
+      settleTimer.current = null
       setResult(outcome)
       setSpinning(false)
       setHistory((h) => [outcome, ...h].slice(0, 16))

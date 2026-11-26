@@ -5,7 +5,7 @@ import { useFavorites } from '../lib/favorites'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
 import { GameArt } from './GameArt'
-import { categoryLabel, gameImage } from '../lib/games'
+import { categoryLabel } from '../lib/games'
 
 export function GameCard({ game, compact = false }: { game: Game; compact?: boolean }) {
   const { isFav, toggle } = useFavorites()
@@ -28,9 +28,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
         className={`relative overflow-hidden ${compact ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}
         style={{
           backgroundColor: '#080a10',
-          backgroundImage: `linear-gradient(160deg, ${game.theme.from}99, rgba(5,6,10,.35) 45%, rgba(5,6,10,.94) 100%), url(${gameImage(game)})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundImage: `radial-gradient(110% 80% at 50% 0%, ${game.theme.from}66, transparent 62%), linear-gradient(160deg, ${game.theme.to}33, #05060a 92%)`,
         }}
       >
         <div className="absolute inset-0 bg-grid opacity-40" />
@@ -39,7 +37,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
           style={{ background: game.theme.to, opacity: hover ? 0.35 : 0.18 }}
         />
         <div
-          className={`absolute inset-0 grid place-items-center transition-transform duration-300 ${hover ? 'scale-110 -rotate-3' : ''}`}
+          className={`absolute inset-0 grid place-items-center transition-transform duration-300 ${hover ? 'scale-105' : ''}`}
         >
           <GameArt
             game={game}
@@ -81,9 +79,9 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
           </span>
         </div>
         <div
-          className={`pointer-events-none absolute inset-0 grid place-items-center bg-black/35 transition-opacity duration-200 ${hover ? 'opacity-100' : 'opacity-0'}`}
+          className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 transition-opacity duration-200 ${hover ? 'opacity-100' : 'opacity-0'}`}
         >
-          <span className="rounded-full bg-white px-4 py-2 text-xs font-bold text-black shadow-xl">▶ Jogar agora</span>
+          <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-extrabold text-black shadow-lg">Jogar agora →</span>
         </div>
       </div>
     </div>

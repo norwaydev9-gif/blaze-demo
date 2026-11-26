@@ -55,6 +55,7 @@ export function ScratchGame({ game }: { game: Game }) {
   const { play } = useSound()
   const [amount, setAmount] = useState(game.minBet)
   const [cells, setCells] = useState<Cell[]>([])
+  const [cardWin, setCardWin] = useState(0)
   const [active, setActive] = useState(false)
   const [win, setWin] = useState<number | null>(null)
   const [history, setHistory] = useState<string[]>([])
@@ -63,6 +64,7 @@ export function ScratchGame({ game }: { game: Game }) {
     if (!placeBet(amount, game.name, game.id, 'Cartão raspado')) return
     const card = makeCard(0.32)
     setCells(card.cells)
+    setCardWin(card.win)
     setWin(null)
     setActive(true)
     play('click')
@@ -73,21 +75,15 @@ export function ScratchGame({ game }: { game: Game }) {
     const next = cells.map((c, idx) => (idx === i ? { ...c, revealed: true } : c))
     setCells(next)
     play('tick')
-    if (next.every((c) => c.revealed)) settle(next)
+    if (next.every((c) => c.revealed)) settle()
   }
 
-  const settle = (all: Cell[]) => {
+  const settle = () => {
     setActive(false)
-    const counts = new Map<string, number>()
-    all.forEach((c) => counts.set(c.symbol, (counts.get(c.symbol) ?? 0) + 1))
-    let best = 0
-    all.forEach((c) => {
-      if ((counts.get(c.symbol) ?? 0) >= 3) best = Math.max(best, c.prize)
-    })
-    if (best > 0) {
-      const prize = amount * best
+    if (cardWin > 0) {
+      const prize = amount * cardWin
       setWin(prize)
-      payout(prize, game.name, game.id, `3 iguais · ${best}×`)
+      payout(prize, game.name, game.id, `3 iguais · ${cardWin}×`)
       setHistory((h) => [`+${fmt(prize)}`, ...h].slice(0, 12))
       play('win')
     } else {
@@ -101,7 +97,7 @@ export function ScratchGame({ game }: { game: Game }) {
     if (!active) return
     const all = cells.map((c) => ({ ...c, revealed: true }))
     setCells(all)
-    settle(all)
+    settle()
   }
 
   return (

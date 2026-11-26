@@ -11,6 +11,14 @@ import { PlayingCard } from '../components/PlayingCard'
 
 type Phase = 'bet' | 'player' | 'done'
 
+const FALLBACK_CARD: Card = { r: 2, s: '♠' }
+
+function safeDeck(decks: number): Card[] {
+  const count = Number.isFinite(decks) && decks >= 1 ? Math.floor(decks) : 1
+  const built = makeDeck(count)
+  return built.length > 0 ? built : [FALLBACK_CARD]
+}
+
 export function BlackjackGame({ game }: { game: Game }) {
   const decks = Number(game.config.decks ?? 6)
   const hitSoft17 = Boolean(game.config.dealerHits17)
@@ -27,8 +35,8 @@ export function BlackjackGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
-    if (deck.current.length < 12) deck.current = makeDeck(decks)
-    return deck.current.pop()!
+    if (deck.current.length < 12) deck.current = safeDeck(decks)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const finish = (p: Card[], d: Card[], currentBet: number) => {
@@ -63,7 +71,7 @@ export function BlackjackGame({ game }: { game: Game }) {
 
   const start = () => {
     if (!placeBet(amount, game.name, game.id, 'Blackjack')) return
-    deck.current = makeDeck(decks)
+    deck.current = safeDeck(decks)
     const p = [draw(), draw()]
     const d = [draw(), draw()]
     setPlayer(p)

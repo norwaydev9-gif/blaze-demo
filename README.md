@@ -67,6 +67,14 @@ npm run check
   ocupa a janela toda. A barra discreta (aparece ao tocar/mover o rato) esconde
   o botão de saída; `Esc` também volta ao catálogo. O botão `i` abre regras,
   histórico e jogos semelhantes.
+- **Referências de UI por tipo de jogo** em `docs/UI_REFERENCES.md`: padrões de
+  Crash, Mines, Slots, Plinko, Roleta, Blackjack/Poker, Keno e Arcade adaptados
+  à marca BLAZE, sem copiar artes de terceiros.
+- **Uma arte principal por jogo**: removida a sobreposição de fotografia,
+  marca d'água gigante e confetti simultâneos. O vector próprio manda.
+- **Teste de runtime dos 66 jogos** (`npm run check:runtime`): renderiza cada
+  motor em jsdom, clica nos controlos e confirma que não há erros e que a
+  aposta é registada na carteira.
 - **Sons** gerados por WebAudio (com mute) e notificações toast.
 - **Persistência local** de carteira, favoritos, jogos recentes e preferência de
   som, com exportação/apagamento dos dados no perfil.
@@ -91,7 +99,9 @@ blaze/
 │   └── icon*.png, icon.svg, manifest, sw.js
 ├── docs/AUDIT.md                 # relatório da auditoria
 ├── docs/IMAGE_CREDITS.md         # créditos/licenças das imagens
+├── docs/UI_REFERENCES.md         # referências visuais por tipo de jogo
 ├── scripts/smoke.mjs             # verificação rápida (npm run check)
+├── scripts/runtime-smoke.mjs     # render + cliques nos 66 jogos (npm run check:runtime)
 └── server/                       # reservado para uma API futura
 ```
 

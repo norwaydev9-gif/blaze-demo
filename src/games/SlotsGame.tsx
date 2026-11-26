@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, clamp } from '../lib/format'
 import { randInt, pick } from '../lib/rng'
@@ -18,13 +18,17 @@ const LINE_PATTERNS: number[][] = [
   [1, 2, 2],
 ]
 
+const DEFAULT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '🔔', '⭐', '7️⃣']
+
 function payFor(index: number): number {
-  return [3, 4, 6, 9, 14, 25, 60][Math.min(index, 6)]
+  return [3, 4, 6, 9, 14, 25, 60][Math.max(0, Math.min(index, 6))]
 }
 
 export function SlotsGame({ game }: { game: Game }) {
-  const symbols = (game.config.symbols as string[] | undefined) ?? ['🍒', '🍋', '🍊', '🍇', '🔔', '⭐', '7️⃣']
-  const linesCount = Number(game.config.lines ?? 5)
+  const configuredSymbols = (game.config.symbols as string[] | undefined) ?? []
+  const symbols = configuredSymbols.length > 0 ? Array.from(new Set(configuredSymbols)) : DEFAULT_SYMBOLS
+  const rawLines = Number(game.config.lines ?? 5)
+  const linesCount = clamp(Number.isFinite(rawLines) ? Math.round(rawLines) : 5, 1, LINE_PATTERNS.length)
   const rows = 3
   const lines = LINE_PATTERNS.slice(0, linesCount)
   const min = game.minBet
@@ -40,7 +44,14 @@ export function SlotsGame({ game }: { game: Game }) {
   const [history, setHistory] = useState<string[]>([])
   const [showPay, setShowPay] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const rollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const stopped = useRef<Set<number>>(new Set())
+
+  useEffect(() => () => {
+    if (rollingRef.current) clearInterval(rollingRef.current)
+    timers.current.forEach(clearTimeout)
+    timers.current = []
+  }, [])
 
   const betPerLine = amount / linesCount
 
@@ -54,7 +65,8 @@ export function SlotsGame({ game }: { game: Game }) {
 
     const result = Array.from({ length: 3 }, () => Array.from({ length: rows }, () => pick(symbols)))
     stopped.current = new Set()
-    const rolling = setInterval(() => {
+    if (rollingRef.current) clearInterval(rollingRef.current)
+    rollingRef.current = setInterval(() => {
       setGrid((prev) => prev.map((col, c) => (stopped.current.has(c) ? col : col.map(() => pick(symbols)))))
     }, 70)
 
@@ -72,7 +84,8 @@ export function SlotsGame({ game }: { game: Game }) {
 
     timers.current.push(
       setTimeout(() => {
-        clearInterval(rolling)
+        if (rollingRef.current) clearInterval(rollingRef.current)
+        rollingRef.current = null
         setGrid(result)
         const hits: number[] = []
         let total = 0

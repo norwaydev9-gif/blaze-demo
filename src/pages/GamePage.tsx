@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { categoryLabel, gameImage, getGame, GAMES } from '../lib/games'
+import { categoryLabel, getGame, GAMES } from '../lib/games'
 import { navigate, useRoute } from '../lib/router'
 import { useFavorites, useRecent } from '../lib/favorites'
 import { useWallet } from '../lib/wallet'
@@ -7,7 +7,7 @@ import { fmt, timeAgo } from '../lib/format'
 import { GameEngine } from '../games/engines'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
-import { GameArt, GameArtWatermark } from '../components/GameArt'
+import { GameArt } from '../components/GameArt'
 
 export function GamePage() {
   const route = useRoute()
@@ -29,10 +29,6 @@ export function GamePage() {
   useEffect(() => {
     if (!game) return
     visit(game.id)
-    document.documentElement.style.setProperty('--game-bg', `url("${gameImage(game)}")`)
-    return () => {
-      document.documentElement.style.removeProperty('--game-bg')
-    }
   }, [game, visit])
 
   useEffect(() => {
@@ -139,10 +135,7 @@ export function GamePage() {
       </div>
 
       <div className="game-immersive-engine">
-        <div className="pointer-events-none absolute right-1 top-1 z-20 hidden opacity-[.08] sm:block">
-          <GameArtWatermark game={game} className="game-float h-64 w-96" />
-        </div>
-        <GameEngine game={game} />
+        <GameEngine key={game.id} game={game} />
       </div>
 
       {showInfo && (

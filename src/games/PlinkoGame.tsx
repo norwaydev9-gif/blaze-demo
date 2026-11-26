@@ -34,6 +34,7 @@ interface Ball {
   duration: number
   bucket: number
   amount: number
+  table: number[]
   settled: boolean
 }
 
@@ -51,13 +52,14 @@ export function PlinkoGame({ game }: { game: Game }) {
   const [dropping, setDropping] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const ballsRef = useRef<Ball[]>([])
+  const rafRef = useRef(0)
   const table = multipliers(rows, risk)
   const tableRef = useRef(table)
   tableRef.current = table
 
   const settle = useCallback(
     (ball: Ball) => {
-      const m = tableRef.current[ball.bucket] ?? 0
+      const m = ball.table[ball.bucket] ?? 0
       setHistory((h) => [m, ...h].slice(0, 18))
       if (m > 0) {
         payout(ball.amount * m, game.name, game.id, `Caiu em ${m}×`)
@@ -121,7 +123,8 @@ export function PlinkoGame({ game }: { game: Game }) {
       const by = bucketY
       const bh = h * 0.09
       ctx.beginPath()
-      ctx.roundRect(bx, by, bw, bh, 5)
+      if (typeof ctx.roundRect === 'function') ctx.roundRect(bx, by, bw, bh, 5)
+      else ctx.rect(bx, by, bw, bh)
       ctx.fillStyle = `${color}22`
       ctx.fill()
       ctx.strokeStyle = `${color}88`
@@ -166,14 +169,17 @@ export function PlinkoGame({ game }: { game: Game }) {
   }, [rows, settle])
 
   useEffect(() => {
-    let raf = 0
     const loop = () => {
       draw()
-      raf = requestAnimationFrame(loop)
+      rafRef.current = requestAnimationFrame(loop)
     }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
+    rafRef.current = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(rafRef.current)
   }, [draw])
+
+  useEffect(() => () => {
+    ballsRef.current = []
+  }, [])
 
   const drop = () => {
     if (!placeBet(amount, game.name, game.id, `Plinko ${risk}`)) return
@@ -194,6 +200,7 @@ export function PlinkoGame({ game }: { game: Game }) {
       duration: 1100 + rows * 28,
       bucket,
       amount,
+      table: tableRef.current.slice(),
       settled: false,
     })
     setDropping((d) => d + 1)
@@ -233,6 +240,7 @@ export function PlinkoGame({ game }: { game: Game }) {
                     tone="ghost"
                     size="compact"
                     onClick={() => setRisk(r)}
+                    disabled={dropping > 0}
                     className={risk === r ? 'border-brand/50 bg-brand/15 text-white' : ''}
                   >
                     {r === 'low' ? 'Baixo' : r === 'medium' ? 'Médio' : 'Alto'}

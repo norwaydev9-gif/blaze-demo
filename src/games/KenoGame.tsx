@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt } from '../lib/format'
 import { randInt, shuffle } from '../lib/rng'
@@ -33,6 +33,11 @@ export function KenoGame({ game }: { game: Game }) {
   const [drawing, setDrawing] = useState(false)
   const [settled, setSettled] = useState(false)
   const [history, setHistory] = useState<string[]>([])
+  const drawTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => () => {
+    if (drawTimer.current) clearInterval(drawTimer.current)
+  }, [])
 
   const toggle = (n: number) => {
     if (drawing) return
@@ -62,12 +67,13 @@ export function KenoGame({ game }: { game: Game }) {
     const numbers = shuffle(Array.from({ length: pool }, (_, i) => i + 1)).slice(0, drawCount)
     play('spin')
     let i = 0
-    const interval = setInterval(() => {
+    drawTimer.current = setInterval(() => {
       setDrawn((prev) => new Set([...prev, numbers[i]]))
       play('tick')
       i++
       if (i >= numbers.length) {
-        clearInterval(interval)
+        if (drawTimer.current !== null) clearInterval(drawTimer.current)
+        drawTimer.current = null
         setDrawing(false)
         setSettled(true)
         const hits = numbers.filter((n) => picked.has(n)).length
@@ -114,7 +120,7 @@ export function KenoGame({ game }: { game: Game }) {
                 </ActionButton>
               </div>
             </div>
-            <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
+            <div className="no-scrollbar grid max-h-[264px] grid-cols-5 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-10 sm:gap-1.5">
               {Array.from({ length: pool }, (_, i) => i + 1).map((n) => {
                 const isPicked = picked.has(n)
                 const isDrawn = drawn.has(n)
@@ -125,7 +131,7 @@ export function KenoGame({ game }: { game: Game }) {
                     type="button"
                     onClick={() => toggle(n)}
                     disabled={drawing}
-                    className={`aspect-square rounded-md border text-[9px] font-bold tabular transition-transform duration-200 sm:text-[11px] ${
+                    className={`h-11 rounded-md border text-[11px] font-bold tabular transition-transform duration-200 sm:aspect-square sm:h-auto sm:text-[11px] ${
                       both
                         ? 'animate-popIn border-good/70 bg-good/30 text-good shadow-[0_0_18px_rgba(34,227,160,.5)] game-pulse'
                         : isDrawn

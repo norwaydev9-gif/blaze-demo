@@ -9,7 +9,15 @@ import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, 
 import { CardHand } from '../components/PlayingCard'
 
 function baccaratTotal(cards: Card[]): number {
-  return cards.reduce((s, c) => s + (c.r >= 10 ? 0 : c.r === 14 ? 1 : c.r), 0) % 10
+  return cards.reduce((s, c) => s + (c.r === 14 ? 1 : c.r >= 10 ? 0 : c.r), 0) % 10
+}
+
+const FALLBACK_CARD: Card = { r: 2, s: '♠' }
+
+function safeDeck(decks: number): Card[] {
+  const count = Number.isFinite(decks) && decks >= 1 ? Math.floor(decks) : 1
+  const built = makeDeck(count)
+  return built.length > 0 ? built : [FALLBACK_CARD]
 }
 
 export function BaccaratGame({ game }: { game: Game }) {
@@ -27,13 +35,13 @@ export function BaccaratGame({ game }: { game: Game }) {
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
-    if (deck.current.length < 10) deck.current = makeDeck(decks)
-    return deck.current.pop()!
+    if (deck.current.length < 10) deck.current = safeDeck(decks)
+    return deck.current.pop() ?? FALLBACK_CARD
   }
 
   const deal = () => {
     if (!placeBet(amount, game.name, game.id, choice)) return
-    deck.current = makeDeck(decks)
+    deck.current = safeDeck(decks)
     const p: Card[] = [draw(), draw()]
     const b: Card[] = [draw(), draw()]
     setWin(0)
@@ -45,7 +53,7 @@ export function BaccaratGame({ game }: { game: Game }) {
     if (pt0 < 8 && bt0 < 8 && pt0 <= 5) {
       const c = draw()
       p.push(c)
-      playerThird = c.r >= 10 ? 0 : c.r === 14 ? 1 : c.r
+      playerThird = baccaratTotal([c])
     }
     const pt = baccaratTotal(p)
     const bt = baccaratTotal(b)

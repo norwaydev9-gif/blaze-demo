@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
@@ -22,6 +22,12 @@ export function DiceGame({ game }: { game: Game }) {
   const [history, setHistory] = useState<number[]>([])
   const [lastWin, setLastWin] = useState<boolean | null>(null)
   const interval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (interval.current) clearInterval(interval.current)
+    if (timeout.current) clearTimeout(timeout.current)
+  }, [])
 
   const chance = over ? 100 - target : target
   const payoutMult = chance > 0 ? 99 / chance : 0
@@ -30,21 +36,24 @@ export function DiceGame({ game }: { game: Game }) {
   const roll = () => {
     if (rolling) return
     if (!placeBet(amount, game.name, game.id, `${over ? 'Acima' : 'Abaixo'} de ${target}`)) return
+    const round = { over, target, payoutMult, amount }
     setRolling(true)
     setLastWin(null)
     play('spin')
     const final = Math.round(rand() * 10000) / 100
     interval.current = setInterval(() => setDisplay(Math.round(rand() * 10000) / 100), 55)
-    setTimeout(() => {
+    timeout.current = setTimeout(() => {
       if (interval.current) clearInterval(interval.current)
+      interval.current = null
+      timeout.current = null
       setDisplay(final)
       setResult(final)
       setRolling(false)
       setHistory((h) => [final, ...h].slice(0, 16))
-      const won = over ? final > target : final < target
+      const won = round.over ? final > round.target : final < round.target
       setLastWin(won)
       if (won) {
-        payout(amount * payoutMult, game.name, game.id, `Acima de ${target}`)
+        payout(round.amount * round.payoutMult, game.name, game.id, `${round.over ? 'Acima' : 'Abaixo'} de ${round.target}`)
         play('win')
       } else {
         play('lose')
@@ -125,6 +134,7 @@ export function DiceGame({ game }: { game: Game }) {
                   tone="ghost"
                   size="half"
                   onClick={() => setOver(true)}
+                  disabled={rolling}
                   className={over ? 'border-good/50 bg-good/15 text-good hover:bg-good/20' : ''}
                 >
                   ↑ Acima
@@ -133,6 +143,7 @@ export function DiceGame({ game }: { game: Game }) {
                   tone="ghost"
                   size="half"
                   onClick={() => setOver(false)}
+                  disabled={rolling}
                   className={!over ? 'border-brand/50 bg-brand/15 text-brand hover:bg-brand/20' : ''}
                 >
                   ↓ Abaixo

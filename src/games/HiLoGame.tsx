@@ -9,12 +9,14 @@ import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout
 import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 import { PlayingCard } from '../components/PlayingCard'
 import { cardText } from '../lib/cards'
+import { configNum } from './helpers'
 
 export function HiLoGame({ game }: { game: Game }) {
+  const decks = Math.max(1, Math.floor(configNum(game, 'deck', 6)))
   const { balance, placeBet, payout } = useWallet()
   const { play } = useSound()
   const [amount, setAmount] = useState(game.minBet)
-  const [deck, setDeck] = useState<Card[]>(() => makeDeck(6))
+  const [deck, setDeck] = useState<Card[]>(() => makeDeck(decks))
   const [current, setCurrent] = useState<Card>(() => deck[0])
   const [rest, setRest] = useState<Card[]>(() => deck.slice(1))
   const [mult, setMult] = useState(1)
@@ -39,7 +41,7 @@ export function HiLoGame({ game }: { game: Game }) {
 
   const start = () => {
     if (!placeBet(amount, game.name, game.id, 'Hi-Lo')) return
-    const d = makeDeck(6)
+    const d = makeDeck(decks)
     setDeck(d)
     setCurrent(d[0])
     setRest(d.slice(1))
@@ -65,7 +67,8 @@ export function HiLoGame({ game }: { game: Game }) {
       setCurrent(next)
       const nextRest = rest.slice(1)
       if (nextRest.length < 8) {
-        const fresh = makeDeck(6)
+        const repeated = (c: Card) => (c.r === current.r && c.s === current.s) || (c.r === next.r && c.s === next.s)
+        const fresh = makeDeck(decks).filter((c) => !repeated(c))
         setRest(fresh)
         setCurrent(next)
       } else setRest(nextRest)

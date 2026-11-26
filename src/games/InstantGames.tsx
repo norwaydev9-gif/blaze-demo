@@ -480,6 +480,11 @@ export function WheelGame({ game }: { game: Game }) {
   const [message, setMessage] = useState('Escolhe vermelho, preto ou verde.')
   const [history, setHistory] = useState<string[]>([])
   const [seed, setSeed] = useState(() => newSeed())
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   const colorOf = (i: number): 'red' | 'black' | 'green' => i === 0 ? 'green' : i % 2 === 1 ? 'red' : 'black'
 
@@ -493,7 +498,8 @@ export function WheelGame({ game }: { game: Game }) {
     setMessage('A roda está a girar…')
     play('spin')
     setRotation((r) => r + 1440 + ((segments - index) * 360) / segments)
-    window.setTimeout(() => {
+    settleTimer.current = window.setTimeout(() => {
+      settleTimer.current = null
       setResult(index)
       setSpinning(false)
       setHistory((h) => [`${index} ${color}`, ...h].slice(0, 14))
@@ -580,6 +586,11 @@ export function CoinFlipGame({ game }: { game: Game }) {
   const [message, setMessage] = useState('Cara ou coroa?')
   const [history, setHistory] = useState<string[]>([])
   const [seed, setSeed] = useState(() => newSeed())
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   const playRound = () => {
     if (flipping || !bet.stake(side === 'heads' ? 'Cara' : 'Coroa')) return
@@ -589,7 +600,8 @@ export function CoinFlipGame({ game }: { game: Game }) {
     setMessage('A moeda está a girar…')
     setStatus('idle')
     play('spin')
-    window.setTimeout(() => {
+    settleTimer.current = window.setTimeout(() => {
+      settleTimer.current = null
       setResult(outcome)
       setFlipping(false)
       setHistory((h) => [(outcome === 'heads' ? 'Cara' : 'Coroa'), ...h].slice(0, 14))
@@ -1054,6 +1066,11 @@ export function ScratchGame({ game }: { game: Game }) {
   const [autoCash, setAutoCash] = useState(false)
   const [autoTarget, setAutoTarget] = useState(2)
   const settled = useRef(false)
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (settleTimer.current) clearTimeout(settleTimer.current)
+  }, [])
 
   const prizes = cells.filter((c) => c === '💎' || c === '7️⃣' || c === '⭐').length
   const multiplier = 1 + prizes * 0.65
@@ -1093,7 +1110,12 @@ export function ScratchGame({ game }: { game: Game }) {
     const next = [...revealed, i]
     setRevealed(next)
     play('tick')
-    if (next.length === size) window.setTimeout(settle, 250)
+    if (next.length === size) {
+      settleTimer.current = window.setTimeout(() => {
+        settleTimer.current = null
+        settle()
+      }, 250)
+    }
   }
 
   const cashout = () => {

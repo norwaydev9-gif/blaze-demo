@@ -18,7 +18,8 @@ function comb(n: number, k: number): number {
 export function MinesGame({ game }: { game: Game }) {
   const size = Number(game.config.grid ?? 5)
   const total = size * size
-  const mineOptions = (game.config.mineOptions as number[] | undefined) ?? [3, 5, 8, 10]
+  const configuredMines = game.config.mineOptions as number[] | undefined
+  const mineOptions = configuredMines && configuredMines.length > 0 ? configuredMines : [3, 5, 8, 10]
   const min = game.minBet
   const max = game.maxBet
   const { balance, placeBet, payout } = useWallet()
