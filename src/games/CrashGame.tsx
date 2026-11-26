@@ -648,7 +648,7 @@ export function CrashGame({ game }: { game: Game }) {
           {/* ZONA B — palco dominante: canvas grande e leituras, sem botões nem listas sobrepostas */}
           <div className="crash-main">
           <div className="relative">
-            <canvas ref={canvasRef} className="block aspect-[4/3] w-full min-h-[220px] sm:aspect-[16/9] sm:min-h-[320px]" />
+            <canvas ref={canvasRef} className="block aspect-[16/9] w-full min-h-[200px] sm:min-h-[280px]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
                 <p className={`crash-mult font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
@@ -779,7 +779,7 @@ export function CrashGame({ game }: { game: Game }) {
                         key={n}
                         type="button"
                         onClick={() => setAmount(n)}
-                        className={`h-10 rounded-lg border px-1 text-[11px] font-bold tabular transition ${
+                        className={`quick-bet h-10 rounded-lg border px-1 text-[11px] font-bold tabular transition ${
                           betAmount === value
                             ? 'border-brand/50 bg-brand/10 text-white'
                             : 'border-line bg-white/[.02] text-white/50 hover:border-white/25 hover:text-white'
@@ -852,7 +852,7 @@ export function CrashGame({ game }: { game: Game }) {
                             type="button"
                             disabled={s.active || phase !== 'betting'}
                             onClick={() => setSlot(i, { amount: value })}
-                            className={`h-8 rounded-md border px-0.5 text-[9px] font-bold tabular transition disabled:opacity-40 ${
+                            className={`quick-bet h-8 rounded-md border px-0.5 text-[9px] font-bold tabular transition disabled:opacity-40 ${
                               s.amount === value
                                 ? 'border-brand/50 bg-brand/10 text-white'
                                 : 'border-line bg-white/[.02] text-white/45 hover:border-white/25 hover:text-white'
