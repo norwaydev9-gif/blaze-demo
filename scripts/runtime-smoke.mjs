@@ -99,6 +99,10 @@ for (const game of GAMES) {
     const text = container.textContent || ''
     const boundary = text.includes('Algo correu mal')
     const scope = container.querySelector('.game-immersive-engine') || container
+    const stage = container.querySelector('.game-stage') || scope
+    const side = container.querySelector('.game-side-content')
+    const stageActions = stage.querySelectorAll('.bet-bar').length
+    const sideActions = side ? side.querySelectorAll('.bet-bar').length : 0
     const buttons = [...scope.querySelectorAll('button')]
     const clickable = buttons.filter((b) => !/Voltar|informações|histórico/i.test(b.textContent || ''))
     const priority = /apost|girar|comprar|iniciar|jogar|sortear|lançar|rodar|continuar|pedir|ficar|dobrar|retirar|sacar|trocar|desenhar|riscar|abri|bomb/i
@@ -125,6 +129,8 @@ for (const game of GAMES) {
       buttons: buttons.length,
       canvas: container.querySelectorAll('canvas').length,
       immersive: !!container.querySelector('.game-immersive-engine'),
+      stageActions,
+      sideActions,
       errors: [...errors],
       changed: after !== text,
       txDelta: readTx().length - txBefore,
@@ -141,6 +147,8 @@ writeFileSync('/tmp/opencode/blaze-runtime-results.json', JSON.stringify(results
 const bad = results.filter((r) => r.fatal || r.boundary || r.errors.length)
 console.log(`Jogos testados: ${results.length}; com erro: ${bad.length}`)
 console.log(`Sem aposta registada após cliques: ${results.filter((r) => !r.txDelta).map((r) => r.id).join(', ') || 'nenhum'}`)
+console.log(`Sem barra de aposta no tabuleiro: ${results.filter((r) => !r.stageActions).map((r) => r.id).join(', ') || 'nenhum'}`)
+console.log(`Com barra de aposta nos controlos: ${results.filter((r) => r.sideActions).map((r) => r.id).join(', ') || 'nenhum'}`)
 for (const r of bad) {
   console.log(`\n[${r.id} / ${r.engine}] ${r.fatal || r.boundary ? 'FALHA DE RENDER' : 'ERRO'}`)
   for (const e of (r.errors || []).slice(0, 4)) console.log(`  ${e.slice(0, 500)}`)

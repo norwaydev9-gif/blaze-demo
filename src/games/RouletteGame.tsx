@@ -201,11 +201,7 @@ export function RouletteGame({ game }: { game: Game }) {
               text={lastWin > 0 ? `+${fmt(lastWin)} B$` : 'Sem prémio nesta ronda.'}
             />
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <div>
               <span className="label">Ficha</span>
               <div className="mt-1.5 grid grid-cols-4 gap-1.5">
@@ -222,13 +218,8 @@ export function RouletteGame({ game }: { game: Game }) {
                 ))}
               </div>
             </div>
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Total apostado" value={`${fmt(total)} B$`} />
-              <Payout label="Apostas" value={String(bets.length)} />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             <ActionButton
-              tone="bet"
+              tone={spinning ? 'placed' : 'bet'}
               icon="bolt"
               loading={spinning}
               onClick={spin}
@@ -242,6 +233,17 @@ export function RouletteGame({ game }: { game: Game }) {
                 Limpar apostas
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Total apostado" value={`${fmt(total)} B$`} />
+              <Payout label="Apostas" value={String(bets.length)} />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Últimos números">
             <RecentStrip

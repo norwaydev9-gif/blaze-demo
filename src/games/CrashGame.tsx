@@ -366,50 +366,6 @@ export function CrashGame({ game }: { game: Game }) {
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 border-t border-line/70 p-3">
-            {slots.map((s, i) => (
-              <div key={i} className={`rounded-xl border p-3 transition ${s.active ? 'border-brand/40 bg-brand/[.06]' : 'border-line/70 bg-white/[.02]'}`}>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Aposta {i + 1}</span>
-                  {s.cashedAt !== null && <span className="text-[10px] font-bold text-good">Retirado {fmtMult(s.cashedAt)}</span>}
-                  {s.active && <span className="text-[10px] font-bold text-good">Em jogo</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={s.amount}
-                    min={min}
-                    max={max}
-                    disabled={s.active || phase !== 'betting'}
-                    onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
-                    className="input py-2 text-center text-sm tabular"
-                  />
-                  <ActionButton
-                    tone={phase === 'flying' && s.active ? 'cashout' : 'bet'}
-                    icon={phase === 'flying' && s.active ? 'check' : 'bolt'}
-                    size="compact"
-                    onClick={() => (phase === 'flying' ? cashout(i) : bet(i))}
-                    disabled={phase === 'crashed' || (phase === 'flying' && !s.active) || (phase === 'betting' && s.active)}
-                    className="flex-1"
-                  >
-                    {phase === 'flying'
-                      ? s.active
-                        ? `Retirar ${fmtMult(mult)}`
-                        : 'Em voo'
-                      : s.active
-                        ? 'Apostado'
-                        : 'Apostar'}
-                  </ActionButton>
-                </div>
-                <AutoControl
-                  value={s.autoCash}
-                  onValueChange={(n) => setSlot(i, { autoCash: n })}
-                  active={s.auto}
-                  onToggle={() => setSlot(i, { auto: !s.auto })}
-                />
-              </div>
-            ))}
-          </div>
           <div className="px-3">
             <ResultBanner
               state={phase !== 'crashed' ? 'idle' : slots.some((s) => s.cashedAt !== null) ? 'win' : 'lose'}
@@ -421,6 +377,54 @@ export function CrashGame({ game }: { game: Game }) {
                   : ''
               }
             />
+          </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {slots.map((s, i) => (
+                <div key={i} className={`rounded-xl border p-3 transition ${s.active ? 'border-brand/40 bg-brand/[.06]' : 'border-line/70 bg-white/[.02]'}`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Aposta {i + 1}</span>
+                    {s.cashedAt !== null && <span className="text-[10px] font-bold text-good">Retirado {fmtMult(s.cashedAt)}</span>}
+                    {s.active && <span className="text-[10px] font-bold text-good">Em jogo</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={s.amount}
+                      min={min}
+                      max={max}
+                      disabled={s.active || phase !== 'betting'}
+                      onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
+                      className="input py-2 text-center text-sm tabular"
+                    />
+                    <ActionButton
+                      tone={phase === 'flying' && s.active ? 'cashout' : s.active ? 'placed' : 'bet'}
+                      icon={phase === 'flying' && s.active ? 'check' : 'bolt'}
+                      size="compact"
+                      onClick={() => (phase === 'flying' ? cashout(i) : bet(i))}
+                      disabled={phase === 'crashed' || (phase === 'flying' && !s.active) || (phase === 'betting' && s.active)}
+                      className="flex-1"
+                    >
+                      {phase === 'flying'
+                        ? s.active
+                          ? `Retirar ${fmtMult(mult)}`
+                          : 'Em voo'
+                        : s.active
+                          ? 'Apostado'
+                          : 'Apostar'}
+                    </ActionButton>
+                  </div>
+                  <AutoControl
+                    value={s.autoCash}
+                    onValueChange={(n) => setSlot(i, { autoCash: n })}
+                    active={s.auto}
+                    onToggle={() => setSlot(i, { auto: !s.auto })}
+                    current={phase === 'flying' ? mult : phase === 'crashed' ? crashRef.current : 1}
+                    currentLabel="Multiplicador do avião"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </Stage>
       }

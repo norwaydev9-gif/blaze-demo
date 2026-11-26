@@ -128,11 +128,7 @@ export function BaccaratGame({ game }: { game: Game }) {
               </div>
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase === 'done'} />
             <div className="mt-3 grid grid-cols-3 gap-1.5">
               {(['player', 'banker', 'tie'] as const).map((c) => (
@@ -147,11 +143,6 @@ export function BaccaratGame({ game }: { game: Game }) {
                 </ActionButton>
               ))}
             </div>
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Pagamento" value={choice === 'player' ? '2.00×' : choice === 'banker' ? '1.95×' : '9.00×'} />
-              <Payout label="Ganho potencial" value={`${fmt(amount * (choice === 'player' ? 2 : choice === 'banker' ? 1.95 : 9))} B$`} />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' ? (
               <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
@@ -161,6 +152,17 @@ export function BaccaratGame({ game }: { game: Game }) {
                 Nova ronda
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Pagamento" value={choice === 'player' ? '2.00×' : choice === 'banker' ? '1.95×' : '9.00×'} />
+              <Payout label="Ganho potencial" value={`${fmt(amount * (choice === 'player' ? 2 : choice === 'banker' ? 1.95 : 9))} B$`} />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).startsWith('J') ? 'text-good border-good/30' : String(v).startsWith('B') ? 'text-gold border-gold/30' : 'text-white/50')} />

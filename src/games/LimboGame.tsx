@@ -109,57 +109,68 @@ export function LimboGame({ game }: { game: Game }) {
               />
             </div>
           </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={running} />
+              <div className="min-w-0">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="label">Multiplicador alvo</span>
+                  <span className="text-sm font-bold tabular text-gold">{fmtMult(target)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={1.1}
+                  max={100}
+                  step={0.1}
+                  value={Math.min(target, 100)}
+                  disabled={running}
+                  onChange={(e) => setTarget(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="mt-2 grid grid-cols-4 gap-1.5">
+                  {[1.5, 2, 5, 10].map((v) => (
+                    <ActionButton
+                      key={v}
+                      tone="ghost"
+                      size="compact"
+                      onClick={() => setTarget(v)}
+                      className={target === v ? 'border-gold/50 bg-gold/15 text-gold' : ''}
+                    >
+                      {v}×
+                    </ActionButton>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min={1.01}
+                  max={maxMult}
+                  step={0.01}
+                  value={target}
+                  onChange={(e) => setTarget(clamp(Number(e.target.value), 1.01, maxMult))}
+                  className="input mt-2 py-2 text-center text-xs tabular"
+                />
+              </div>
+            </div>
+            <ActionButton
+              tone={running ? 'placed' : 'bet'}
+              icon="bolt"
+              loading={running}
+              onClick={playRound}
+              disabled={running}
+              className="mt-3"
+            >
+              {running ? 'A subir…' : `Jogar · ${fmt(amount)} B$`}
+            </ActionButton>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={running} />
-            <div className="mt-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="label">Multiplicador alvo</span>
-                <span className="text-sm font-bold tabular text-gold">{fmtMult(target)}</span>
-              </div>
-              <input
-                type="range"
-                min={1.1}
-                max={100}
-                step={0.1}
-                value={Math.min(target, 100)}
-                disabled={running}
-                onChange={(e) => setTarget(Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="mt-2 grid grid-cols-4 gap-1.5">
-                {[1.5, 2, 5, 10].map((v) => (
-                  <ActionButton
-                    key={v}
-                    tone="ghost"
-                    size="compact"
-                    onClick={() => setTarget(v)}
-                    className={target === v ? 'border-gold/50 bg-gold/15 text-gold' : ''}
-                  >
-                    {v}×
-                  </ActionButton>
-                ))}
-              </div>
-              <input
-                type="number"
-                min={1.01}
-                max={maxMult}
-                step={0.01}
-                value={target}
-                onChange={(e) => setTarget(clamp(Number(e.target.value), 1.01, maxMult))}
-                className="input mt-2 py-2 text-center text-xs tabular"
-              />
-            </div>
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Ganho potencial" value={`${fmt(amount * target)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton tone="bet" icon="bolt" loading={running} onClick={playRound} disabled={running} className="mt-3">
-              {running ? 'A subir…' : `Jogar · ${fmt(amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos multiplicadores">
             <RecentStrip

@@ -225,37 +225,41 @@ export function PlinkoGame({ game }: { game: Game }) {
               text={history.length > 0 && parseFloat(String(history[0])) > 1 ? `+${fmt(amount * parseFloat(String(history[0])))} B$` : 'Sem ganho neste lançamento.'}
             />
           </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BetInput value={amount} onChange={setAmount} min={min} max={max} />
+              <div className="min-w-0">
+                <span className="label">Risco</span>
+                <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                  {(['low', 'medium', 'high'] as const).map((r) => (
+                    <ActionButton
+                      key={r}
+                      tone="ghost"
+                      size="compact"
+                      onClick={() => setRisk(r)}
+                      disabled={dropping > 0}
+                      className={risk === r ? 'border-brand/50 bg-brand/15 text-white' : ''}
+                    >
+                      {r === 'low' ? 'Baixo' : r === 'medium' ? 'Médio' : 'Alto'}
+                    </ActionButton>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <ActionButton tone={dropping > 0 ? 'placed' : 'bet'} icon="bolt" onClick={drop} className="mt-3">
+              Largar bola · {fmt(amount)} B$
+            </ActionButton>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={min} max={max} />
-            <div className="mt-3">
-              <span className="label">Risco</span>
-              <div className="mt-1.5 grid grid-cols-3 gap-1.5">
-                {(['low', 'medium', 'high'] as const).map((r) => (
-                  <ActionButton
-                    key={r}
-                    tone="ghost"
-                    size="compact"
-                    onClick={() => setRisk(r)}
-                    disabled={dropping > 0}
-                    className={risk === r ? 'border-brand/50 bg-brand/15 text-white' : ''}
-                  >
-                    {r === 'low' ? 'Baixo' : r === 'medium' ? 'Médio' : 'Alto'}
-                  </ActionButton>
-                ))}
-              </div>
-            </div>
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Linhas" value={String(rows)} />
               <Payout label="Multiplicador máx." value={`${Math.max(...table)}×`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton tone="bet" icon="bolt" onClick={drop} className="mt-3">
-              Largar bola · {fmt(amount)} B$
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos prémios">
             <RecentStrip

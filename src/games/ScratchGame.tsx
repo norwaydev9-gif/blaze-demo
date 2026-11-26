@@ -150,21 +150,23 @@ export function ScratchGame({ game }: { game: Game }) {
                 state={win === null ? 'idle' : win > 0 ? 'win' : 'lose'}
                 text={win ? `+${fmt(win)} B$` : 'Sem prémio neste cartão.'}
               />
+              <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+                <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
+                <ActionButton tone={active ? 'placed' : 'bet'} icon="gift" loading={active} onClick={buy} disabled={active} className="mt-3">
+                  {active ? 'Raspa os campos…' : `Comprar cartão · ${fmt(amount)} B$`}
+                </ActionButton>
+              </div>
             </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Prémio máximo" value={`${fmt(amount * 25)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton tone="gold" icon="gift" loading={active} onClick={buy} disabled={active} className="mt-3">
-              {active ? 'Raspa os campos…' : `Comprar cartão · ${fmt(amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).startsWith('+') ? 'text-gold border-gold/30' : 'text-white/30')} />

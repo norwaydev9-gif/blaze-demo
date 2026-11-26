@@ -102,44 +102,48 @@ export function BalloonGame({ game }: { game: Game }) {
               state={cashed !== null ? 'win' : popped ? 'lose' : 'idle'}
               text={cashed !== null ? `+${fmt(amount * cashed)} B$` : popped ? `Perdeste ${fmt(amount)} B$.` : ''}
             />
+            <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+              <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
+              {!active ? (
+                <ActionButton
+                  tone={active ? 'placed' : popped || cashed !== null ? 'ghost' : 'bet'}
+                  icon={popped || cashed !== null ? undefined : 'bolt'}
+                  onClick={start}
+                  className="mt-3"
+                >
+                  {popped || cashed !== null ? 'Novo balão' : `Encher · ${fmt(amount)} B$`}
+                </ActionButton>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <ActionButton tone="bet" icon="bolt" onClick={pump}>
+                    Bombar · {fmtMult(mult * 1.09)}
+                  </ActionButton>
+                  <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={pumps === 0}>
+                    Retirar {fmt(amount * mult)} B$
+                  </ActionButton>
+                </div>
+              )}
+            </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Prémio atual" value={`${fmt(amount * mult)} B$`} />
               <Payout label="Próxima bombada" value={`${fmtMult(mult * 1.09)}`} />
               <Payout label="Limite" value={`${maxMult}×`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton
-                tone={popped || cashed !== null ? 'ghost' : 'bet'}
-                icon={popped || cashed !== null ? undefined : 'bolt'}
-                onClick={start}
-                className="mt-3"
-              >
-                {popped || cashed !== null ? 'Novo balão' : `Encher · ${fmt(amount)} B$`}
-              </ActionButton>
-            ) : (
-              <div className="mt-3 space-y-2">
-                <ActionButton tone="bet" icon="bolt" onClick={pump}>
-                  Bombar · {fmtMult(mult * 1.09)}
-                </ActionButton>
-                <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={pumps === 0}>
-                  Retirar {fmt(amount * mult)} B$
-                </ActionButton>
-              </div>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={mult}
+              currentLabel="Multiplicador do balão"
             />
           </SidePanel>
           <SidePanel title="Histórico">

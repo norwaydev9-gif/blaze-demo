@@ -129,66 +129,77 @@ export function DiceGame({ game }: { game: Game }) {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <ActionButton
-                  tone="ghost"
-                  size="half"
-                  onClick={() => setOver(true)}
-                  disabled={rolling}
-                  className={over ? 'border-good/50 bg-good/15 text-good hover:bg-good/20' : ''}
-                >
-                  ↑ Acima
-                </ActionButton>
-                <ActionButton
-                  tone="ghost"
-                  size="half"
-                  onClick={() => setOver(false)}
-                  disabled={rolling}
-                  className={!over ? 'border-brand/50 bg-brand/15 text-brand hover:bg-brand/20' : ''}
-                >
-                  ↓ Abaixo
-                </ActionButton>
-              </div>
               <ResultBanner
                 state={lastWin === null ? 'idle' : lastWin ? 'win' : 'lose'}
                 text={lastWin ? `+${fmt(amount * payoutMult - amount)} B$` : 'Sem ganho nesta ronda.'}
               />
             </div>
           </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={rolling} />
+              <div className="min-w-0">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="label">Alvo</span>
+                  <span className="text-sm font-bold tabular text-white">{target}</span>
+                </div>
+                <input
+                  type="range"
+                  min={2}
+                  max={98}
+                  step={step}
+                  value={target}
+                  disabled={rolling}
+                  onChange={(e) => setTarget(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="mt-1 flex justify-between text-[10px] text-white/25">
+                  <span>2</span>
+                  <span>50</span>
+                  <span>98</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <ActionButton
+                tone="ghost"
+                size="compact"
+                onClick={() => setOver(true)}
+                disabled={rolling}
+                className={over ? 'border-good/50 bg-good/15 text-good hover:bg-good/20' : ''}
+              >
+                ↑ Acima
+              </ActionButton>
+              <ActionButton
+                tone="ghost"
+                size="compact"
+                onClick={() => setOver(false)}
+                disabled={rolling}
+                className={!over ? 'border-brand/50 bg-brand/15 text-brand hover:bg-brand/20' : ''}
+              >
+                ↓ Abaixo
+              </ActionButton>
+            </div>
+            <ActionButton
+              tone={rolling ? 'placed' : 'bet'}
+              icon="bolt"
+              loading={rolling}
+              onClick={roll}
+              disabled={rolling}
+              className="mt-3"
+            >
+              {rolling ? 'A rolar…' : `Jogar · ${fmt(amount)} B$`}
+            </ActionButton>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={rolling} />
-            <div className="mt-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="label">Alvo</span>
-                <span className="text-sm font-bold tabular text-white">{target}</span>
-              </div>
-              <input
-                type="range"
-                min={2}
-                max={98}
-                step={step}
-                value={target}
-                disabled={rolling}
-                onChange={(e) => setTarget(Number(e.target.value))}
-                className="w-full"
-              />
-              <div className="mt-1 flex justify-between text-[10px] text-white/25">
-                <span>2</span>
-                <span>50</span>
-                <span>98</span>
-              </div>
-            </div>
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Ganho potencial" value={`${fmt(amount * payoutMult)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton tone="bet" icon="bolt" loading={rolling} onClick={roll} disabled={rolling} className="mt-3">
-              {rolling ? 'A rolar…' : `Jogar · ${fmt(amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos dados">
             <RecentStrip items={history.map((n) => n.toFixed(2))} colorFor={(v) => recentColor(Number(v))} />

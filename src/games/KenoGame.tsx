@@ -165,29 +165,31 @@ export function KenoGame({ game }: { game: Game }) {
               state={!settled ? 'idle' : lastWin > 0 ? 'win' : 'lose'}
               text={lastWin > 0 ? `+${fmt(lastWin)} B$` : 'Sem prémio neste sorteio.'}
             />
+            <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+              <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={drawing} />
+              <ActionButton
+                tone={drawing ? 'placed' : 'bet'}
+                icon="bolt"
+                loading={drawing}
+                onClick={start}
+                disabled={drawing || picked.size !== pickCount}
+                className="mt-3"
+              >
+                {drawing ? 'A sortear…' : picked.size !== pickCount ? `Faltam ${pickCount - picked.size} números` : `Jogar · ${fmt(amount)} B$`}
+              </ActionButton>
+            </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={drawing} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Sorteia" value={`${drawCount} de ${pool}`} />
               <Payout label="3 acertos" value={`${table[3]}×`} />
               <Payout label={`${pickCount} acertos`} value={`${table[pickCount]}×`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton
-              tone="bet"
-              icon="bolt"
-              loading={drawing}
-              onClick={start}
-              disabled={drawing || picked.size !== pickCount}
-              className="mt-3"
-            >
-              {drawing ? 'A sortear…' : picked.size !== pickCount ? `Faltam ${pickCount - picked.size} números` : `Jogar · ${fmt(amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Tabela de prémios">
             <div className="grid grid-cols-2 gap-1">

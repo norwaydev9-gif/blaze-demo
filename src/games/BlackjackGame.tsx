@@ -178,17 +178,8 @@ export function BlackjackGame({ game }: { game: Game }) {
               </div>
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Mesa">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase === 'player'} />
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Aposta em jogo" value={`${fmt(bet)} B$`} />
-              <Payout label="Blackjack paga" value="3:2" />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' && (
               <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
                 Distribuir · {fmt(amount)} B$
@@ -197,10 +188,10 @@ export function BlackjackGame({ game }: { game: Game }) {
             {phase === 'player' && (
               <div className="mt-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <ActionButton tone="bet" icon="bolt" size="half" onClick={hit}>Pedir</ActionButton>
+                  <ActionButton tone={phase === 'player' ? 'placed' : 'bet'} icon="bolt" size="half" onClick={hit}>Pedir</ActionButton>
                   <ActionButton tone="cashout" icon="check" size="half" onClick={stand}>Ficar</ActionButton>
                 </div>
-                <ActionButton tone="gold" onClick={double} disabled={player.length !== 2 || balance < bet}>
+                <ActionButton tone="bet" onClick={double} disabled={player.length !== 2 || balance < bet}>
                   Dobrar · {fmt(bet)} B$
                 </ActionButton>
               </div>
@@ -210,6 +201,17 @@ export function BlackjackGame({ game }: { game: Game }) {
                 Nova ronda
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Mesa">
+            <div className="space-y-1.5">
+              <Payout label="Aposta em jogo" value={`${fmt(bet)} B$`} />
+              <Payout label="Blackjack paga" value="3:2" />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
           </SidePanel>
           <SidePanel title="Histórico">

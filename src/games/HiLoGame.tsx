@@ -149,33 +149,37 @@ export function HiLoGame({ game }: { game: Game }) {
               state={!active && last ? (roundLost ? 'lose' : 'win') : 'idle'}
               text={last ? (roundLost ? 'Ronda terminada.' : `+${fmt(amount * (parseFloat(String(history[0] ?? '1')) || 1))} B$`) : ''}
             />
+            <div className="relative z-10 mt-3 w-full rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+              <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
+              {!active ? (
+                <ActionButton tone={active ? 'placed' : 'bet'} icon="bolt" onClick={start} className="mt-3">
+                  {last ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
+                </ActionButton>
+              ) : (
+                <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={mult <= 1} className="mt-3">
+                  Retirar {fmt(amount * mult)} B$
+                </ActionButton>
+              )}
+            </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Prémio atual" value={`${fmt(amount * mult)} B$`} />
               <Payout label="Cartas restantes" value={String(rest.length)} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
-                {last ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
-              </ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={mult <= 1} className="mt-3">
-                Retirar {fmt(amount * mult)} B$
-              </ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={mult}
+              currentLabel="Multiplicador atual"
             />
           </SidePanel>
           <SidePanel title="Histórico">

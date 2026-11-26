@@ -19,10 +19,17 @@ não para copiar arte ou marcas de terceiros. A BLAZE usa vectores próprios em
 
 1. **Um tema por jogo, uma arte por jogo.** A ilustração vectorial é o elemento principal; não
    sobrepomos fotografia, marca d'água gigante e confetti ao mesmo tempo.
-2. **Contrato de cor consistente:** vermelho = aposta/acerto de risco, verde = retirar/ganho,
-   dourado = prémio/bónus, violeta = automação.
+2. **Contrato de cor consistente:** **vermelho = apostar**, **verde = retirar/sacar**.
+   Só estas duas cores nos botões de acção. AUTO é neutro (cinza) e fica verde quando
+   ligado; dourado continua apenas como realce de texto/prémio, nunca como botão.
 3. **Alvos de toque ≥44px**, com botão principal de 52px, em qualquer motor.
 4. **Espaçamento previsível:** painéis com `space-y-4`, blocos internos com `mt-3`, grelhas
    com `gap-1.5`–`gap-2`; nunca cartas ou botões a ultrapassar o tabuleiro em 360px.
 5. **Feedback de ganho único:** `ResultBanner` com confetti/brilho; o Slots mantém o seu próprio
    efeito de tambores, sem duplicar banners.
+6. **Aposta dentro do tabuleiro:** valor e botão de apostar/retirar vivem numa barra escura
+   (`bet-bar`) no fundo do palco, nunca escondidos no painel «Controlos de aposta». Esse painel
+   fica reservado a progresso da sessão (voltas, acertos, retorno, saldo) e automação.
+7. **Estado inequívoco:** aposta disponível e aposta activa são **vermelhas** (`action-bet` /
+   `action-placed`, esta com contorno branco e brilho); retirada é **verde** (`action-cashout`).
+   Nunca se depende apenas de opacidade ou da cor do jogo para perceber se a aposta está feita.

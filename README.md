@@ -72,6 +72,11 @@ npm run check
   à marca BLAZE, sem copiar artes de terceiros.
 - **Uma arte principal por jogo**: removida a sobreposição de fotografia,
   marca d'água gigante e confetti simultâneos. O vector próprio manda.
+- **Aposta no palco**: valor e botão de apostar/retirar ficam numa barra escura de
+  alto contraste dentro do tabuleiro; «Controlos de aposta» mostra progresso
+  (voltas, acertos, retorno, saldo da sessão) e automação. **Só duas cores de botão:
+  vermelho = apostar, verde = retirar**; o estado activo é o vermelho reforçado com
+  contorno branco — nunca depende da cor do fundo.
 - **Teste de runtime dos 66 jogos** (`npm run check:runtime`): renderiza cada
   motor em jsdom, clica nos controlos e confirma que não há erros e que a
   aposta é registada na carteira.

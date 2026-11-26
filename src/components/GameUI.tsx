@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { clamp, fmt } from '../lib/format'
+import { clamp, fmt, fmtMult } from '../lib/format'
+import { useRoute } from '../lib/router'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { Icon } from './Icon'
@@ -260,22 +261,24 @@ export function ActionButton({
   onClick: () => void
   disabled?: boolean
   loading?: boolean
-  tone?: 'bet' | 'cashout' | 'gold' | 'ghost' | 'auto'
+  tone?: 'bet' | 'placed' | 'cashout' | 'gold' | 'ghost' | 'auto'
   size?: 'full' | 'half' | 'compact'
   icon?: IconName
   active?: boolean
   className?: string
 }) {
   const toneClass =
-    tone === 'cashout'
-      ? 'action-cashout'
-      : tone === 'gold'
-        ? 'action-gold'
-        : tone === 'ghost'
-          ? 'action-ghost'
-          : tone === 'auto'
-            ? `action-auto${active ? ' is-active' : ''}`
-            : 'action-bet'
+    tone === 'placed'
+      ? 'action-placed'
+      : tone === 'cashout'
+        ? 'action-cashout'
+        : tone === 'gold'
+          ? 'action-gold'
+          : tone === 'ghost'
+            ? 'action-ghost'
+            : tone === 'auto'
+              ? `action-auto${active ? ' is-active' : ''}`
+              : 'action-bet'
   const sizeClass =
     size === 'compact'
       ? 'w-auto min-h-[44px] rounded-xl px-3 text-xs'
@@ -305,6 +308,8 @@ export function AutoControl({
   step = 0.1,
   suffix = '×',
   disabled = false,
+  current,
+  currentLabel = 'Multiplicador atual',
 }: {
   value: number
   onValueChange: (n: number) => void
@@ -315,39 +320,70 @@ export function AutoControl({
   step?: number
   suffix?: string
   disabled?: boolean
+  /** Valor em tempo real (multiplicador, nível, etc.) para mostrar o progresso até ao alvo. */
+  current?: number
+  currentLabel?: string
 }) {
   const { play } = useSound()
+  const target = Number.isFinite(value) && value > min ? value : min
+  const progress =
+    current !== undefined && Number.isFinite(current)
+      ? clamp(((current - 1) / (target - 1)) * 100, 0, 100)
+      : 0
+  const reached = current !== undefined && current >= target
+
   return (
-    <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
-      <label className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/35">
-        <span className="truncate">{label}</span>
-        <span className="relative min-w-0 flex-1">
-          <input
-            type="number"
-            inputMode="decimal"
-            step={step}
-            min={min}
-            value={value}
-            disabled={disabled}
-            onChange={(e) => onValueChange(Number(e.target.value))}
-            className="h-11 w-full min-w-0 rounded-lg border border-line bg-black/30 pl-2 pr-6 text-center text-[11px] font-bold tabular text-white outline-none focus:border-brand/50"
-          />
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/30">{suffix}</span>
-        </span>
-      </label>
-      <ActionButton
-        tone="auto"
-        size="compact"
-        active={active}
-        disabled={disabled}
-        onClick={() => {
-          play('tick')
-          onToggle()
-        }}
-        className="w-auto min-w-[74px] px-2"
-      >
-        AUTO
-      </ActionButton>
+    <div>
+      <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
+        <label className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/50">
+          <span className="truncate">{label}</span>
+          <span className="relative min-w-0 flex-1">
+            <input
+              type="number"
+              inputMode="decimal"
+              step={step}
+              min={min}
+              value={value}
+              disabled={disabled}
+              onChange={(e) => onValueChange(Number(e.target.value))}
+              className="h-11 w-full min-w-0 rounded-lg border border-white/15 bg-black/60 pl-2 pr-6 text-center text-[11px] font-bold tabular text-white outline-none focus:border-good/60"
+            />
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/50">{suffix}</span>
+          </span>
+        </label>
+        <ActionButton
+          tone="auto"
+          size="compact"
+          active={active}
+          disabled={disabled}
+          onClick={() => {
+            play('tick')
+            onToggle()
+          }}
+          className="w-auto min-w-[74px] px-2"
+        >
+          AUTO
+        </ActionButton>
+      </div>
+      {active && current !== undefined && (
+        <div className="mt-2 rounded-lg border border-good/25 bg-good/[.07] px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2 text-[10px] font-bold tabular">
+            <span className="truncate text-white/50">{currentLabel}</span>
+            <span className={reached ? 'text-good' : 'text-white/80'}>
+              {current.toFixed(2)}{suffix} / {target.toFixed(2)}{suffix}
+            </span>
+          </div>
+          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-black/50">
+            <div
+              className={`h-full rounded-full transition-all duration-150 ${reached ? 'bg-good' : 'bg-gradient-to-r from-[#ff2d3f] to-[#22e3a0]'}`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-1 text-[9px] text-white/35">
+            {reached ? 'Alvo atingido — a retirar agora.' : `Retirada automática aos ${fmtMult(target)}.`}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -358,33 +394,103 @@ export function AutoBetControl({
   disabled = false,
   label = 'Auto aposta',
   hint = 'Repete a ronda automaticamente',
+  goal: goalProp,
 }: {
   active: boolean
   onToggle: () => void
   disabled?: boolean
   label?: string
   hint?: string
+  /** Meta de acompanhamento (10, 25 ou 50 voltas). Não interrompe a aposta. */
+  goal?: number
 }) {
   const { play } = useSound()
+  const { tx } = useWallet()
+  const route = useRoute()
+  const gameId = route.segments[0] === 'jogo' ? route.segments[1] : undefined
+  const [ownGoal, setOwnGoal] = useState(10)
+  const goal = goalProp ?? ownGoal
+
+  const stats = useMemo(() => {
+    const list = tx.filter((t) => t.gameId === gameId && (t.type === 'bet' || t.type === 'win'))
+    const bets = list.filter((t) => t.type === 'bet')
+    const wins = list.filter((t) => t.type === 'win')
+    const wagered = bets.reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    const won = wins.reduce((sum, t) => sum + t.amount, 0)
+    return { rounds: bets.length, wins: wins.length, wagered, won, net: won - wagered }
+  }, [tx, gameId])
+
+  const rate = stats.rounds > 0 ? Math.round((stats.wins / stats.rounds) * 100) : 0
+  const roi = stats.wagered > 0 ? Math.round((stats.won / stats.wagered) * 100) : 0
+  const progress = clamp((stats.rounds / goal) * 100, 0, 100)
+
   return (
-    <div className="mt-2 flex items-center gap-3 rounded-xl border border-line/70 bg-black/20 px-3 py-2">
-      <ActionButton
-        tone="auto"
-        size="compact"
-        active={active}
-        disabled={disabled}
-        onClick={() => {
-          play('tick')
-          onToggle()
-        }}
-        className="w-auto min-w-[74px] px-2"
-      >
-        AUTO
-      </ActionButton>
-      <div className="min-w-0">
-        <p className="text-[11px] font-bold text-white/70">{label}</p>
-        <p className="truncate text-[10px] text-white/30">{hint}</p>
+    <div className="mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#05060a]/80">
+      <div className="flex items-center gap-3 px-3 py-2">
+        <ActionButton
+          tone="auto"
+          size="compact"
+          active={active}
+          disabled={disabled}
+          onClick={() => {
+            play('tick')
+            onToggle()
+          }}
+          className="w-auto min-w-[74px] px-2"
+        >
+          AUTO
+        </ActionButton>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold text-white/80">{label}</p>
+          <p className="truncate text-[10px] text-white/45">
+            {active ? 'A repetir a ronda automaticamente' : hint}
+          </p>
+        </div>
       </div>
+
+      {(stats.rounds > 0 || active) && (
+        <div className="border-t border-white/10 px-3 pb-2.5 pt-2">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <span className="truncate text-[10px] font-bold uppercase tracking-wider text-white/50">
+              Progresso · {stats.rounds}/{goal} voltas
+            </span>
+            {goalProp === undefined && (
+              <button
+                type="button"
+                title="Meta de acompanhamento (não para a aposta automaticamente)"
+                onClick={() => setOwnGoal((g) => (g === 10 ? 25 : g === 25 ? 50 : 10))}
+                className="shrink-0 rounded-md border border-white/15 bg-white/[.06] px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white/60 transition hover:border-white/30 hover:text-white"
+              >
+                meta {goal} ↻
+              </button>
+            )}
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-black/60">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                active ? 'bg-gradient-to-r from-[#ff2d3f] to-[#22e3a0]' : 'bg-gradient-to-r from-[#22e3a0] to-[#6dffd0]'
+              }`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
+            <div className="rounded-lg bg-white/[.04] py-1.5">
+              <p className="text-[9px] uppercase tracking-wider text-white/35">Acertos</p>
+              <p className="text-xs font-extrabold tabular text-white/85">{rate}%</p>
+            </div>
+            <div className="rounded-lg bg-white/[.04] py-1.5">
+              <p className="text-[9px] uppercase tracking-wider text-white/35">Retorno</p>
+              <p className={`text-xs font-extrabold tabular ${roi >= 100 ? 'text-good' : 'text-gold'}`}>{roi}%</p>
+            </div>
+            <div className="rounded-lg bg-white/[.04] py-1.5">
+              <p className="text-[9px] uppercase tracking-wider text-white/35">Sessão</p>
+              <p className={`text-xs font-extrabold tabular ${stats.net >= 0 ? 'text-good' : 'text-brand'}`}>
+                {stats.net >= 0 ? '+' : '−'}{fmt(Math.abs(stats.net))}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

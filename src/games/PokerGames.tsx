@@ -142,25 +142,15 @@ export function VideoPokerGame({ game }: { game: Game }) {
               </div>
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase === 'draw'} />
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Par de Valetes+" value="2×" />
-              <Payout label="Full House" value="10×" />
-              <Payout label="Royal Flush" value="251×" />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' && (
               <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
               </ActionButton>
             )}
             {phase === 'draw' && (
-              <ActionButton tone="bet" icon="bolt" onClick={drawCards} className="mt-3">
+              <ActionButton tone={phase === 'draw' ? 'placed' : 'bet'} icon="bolt" onClick={drawCards} className="mt-3">
                 Trocar e revelar
               </ActionButton>
             )}
@@ -169,6 +159,18 @@ export function VideoPokerGame({ game }: { game: Game }) {
                 Nova mão
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Par de Valetes+" value="2×" />
+              <Payout label="Full House" value="10×" />
+              <Payout label="Royal Flush" value="251×" />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('+') ? 'text-good border-good/30' : 'text-white/35')} />
@@ -297,18 +299,8 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
               </div>
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase !== 'bet'} />
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Aposta" value={`${fmt(amount)} B$`} />
-              <Payout label="Par paga" value="2×" />
-              <Payout label="Dealer qualifica" value="Dama+ ou par" />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' && (
               <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
@@ -317,7 +309,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
             {phase === 'decide' && (
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <ActionButton tone="ghost" size="half" onClick={() => finish(false)}>Desistir</ActionButton>
-                <ActionButton tone="gold" size="half" onClick={() => finish(true)}>Apostar 2×</ActionButton>
+                <ActionButton tone="bet" size="half" onClick={() => finish(true)}>Apostar 2×</ActionButton>
               </div>
             )}
             {phase === 'done' && (
@@ -325,6 +317,18 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
                 Nova mão
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Aposta" value={`${fmt(amount)} B$`} />
+              <Payout label="Par paga" value="2×" />
+              <Payout label="Dealer qualifica" value="Dama+ ou par" />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('+') ? 'text-good border-good/30' : 'text-white/35')} />
@@ -437,17 +441,8 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
               </div>
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase !== 'bet'} />
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Ante" value={`${fmt(amount)} B$`} />
-              <Payout label="Dealer qualifica" value="Dama high+ ou par" />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' && (
               <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
@@ -456,7 +451,7 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
             {phase === 'decide' && (
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <ActionButton tone="ghost" size="half" onClick={() => finish(false)}>Desistir</ActionButton>
-                <ActionButton tone="gold" size="half" onClick={() => finish(true)}>Jogar 2×</ActionButton>
+                <ActionButton tone="bet" size="half" onClick={() => finish(true)}>Jogar 2×</ActionButton>
               </div>
             )}
             {phase === 'done' && (
@@ -464,6 +459,17 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
                 Nova mão
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Ante" value={`${fmt(amount)} B$`} />
+              <Payout label="Dealer qualifica" value="Dama high+ ou par" />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('+') ? 'text-good border-good/30' : 'text-white/35')} />
@@ -600,17 +606,8 @@ export function TexasHoldemGame({ game }: { game: Game }) {
               />
             </div>
           </div>
-        </Stage>
-      }
-      side={
-        <div className="space-y-4">
-          <SidePanel title="Aposta">
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase === 'play'} />
-            <div className="mt-3 space-y-1.5">
-              <Payout label="Aposta" value={`${fmt(amount)} B$`} />
-              <Payout label="Prémio" value={`${fmt(amount * 2)} B$`} />
-              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
-            </div>
             {phase === 'bet' && (
               <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
@@ -618,7 +615,7 @@ export function TexasHoldemGame({ game }: { game: Game }) {
             )}
             {phase === 'play' && (
               <div className="mt-3 space-y-2">
-                <ActionButton tone="bet" icon="bolt" onClick={advance}>
+                <ActionButton tone={phase === 'play' ? 'placed' : 'bet'} icon="bolt" onClick={advance}>
                   {reveal === 0 ? 'Ver flop' : reveal === 3 ? 'Ver turn' : reveal === 4 ? 'Ver river' : 'Mostrar cartas'}
                 </ActionButton>
                 <ActionButton tone="ghost" size="compact" onClick={fold}>Desistir</ActionButton>
@@ -629,6 +626,17 @@ export function TexasHoldemGame({ game }: { game: Game }) {
                 Nova mão
               </ActionButton>
             )}
+          </div>
+        </Stage>
+      }
+      side={
+        <div className="space-y-4">
+          <SidePanel title="Aposta">
+            <div className="space-y-1.5">
+              <Payout label="Aposta" value={`${fmt(amount)} B$`} />
+              <Payout label="Prémio" value={`${fmt(amount * 2)} B$`} />
+              <Payout label="Saldo" value={`${fmt(balance)} B$`} />
+            </div>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('+') ? 'text-good border-good/30' : 'text-white/35')} />

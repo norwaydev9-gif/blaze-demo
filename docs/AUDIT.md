@@ -104,6 +104,20 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
   (Aviator/Crash, Mines, Slots, Plinko, Roleta, Blackjack/Poker, Keno, Arcade),
   usadas como inspiração de estrutura — nunca para copiar arte de terceiros.
 
+## Quinta passagem — aposta no tabuleiro, progresso e duas cores
+
+- **Valor e botões no palco:** os 66 jogos passaram a ter uma `bet-bar` escura dentro do
+  `Stage`, com input de valor, fichas/opções e botão de apostar/retirar. O painel
+  «Controlos de aposta» ficou apenas com automação, estatísticas, histórico e regras.
+- **Progresso útil:** `AutoBetControl` mostra voltas jogadas vs. meta (10/25/50),
+  taxa de acerto, retorno observado e saldo da sessão, com barra de progresso.
+  `AutoControl` mostra o valor atual vs. alvo e quanto falta para a retirada automática.
+- **Duas cores só:** vermelho = apostar (o estado activo é o mesmo vermelho com
+  contorno branco/brilho), verde = retirar. AUTO é neutro e fica verde quando ligado.
+  O dourado ficou limitado a realces de texto/prémios, sem botões dourados.
+- **Contraste:** fundo escuro sólido atrás dos controlos, labels/inputs com mais brilho
+  e gradiente escuro na base do tabuleiro — a aposta deixa de se confundir com a arte.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.

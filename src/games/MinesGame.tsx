@@ -178,57 +178,65 @@ export function MinesGame({ game }: { game: Game }) {
               text={cashed !== null ? `+${fmt(amount * cashed)} B$` : lost ? `Perdeste ${fmt(amount)} B$.` : ''}
             />
           </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={active} />
+              <div className="min-w-0">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="label">Minas</span>
+                  <span className="text-[10px] text-white/30">{total} campos</span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {mineOptions.map((m) => (
+                    <ActionButton
+                      key={m}
+                      tone="ghost"
+                      size="compact"
+                      disabled={active}
+                      onClick={() => setMinesCount(m)}
+                      className={minesCount === m ? 'border-brand/50 bg-brand/15 text-white' : ''}
+                    >
+                      {m}
+                    </ActionButton>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <ActionButton
+                tone={active ? 'cashout' : 'bet'}
+                icon={active ? 'check' : 'bolt'}
+                onClick={active ? cashout : start}
+                disabled={active && opened.size === 0}
+                className="min-w-[180px] flex-1"
+              >
+                {active ? `Retirar ${fmt(amount * multiplier)} B$` : cashed !== null || lost ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
+              </ActionButton>
+              {(cashed !== null || lost) && (
+                <ActionButton tone="ghost" size="compact" onClick={reset}>
+                  Limpar grelha
+                </ActionButton>
+              )}
+            </div>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={active} />
-            <div className="mt-3">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="label">Minas</span>
-                <span className="text-[10px] text-white/30">{total} campos</span>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {mineOptions.map((m) => (
-                  <ActionButton
-                    key={m}
-                    tone="ghost"
-                    size="compact"
-                    disabled={active}
-                    onClick={() => setMinesCount(m)}
-                    className={minesCount === m ? 'border-brand/50 bg-brand/15 text-white' : ''}
-                  >
-                    {m}
-                  </ActionButton>
-                ))}
-              </div>
-            </div>
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Próximo campo" value={fmtMult(nextMult)} />
               <Payout label="Prémio potencial" value={`${fmt(amount * nextMult)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
-                {cashed !== null || lost ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
-              </ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={opened.size === 0} className="mt-3">
-                Retirar {fmt(amount * multiplier)} B$
-              </ActionButton>
-            )}
-            {(cashed !== null || lost) && (
-              <ActionButton tone="ghost" size="compact" onClick={reset} className="mt-2">
-                Limpar grelha
-              </ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={multiplier}
+              currentLabel="Multiplicador atual"
             />
           </SidePanel>
           <SidePanel title="Histórico">

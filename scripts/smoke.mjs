@@ -77,6 +77,10 @@ check(read('src/index.css').includes('.app-immersive'), 'index.css: falta o modo
 check(read('src/pages/GamePage.tsx').includes('game-immersive-engine'), 'GamePage.tsx: falta o palco imersivo')
 check(read('src/pages/GamePage.tsx').includes('<GameEngine key={game.id}'), 'GamePage.tsx: o motor deve ser remontado ao trocar de jogo')
 check(gameUi.includes('saldo insuficiente'), 'GameUI.tsx: falta a guarda de saldo insuficiente no BetInput')
+check(gameUi.includes("tone === 'placed'"), 'GameUI.tsx: falta o estado visual de aposta activa')
+check(gameUi.includes('Progresso ·'), 'GameUI.tsx: falta o painel de progresso da sessão')
+check(gameUi.includes('currentLabel'), 'GameUI.tsx: falta o progresso até ao alvo no auto-retirar')
+check(read('src/index.css').includes('.bet-bar'), 'index.css: falta a barra de aposta com contraste alto')
 check(existsSync(new URL('docs/UI_REFERENCES.md', root)), 'Falta docs/UI_REFERENCES.md com as referências visuais')
 
 /* -------------------------------- marca ---------------------------------- */
@@ -138,7 +142,7 @@ if (existsSync(new URL('dist/index.html', root))) {
 
   const manifest = readJson('dist/manifest.webmanifest')
   check(manifest.name.includes('BLAZE'), 'dist/manifest.webmanifest: nome não usa BLAZE')
-  check(read('dist/sw.js').includes('blaze-demo-v4'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v4')
+  check(read('dist/sw.js').includes('blaze-demo-v5'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v5')
 }
 
 /* -------------------------------- resultado ------------------------------- */

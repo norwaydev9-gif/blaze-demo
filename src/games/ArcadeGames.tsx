@@ -457,9 +457,6 @@ export function ArcadeGame({ game }: { game: Game }) {
                   <span className="text-5xl">{game.theme.icon}</span>
                   <h3 className="mt-3 font-display text-xl font-bold">{result ? (result.win > 0 ? 'Boa corrida!' : 'Fim de jogo') : 'Pronto para jogar?'}</h3>
                   <p className="mt-1 text-[11px] leading-relaxed text-white/45">{result ? `${result.text}${result.win > 0 ? ` · +${fmt(result.win)} B$` : ''}` : instructions}</p>
-                  <ActionButton tone="bet" icon="bolt" size="compact" onClick={start} className="mt-4 px-6">
-                    {result ? 'Jogar novamente' : `Começar · ${fmt(amount)} B$`}
-                  </ActionButton>
                 </div>
               </div>
             )}
@@ -470,26 +467,27 @@ export function ArcadeGame({ game }: { game: Game }) {
               </div>
             )}
           </div>
+          <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={running} />
+            <ActionButton
+              tone={running ? 'placed' : 'bet'}
+              icon={running ? 'check' : 'bolt'}
+              onClick={running ? finish : start}
+              className="mt-3"
+            >
+              {running ? 'Terminar corrida' : result ? 'Jogar novamente' : `Começar · ${fmt(amount)} B$`}
+            </ActionButton>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
           <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={running} />
-            <div className="mt-3 space-y-1.5">
+            <div className="space-y-1.5">
               <Payout label="Pontos" value={String(score)} />
               <Payout label="Prémio estimado" value={`${fmt(score >= 3 ? prize : 0)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            {!running ? (
-              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
-                {result ? 'Jogar novamente' : `Começar · ${fmt(amount)} B$`}
-              </ActionButton>
-            ) : (
-              <ActionButton tone="ghost" onClick={finish} className="mt-3">
-                Terminar corrida
-              </ActionButton>
-            )}
             <ResultBanner
               state={!result ? 'idle' : result.win > 0 ? 'win' : 'lose'}
               text={result ? `${result.text}${result.win > 0 ? ` · +${fmt(result.win)} B$` : ''}` : ''}

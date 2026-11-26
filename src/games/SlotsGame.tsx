@@ -210,20 +210,29 @@ export function SlotsGame({ game }: { game: Game }) {
               />
             </div>
           </div>
+          <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+            <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={spinning} />
+            <ActionButton
+              tone={spinning ? 'placed' : 'bet'}
+              icon="gift"
+              loading={spinning}
+              onClick={spin}
+              disabled={spinning}
+              className="mt-3"
+            >
+              {spinning ? 'A girar…' : `Girar · ${fmt(amount)} B$`}
+            </ActionButton>
+          </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={min} max={max} disabled={spinning} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Por linha" value={`${fmt(betPerLine)} B$`} />
               <Payout label="Linhas ativas" value={String(linesCount)} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <ActionButton tone="gold" icon="gift" loading={spinning} onClick={spin} disabled={spinning} className="mt-3">
-              {spinning ? 'A girar…' : `Girar · ${fmt(amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos giros">
             <RecentStrip

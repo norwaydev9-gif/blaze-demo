@@ -151,43 +151,47 @@ export function TowerGame({ game }: { game: Game }) {
               state={cashed !== null ? 'win' : lost ? 'lose' : 'idle'}
               text={cashed !== null ? `+${fmt(amount * cashed)} B$` : lost ? `Perdeste ${fmt(amount)} B$.` : ''}
             />
+            <div className="relative z-10 mt-3 rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+              <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
+              {!active ? (
+                <ActionButton
+                  tone={active ? 'placed' : lost || cashed !== null ? 'ghost' : 'bet'}
+                  icon={lost || cashed !== null ? undefined : 'bolt'}
+                  onClick={lost || cashed !== null ? reset : start}
+                  className="mt-3"
+                >
+                  {lost || cashed !== null ? 'Limpar torre' : `Subir · ${fmt(amount)} B$`}
+                </ActionButton>
+              ) : (
+                <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-3">
+                  Retirar {fmt(amount * mult)} B$
+                </ActionButton>
+              )}
+              {(lost || cashed !== null) && (
+                <ActionButton tone="ghost" size="compact" onClick={start} className="mt-2">
+                  Jogar novamente
+                </ActionButton>
+              )}
+            </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Multiplicador por andar" value={`${step.toFixed(2)}×`} />
               <Payout label="Prémio atual" value={`${fmt(amount * mult)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton
-                tone={lost || cashed !== null ? 'ghost' : 'bet'}
-                icon={lost || cashed !== null ? undefined : 'bolt'}
-                onClick={lost || cashed !== null ? reset : start}
-                className="mt-3"
-              >
-                {lost || cashed !== null ? 'Limpar torre' : `Subir · ${fmt(amount)} B$`}
-              </ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-3">
-                Retirar {fmt(amount * mult)} B$
-              </ActionButton>
-            )}
-            {(lost || cashed !== null) && (
-              <ActionButton tone="ghost" size="compact" onClick={start} className="mt-2">
-                Jogar novamente
-              </ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={mult}
+              currentLabel="Multiplicador atual"
             />
           </SidePanel>
           <SidePanel title="Histórico">

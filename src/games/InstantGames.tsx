@@ -51,21 +51,23 @@ function QuickShell({
             <div className="relative mx-auto mt-6 max-w-[620px]">
               <ResultBanner state={status} text={message} />
             </div>
+            <div className="relative z-10 mx-auto mt-3 w-full max-w-[620px] rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 text-left shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+              <div>{controls}</div>
+              <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={busy} />
+              <ActionButton tone={busy ? 'placed' : 'bet'} icon="bolt" loading={busy} onClick={onPlay} disabled={busy} className="mt-3">
+                {busy ? 'A processar…' : `${label} · ${fmt(bet.amount)} B$`}
+              </ActionButton>
+            </div>
           </div>
         </Stage>
       }
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={busy} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               {extra}
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
-            <div className="mt-3">{controls}</div>
-            <ActionButton tone="bet" icon="bolt" loading={busy} onClick={onPlay} disabled={busy} className="mt-4">
-              {busy ? 'A processar…' : `${label} · ${fmt(bet.amount)} B$`}
-            </ActionButton>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} />
@@ -891,27 +893,31 @@ export function TowerGame({ game }: { game: Game }) {
         <p className={`font-display text-5xl font-extrabold tabular ${status === 'lose' ? 'text-brand' : 'text-gold'}`}>{level} / {rows}</p>
         <div className="mt-5">{stage}</div>
         <ResultBanner state={status} text={message} />
+        <div className="relative z-10 mx-auto mt-3 w-full max-w-[620px] rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 text-left shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+          <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
+          {!active ? (
+            <ActionButton tone={active ? 'placed' : 'bet'} icon="bolt" onClick={start} className="mt-3">Iniciar torre</ActionButton>
+          ) : (
+            <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-3">Retirar {fmt(bet.amount * multiplier(level))} B$</ActionButton>
+          )}
+        </div>
       </div></Stage>}
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Multiplicador" value={fmtMult(multiplier(level))} />
               <Payout label="Prémio potencial" value={`${fmt(bet.amount * multiplier(level))} B$`} />
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-4">Iniciar torre</ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-4">Retirar {fmt(bet.amount * multiplier(level))} B$</ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={multiplier(level)}
+              currentLabel="Multiplicador da torre"
             />
           </SidePanel>
           <SidePanel title="Rondas">
@@ -1015,26 +1021,30 @@ export function BalloonGame({ game }: { game: Game }) {
         <p className={`font-display text-[clamp(48px,10vw,80px)] font-extrabold leading-none tabular ${status === 'lose' ? 'text-brand' : 'text-good'}`}>{fmtMult(value)}</p>
         <div className="mt-6">{stage}</div>
         <ResultBanner state={status} text={message} />
+        <div className="relative z-10 mx-auto mt-3 w-full max-w-[620px] rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 text-left shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+          <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
+          {!active ? (
+            <ActionButton tone={active ? 'placed' : 'bet'} icon="bolt" onClick={start} className="mt-3">Encher balão</ActionButton>
+          ) : (
+            <ActionButton tone="cashout" icon="check" onClick={cashout} className="mt-3">Retirar {fmt(bet.amount * value)} B$</ActionButton>
+          )}
+        </div>
       </div></Stage>}
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Teto" value={fmtMult(maxMult)} />
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-4">Encher balão</ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} className="mt-4">Retirar {fmt(bet.amount * value)} B$</ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={value}
+              currentLabel="Multiplicador do balão"
             />
           </SidePanel>
           <SidePanel title="Rondas">
@@ -1151,26 +1161,30 @@ export function ScratchGame({ game }: { game: Game }) {
         <p className="font-display text-5xl font-extrabold tabular text-gold">{prizes}</p>
         <div className="mt-5">{stage}</div>
         <ResultBanner state={status} text={message} />
+        <div className="relative z-10 mx-auto mt-3 w-full max-w-[620px] rounded-2xl border border-white/10 bet-bar bg-[#05060a]/95 p-3 text-left shadow-[0_-8px_30px_rgba(0,0,0,.45)]">
+          <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
+          {!active ? (
+            <ActionButton tone={active ? 'placed' : 'bet'} icon="gift" onClick={start} className="mt-3">Comprar cartão</ActionButton>
+          ) : (
+            <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={revealed.length === 0} className="mt-3">Retirar agora</ActionButton>
+          )}
+        </div>
       </div></Stage>}
       side={
         <div className="space-y-4">
-          <SidePanel title="Aposta">
-            <BetInput value={bet.amount} onChange={bet.setAmount} min={bet.min} max={bet.max} disabled={active} />
-            <div className="mt-3 space-y-1.5">
+          <SidePanel title="Detalhes da aposta">
+            <div className="space-y-1.5">
               <Payout label="Multiplicador" value={fmtMult(multiplier)} />
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
-            {!active ? (
-              <ActionButton tone="gold" icon="gift" onClick={start} className="mt-4">Comprar cartão</ActionButton>
-            ) : (
-              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={revealed.length === 0} className="mt-4">Retirar agora</ActionButton>
-            )}
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <AutoControl
               value={autoTarget}
               onValueChange={setAutoTarget}
               active={autoCash}
               onToggle={() => setAutoCash((v) => !v)}
+              current={multiplier}
+              currentLabel="Multiplicador do cartão"
             />
           </SidePanel>
           <SidePanel title="Tabela">
