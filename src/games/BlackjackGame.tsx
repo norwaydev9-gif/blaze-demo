@@ -13,6 +13,13 @@ type Phase = 'bet' | 'player' | 'done'
 
 const FALLBACK_CARD: Card = { r: 2, s: '♠' }
 
+/** Ás a valer 11 (mão suave) — a conta final continua em handValue(). */
+function isSoft(cards: Card[]): boolean {
+  if (!cards.some((c) => c.r === 14)) return false
+  const base = cards.reduce((sum, c) => sum + (c.r === 14 ? 1 : Math.min(10, c.r)), 0)
+  return handValue(cards) - base === 10
+}
+
 function safeDeck(decks: number): Card[] {
   const count = Number.isFinite(decks) && decks >= 1 ? Math.floor(decks) : 1
   const built = makeDeck(count)
@@ -32,11 +39,14 @@ export function BlackjackGame({ game }: { game: Game }) {
   const [bet, setBet] = useState(0)
   const [history, setHistory] = useState<string[]>([])
   const [autoReplay, setAutoReplay] = useState(false)
+  const [remaining, setRemaining] = useState(0)
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
     if (deck.current.length < 12) deck.current = safeDeck(decks)
-    return deck.current.pop() ?? FALLBACK_CARD
+    const card = deck.current.pop() ?? FALLBACK_CARD
+    setRemaining(deck.current.length)
+    return card
   }
 
   const finish = (p: Card[], d: Card[], currentBet: number) => {
@@ -72,6 +82,7 @@ export function BlackjackGame({ game }: { game: Game }) {
   const start = () => {
     if (!placeBet(amount, game.name, game.id, 'Blackjack')) return
     deck.current = safeDeck(decks)
+    setRemaining(deck.current.length)
     const p = [draw(), draw()]
     const d = [draw(), draw()]
     setPlayer(p)
@@ -129,6 +140,9 @@ export function BlackjackGame({ game }: { game: Game }) {
 
   const pv = handValue(player)
   const dv = handValue(dealer)
+  const playerSoft = isSoft(player)
+  const dealerSoft = isSoft(dealer)
+  const canDouble = phase === 'player' && player.length === 2 && balance >= bet
 
   useAutoReplay({ idle: phase === 'done', enabled: autoReplay, onStart: start })
 
@@ -139,13 +153,21 @@ export function BlackjackGame({ game }: { game: Game }) {
           <div className="relative flex min-h-[440px] flex-col justify-between px-4 py-5 sm:px-7">
             <div className="pointer-events-none absolute inset-0 bg-grid opacity-15" />
             <div className="relative">
-              <div className="mb-2 flex items-center gap-2">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-black/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Dealer</span>
-                {dealer.length > 0 && <span className="text-xs font-bold tabular text-white/70">{phase === 'player' ? handValue([dealer[0]]) : dv}</span>}
+                {dealer.length > 0 && (
+                  <span className={`text-xs font-bold tabular ${phase === 'done' && dv > 21 ? 'text-brand' : 'text-white/70'}`}>
+                    {phase === 'player' ? handValue([dealer[0]]) : dv}
+                  </span>
+                )}
+                {phase === 'done' && dealerSoft && (
+                  <span className="rounded-md bg-white/[.06] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/40">suave</span>
+                )}
+                <span className="ml-auto text-[9px] uppercase tracking-wider text-white/25">{remaining} cartas no baralho</span>
               </div>
               <div className="flex min-h-[112px] flex-wrap gap-2">
                 {dealer.map((c, i) => (
-                  <div key={`d-${i}`} className="animate-popIn" style={{ animationDelay: `${i * 110}ms` }}>
+                  <div key={`d-${i}-${phase}`} className="animate-popIn" style={{ animationDelay: `${i * 110}ms` }}>
                     <PlayingCard card={i === 1 && phase === 'player' ? undefined : c} size="md" />
                   </div>
                 ))}
@@ -157,8 +179,12 @@ export function BlackjackGame({ game }: { game: Game }) {
               {result ? (
                 <ResultBanner state={result.kind} text={result.text} />
               ) : (
-                <span className="rounded-full border border-line bg-black/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/30">
-                  {phase === 'player' ? 'A tua vez' : 'Faz a tua aposta'}
+                <span className="rounded-full border border-line bg-black/30 px-3 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white/30">
+                  {phase === 'player'
+                    ? canDouble
+                      ? 'A tua vez · podes dobrar'
+                      : 'A tua vez'
+                    : 'Faz a tua aposta'}
                 </span>
               )}
             </div>
@@ -172,9 +198,16 @@ export function BlackjackGame({ game }: { game: Game }) {
                 ))}
                 {player.length === 0 && <p className="text-xs text-white/20">As tuas cartas aparecem aqui.</p>}
               </div>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="rounded-md bg-black/50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Jogador</span>
-                {player.length > 0 && <span className="text-xs font-bold tabular text-white/70">{pv}</span>}
+                {player.length > 0 && (
+                  <span className={`text-xs font-bold tabular ${pv > 21 ? 'text-brand' : 'text-white/70'}`}>{pv}</span>
+                )}
+                {playerSoft && (
+                  <span className="rounded-md border border-gold/25 bg-gold/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
+                    Ás = 11
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -188,12 +221,21 @@ export function BlackjackGame({ game }: { game: Game }) {
             {phase === 'player' && (
               <div className="mt-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <ActionButton tone={phase === 'player' ? 'placed' : 'bet'} icon="bolt" size="half" onClick={hit}>Pedir</ActionButton>
-                  <ActionButton tone="cashout" icon="check" size="half" onClick={stand}>Ficar</ActionButton>
+                  <ActionButton tone="bet" icon="bolt" size="half" onClick={hit} disabled={pv >= 21} className="w-full">
+                    Pedir
+                  </ActionButton>
+                  <ActionButton tone="cashout" icon="check" size="half" onClick={stand} className="w-full">
+                    Ficar
+                  </ActionButton>
                 </div>
-                <ActionButton tone="bet" onClick={double} disabled={player.length !== 2 || balance < bet}>
+                <ActionButton tone="bet" onClick={double} disabled={!canDouble}>
                   Dobrar · {fmt(bet)} B$
                 </ActionButton>
+                {!canDouble && (
+                  <p className="text-center text-[9px] text-white/25">
+                    Dobrar apenas com 2 cartas e saldo para {fmt(bet)} B$
+                  </p>
+                )}
               </div>
             )}
             {phase === 'done' && (
@@ -210,6 +252,7 @@ export function BlackjackGame({ game }: { game: Game }) {
             <div className="space-y-1.5">
               <Payout label="Aposta em jogo" value={`${fmt(bet)} B$`} />
               <Payout label="Blackjack paga" value="3:2" />
+              <Payout label="Cartas restantes" value={String(remaining)} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />

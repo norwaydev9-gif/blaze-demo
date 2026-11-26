@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
-import { fmt, clamp } from '../lib/format'
+import { fmt, fmtMult, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
@@ -49,6 +49,7 @@ export function PlinkoGame({ game }: { game: Game }) {
   const [amount, setAmount] = useState(min)
   const [risk, setRisk] = useState<'low' | 'medium' | 'high'>(defaultRisk)
   const [history, setHistory] = useState<number[]>([])
+  const [lastPrize, setLastPrize] = useState(0)
   const [dropping, setDropping] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const ballsRef = useRef<Ball[]>([])
@@ -61,6 +62,7 @@ export function PlinkoGame({ game }: { game: Game }) {
     (ball: Ball) => {
       const m = ball.table[ball.bucket] ?? 0
       setHistory((h) => [m, ...h].slice(0, 18))
+      setLastPrize(ball.amount * m)
       if (m > 0) {
         payout(ball.amount * m, game.name, game.id, `Caiu em ${m}×`)
         play('win')
@@ -94,19 +96,52 @@ export function PlinkoGame({ game }: { game: Game }) {
     const xAt = (k: number, r: number) => w / 2 + ((k - r / 2) / rows) * spanX
     const yAt = (r: number) => topY + (r / rows) * (bottomY - topY)
 
+    // queda acelerada (gravidade simples) entre os pegos
+    const positionAt = (t: number, points: Ball['points']) => {
+      const eased = Math.pow(clamp(t, 0, 1), 1.55)
+      const segs = points.length - 1
+      const pos = eased * segs
+      const idx = Math.min(segs - 1, Math.floor(pos))
+      const local = pos - idx
+      const p0 = points[idx]
+      const p1 = points[idx + 1]
+      return {
+        x: (p0.x + (p1.x - p0.x) * local) * w,
+        y: (p0.y + (p1.y - p0.y) * local) * h - Math.sin(local * Math.PI) * 3,
+      }
+    }
+
+    const activeRows = new Set<number>()
+    const activeBuckets = new Set<number>()
+    for (const ball of ballsRef.current) {
+      const t = clamp((now - ball.start) / ball.duration, 0, 1)
+      activeRows.add(Math.min(rows - 1, Math.floor(Math.pow(t, 1.55) * rows)))
+      if (t > 0.78) activeBuckets.add(ball.bucket)
+    }
+
+    // funil de lançamento
+    ctx.strokeStyle = 'rgba(255,45,63,.45)'
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    ctx.moveTo(w / 2 - 15, h * 0.015)
+    ctx.lineTo(w / 2, h * 0.055)
+    ctx.lineTo(w / 2 + 15, h * 0.015)
+    ctx.stroke()
+
     // pegs
     for (let r = 0; r < rows; r++) {
       for (let k = 0; k <= r; k++) {
         const x = xAt(k, r)
         const y = yAt(r)
-        const pulse = 0.28 + Math.sin(now / 520 + r * 0.7 + k) * 0.1
+        const hot = activeRows.has(r)
+        const pulse = hot ? 0.8 + Math.sin(now / 90 + k) * 0.15 : 0.28 + Math.sin(now / 520 + r * 0.7 + k) * 0.1
         ctx.beginPath()
-        ctx.arc(x, y, 2.6, 0, Math.PI * 2)
+        ctx.arc(x, y, hot ? 3.4 : 2.6, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(255,255,255,${pulse.toFixed(2)})`
         ctx.fill()
         ctx.beginPath()
-        ctx.arc(x, y, 6.5, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255,200,87,${(pulse * 0.22).toFixed(2)})`
+        ctx.arc(x, y, hot ? 10 : 6.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,200,87,${(pulse * (hot ? 0.4 : 0.22)).toFixed(2)})`
         ctx.fill()
       }
     }
@@ -116,8 +151,9 @@ export function PlinkoGame({ game }: { game: Game }) {
     const bucketY = h * 0.88
     for (let k = 0; k <= rows; k++) {
       const m = tableRef.current[k]
-      const x = w / 2 + ((k - rows / 2) / rows) * spanX - bucketW / 2 + bucketW / 2
-      const color = m >= 10 ? '#ffc857' : m >= 2 ? '#ff6b3d' : m >= 1 ? '#22e3a0' : 'rgba(255,255,255,.18)'
+      const x = w / 2 + ((k - rows / 2) / rows) * spanX
+      const color = m >= 10 ? '#ffc857' : m >= 2 ? '#ff6b3d' : m >= 1 ? '#22e3a0' : '#7b8494'
+      const hot = activeBuckets.has(k)
       const bw = Math.max(14, bucketW - 4)
       const bx = x - bw / 2
       const by = bucketY
@@ -125,11 +161,16 @@ export function PlinkoGame({ game }: { game: Game }) {
       ctx.beginPath()
       if (typeof ctx.roundRect === 'function') ctx.roundRect(bx, by, bw, bh, 5)
       else ctx.rect(bx, by, bw, bh)
-      ctx.fillStyle = `${color}22`
+      ctx.fillStyle = `${color}${hot ? '44' : '22'}`
       ctx.fill()
-      ctx.strokeStyle = `${color}88`
-      ctx.lineWidth = 1
+      ctx.strokeStyle = `${color}${hot ? 'ff' : '88'}`
+      ctx.lineWidth = hot ? 2 : 1
+      if (hot) {
+        ctx.shadowColor = color
+        ctx.shadowBlur = 12
+      }
       ctx.stroke()
+      ctx.shadowBlur = 0
       ctx.fillStyle = color
       ctx.font = `700 ${rows > 13 ? 8 : 10}px Inter, system-ui, sans-serif`
       ctx.textAlign = 'center'
@@ -139,15 +180,19 @@ export function PlinkoGame({ game }: { game: Game }) {
     // balls
     ballsRef.current = ballsRef.current.filter((ball) => {
       const t = clamp((now - ball.start) / ball.duration, 0, 1)
-      const eased = t
-      const segs = ball.points.length - 1
-      const pos = eased * segs
-      const idx = Math.min(segs - 1, Math.floor(pos))
-      const local = pos - idx
-      const p0 = ball.points[idx]
-      const p1 = ball.points[idx + 1]
-      const x = (p0.x + (p1.x - p0.x) * local) * w
-      const y = (p0.y + (p1.y - p0.y) * local) * h + Math.sin(local * Math.PI) * 2
+      // rasto curto da bola a cair
+      for (let trail = 3; trail >= 1; trail--) {
+        const tt = (now - ball.start - trail * 34) / ball.duration
+        if (tt <= 0) continue
+        const old = positionAt(tt, ball.points)
+        ctx.globalAlpha = 0.08 * (4 - trail)
+        ctx.beginPath()
+        ctx.arc(old.x, old.y, 4.5, 0, Math.PI * 2)
+        ctx.fillStyle = '#ff2d3f'
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
+      const { x, y } = positionAt(t, ball.points)
       ctx.beginPath()
       ctx.arc(x, y, 6, 0, Math.PI * 2)
       const g = ctx.createRadialGradient(x - 2, y - 2, 1, x, y, 7)
@@ -219,10 +264,15 @@ export function PlinkoGame({ game }: { game: Game }) {
               </span>
             )}
           </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 pt-2 text-[10px]">
+            <span className="text-white/30">Esq. <span className="font-bold text-gold">{fmtMult(table[0])}</span></span>
+            <span className="text-white/30">Centro <span className="font-bold text-gold">{fmtMult(table[Math.floor(rows / 2)])}</span></span>
+            <span className="text-white/30">Dir. <span className="font-bold text-gold">{fmtMult(table[rows])}</span></span>
+          </div>
           <div className="px-3">
             <ResultBanner
-              state={history.length === 0 ? 'idle' : parseFloat(String(history[0])) > 1 ? 'win' : 'lose'}
-              text={history.length > 0 && parseFloat(String(history[0])) > 1 ? `+${fmt(amount * parseFloat(String(history[0])))} B$` : 'Sem ganho neste lançamento.'}
+              state={history.length === 0 ? 'idle' : history[0] > 1 ? 'win' : 'lose'}
+              text={history.length > 0 && history[0] > 1 ? `+${fmt(lastPrize)} B$` : 'Sem ganho neste lançamento.'}
             />
           </div>
           <div className="bet-bar relative z-10 mt-3 rounded-2xl border border-white/10 bg-[#05060a]/95 p-3 shadow-[0_-8px_30px_rgba(0,0,0,.45)]">

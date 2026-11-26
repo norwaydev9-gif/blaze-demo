@@ -6,6 +6,8 @@ import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
+const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
+
 export function DiceGame({ game }: { game: Game }) {
   const min = game.minBet
   const max = game.maxBet
@@ -37,6 +39,8 @@ export function DiceGame({ game }: { game: Game }) {
     if (rolling) return
     if (!placeBet(amount, game.name, game.id, `${over ? 'Acima' : 'Abaixo'} de ${target}`)) return
     const round = { over, target, payoutMult, amount }
+    if (interval.current) clearInterval(interval.current)
+    if (timeout.current) clearTimeout(timeout.current)
     setRolling(true)
     setLastWin(null)
     play('spin')
@@ -62,7 +66,8 @@ export function DiceGame({ game }: { game: Game }) {
   }
 
   const pct = clamp(display, 0, 100)
-  const targetPct = target
+  const targetPct = clamp(target, 0, 100)
+  const faceIndex = clamp(Math.floor((pct / 100) * DICE_FACES.length), 0, DICE_FACES.length - 1)
 
   const recentColor = (n: number) => (over ? (n > target ? 'text-good border-good/30' : 'text-brand border-brand/30') : n < target ? 'text-good border-good/30' : 'text-brand border-brand/30')
 
@@ -86,14 +91,24 @@ export function DiceGame({ game }: { game: Game }) {
                 </p>
               </div>
 
-              <div className="relative mt-10 px-3">
-                <div className="relative h-3 overflow-hidden rounded-full bg-gradient-to-r from-[#ff2d3f] via-[#ffc857] to-[#22e3a0] opacity-70">
-                  <div className="absolute inset-y-0 bg-black/50" style={{ left: `${targetPct}%`, right: 0 }} />
+              <div className="relative mx-3 mt-10">
+                <div className="relative h-3 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="absolute inset-y-0 bg-gradient-to-r from-[#ff2d3f] to-[#ffc857] opacity-70"
+                    style={{ left: over ? 0 : `${targetPct}%`, width: over ? `${targetPct}%` : `${100 - targetPct}%` }}
+                  />
+                  <div
+                    className="absolute inset-y-0 bg-good/70"
+                    style={{ left: over ? `${targetPct}%` : 0, width: over ? `${100 - targetPct}%` : `${targetPct}%` }}
+                  />
                 </div>
-                <div className="absolute -top-1 h-5 w-1 -translate-x-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,.8)]" style={{ left: `calc(${targetPct}% + 12px)` }} />
                 <div
-                  className="absolute -top-2.5 h-8 w-1.5 -translate-x-1/2 rounded-full bg-white shadow-[0_0_16px_rgba(255,255,255,.9)] transition-all duration-150"
-                  style={{ left: `calc(${pct}% + 12px)` }}
+                  className="absolute -top-1.5 h-6 w-0.5 -translate-x-1/2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,.8)]"
+                  style={{ left: `${targetPct}%` }}
+                />
+                <div
+                  className={`absolute -top-2 h-7 w-1.5 -translate-x-1/2 rounded-full bg-white shadow-[0_0_16px_rgba(255,255,255,.9)] transition-all duration-150 ${rolling ? '' : 'animate-popIn'}`}
+                  style={{ left: `${pct}%` }}
                 />
                 <div className="mt-2 flex justify-between text-[10px] tabular text-white/25">
                   <span>0</span>
@@ -102,6 +117,9 @@ export function DiceGame({ game }: { game: Game }) {
                   <span>75</span>
                   <span>100</span>
                 </div>
+                <p className="mt-1 text-center text-[9px] font-semibold uppercase tracking-wider text-white/30">
+                  <span className="text-good">Verde</span> = zona de vitória · branco = resultado
+                </p>
               </div>
 
               <div className="mt-8 grid grid-cols-3 gap-2">
@@ -122,10 +140,11 @@ export function DiceGame({ game }: { game: Game }) {
               <div className="relative mx-auto mt-8 flex h-24 w-24 items-center justify-center">
                 <div className={`absolute inset-0 rounded-2xl blur-2xl ${lastWin === true ? 'bg-good/25' : lastWin === false ? 'bg-brand/25' : 'bg-white/10'}`} />
                 <div
-                  className={`relative grid h-20 w-20 place-items-center rounded-2xl border border-white/20 bg-gradient-to-br from-white/15 to-white/[.02] font-display text-2xl font-black text-white shadow-[0_12px_30px_rgba(0,0,0,.5)] transition-transform duration-200 ${rolling ? 'game-spin' : 'animate-popIn'}`}
+                  className={`relative grid h-20 w-20 place-items-center rounded-2xl border border-white/20 bg-gradient-to-br from-white/15 to-white/[.02] font-display text-4xl font-black text-white shadow-[0_12px_30px_rgba(0,0,0,.5)] transition-transform duration-200 ${rolling ? 'game-spin' : 'animate-popIn'}`}
                   style={{ transformStyle: 'preserve-3d' }}
+                  aria-label={`Face ${faceIndex + 1}`}
                 >
-                  ⚄
+                  {DICE_FACES[faceIndex]}
                 </div>
               </div>
 
@@ -158,6 +177,20 @@ export function DiceGame({ game }: { game: Game }) {
                   <span>50</span>
                   <span>98</span>
                 </div>
+                <div className="mt-2 grid grid-cols-5 gap-1">
+                  {[10, 25, 50, 75, 90].map((t) => (
+                    <ActionButton
+                      key={t}
+                      tone="ghost"
+                      size="compact"
+                      disabled={rolling}
+                      onClick={() => setTarget(t)}
+                      className={`w-full px-1 text-[10px] ${target === t ? 'border-white/50 bg-white/10 text-white' : ''}`}
+                    >
+                      {t}
+                    </ActionButton>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -166,7 +199,7 @@ export function DiceGame({ game }: { game: Game }) {
                 size="compact"
                 onClick={() => setOver(true)}
                 disabled={rolling}
-                className={over ? 'border-good/50 bg-good/15 text-good hover:bg-good/20' : ''}
+                className={over ? 'border-white/50 bg-white/10 text-white' : 'text-white/45'}
               >
                 ↑ Acima
               </ActionButton>
@@ -175,7 +208,7 @@ export function DiceGame({ game }: { game: Game }) {
                 size="compact"
                 onClick={() => setOver(false)}
                 disabled={rolling}
-                className={!over ? 'border-brand/50 bg-brand/15 text-brand hover:bg-brand/20' : ''}
+                className={!over ? 'border-white/50 bg-white/10 text-white' : 'text-white/45'}
               >
                 ↓ Abaixo
               </ActionButton>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, fmtMult, clamp } from '../lib/format'
-import { randInt, shuffle } from '../lib/rng'
+import { shuffle } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
@@ -69,7 +69,7 @@ export function MinesGame({ game }: { game: Game }) {
     next.add(i)
     setOpened(next)
     play('tick')
-    if (next.size === total - minesCount) {
+    if (next.size === safeCount) {
       const k = next.size
       const final = (comb(total, k) / comb(total - minesCount, k)) * 0.99
       payout(amount * final, game.name, game.id, `Grelha limpa ${fmtMult(final)}`)
@@ -101,35 +101,63 @@ export function MinesGame({ game }: { game: Game }) {
   useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
 
   const revealAll = lost || cashed !== null
+  const safeCount = Math.max(0, total - minesCount)
   const nextMult = useMemo(() => {
     const k = opened.size + 1
     if (k > total - minesCount) return multiplier
     return (comb(total, k) / comb(total - minesCount, k)) * 0.99
   }, [opened.size, total, minesCount, multiplier])
+  const ladder = useMemo(
+    () => Array.from({ length: safeCount }, (_, i) => (comb(total, i + 1) / comb(total - minesCount, i + 1)) * 0.99),
+    [safeCount, total, minesCount],
+  )
 
   return (
     <GameLayout
       stage={
         <Stage>
-          <div className="flex items-center justify-between border-b border-line/70 px-4 py-3">
-            <div>
-              <p className="label">Multiplicador atual</p>
-              <p className={`font-display text-2xl font-extrabold tabular ${cashed ? 'text-good' : 'text-white'}`}>
-                {fmtMult(cashed ?? multiplier)}
-              </p>
-            </div>
-            <div className="flex gap-4 text-right">
-              <div>
-                <p className="label">Campos abertos</p>
-                <p className="text-sm font-bold tabular text-white/80">
-                  {opened.size}/{total - minesCount}
+          <div className="border-b border-line/70 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="label">Multiplicador atual</p>
+                <p className={`font-display text-2xl font-extrabold tabular ${cashed ? 'text-good' : 'text-white'}`}>
+                  {fmtMult(cashed ?? multiplier)}
                 </p>
               </div>
-              <div>
-                <p className="label">Minas</p>
-                <p className="text-sm font-bold tabular text-brand">{minesCount}</p>
+              <div className="flex shrink-0 gap-4 text-right">
+                <div>
+                  <p className="label">Campos abertos</p>
+                  <p className="text-sm font-bold tabular text-white/80">
+                    {opened.size}/{safeCount}
+                  </p>
+                </div>
+                <div>
+                  <p className="label">Minas</p>
+                  <p className="text-sm font-bold tabular text-brand">{minesCount}</p>
+                </div>
               </div>
             </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/50">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-brand via-gold to-good transition-all duration-300"
+                style={{ width: `${safeCount > 0 ? clamp((opened.size / safeCount) * 100, 0, 100) : 0}%` }}
+              />
+            </div>
+          </div>
+          <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-3 pt-3">
+            {ladder.map((m, i) => (
+              <div
+                key={i}
+                className={`shrink-0 rounded-lg border px-2 py-1.5 text-center ${
+                  i + 1 === opened.size ? 'border-gold/50 bg-gold/10' : 'border-line/70 bg-black/20'
+                }`}
+              >
+                <p className="text-[9px] text-white/30">{i + 1}</p>
+                <p className={`text-[10px] font-bold tabular ${i + 1 <= opened.size ? 'text-gold' : 'text-white/45'}`}>
+                  {fmtMult(m)}
+                </p>
+              </div>
+            ))}
           </div>
           <div className="p-3 sm:p-5">
             <div
@@ -145,6 +173,7 @@ export function MinesGame({ game }: { game: Game }) {
                     key={i}
                     type="button"
                     disabled={!active || isOpen}
+                    title={`Campo ${i + 1} · próximo ${fmtMult(nextMult)}`}
                     onClick={() => open(i)}
                     className={`tile-mines transition-transform active:scale-95 ${isOpen && !isMine ? 'safe animate-popIn drop-shadow-[0_0_12px_rgba(34,227,160,.45)]' : ''} ${showMine ? 'mine game-pulse' : ''} ${
                       !active && !isOpen && !showMine ? 'opacity-60 hover:scale-[1.03]' : ''

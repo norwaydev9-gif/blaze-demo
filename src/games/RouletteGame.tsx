@@ -45,6 +45,22 @@ export function RouletteGame({ game }: { game: Game }) {
 
   const total = bets.reduce((s, b) => s + b.amount, 0)
 
+  const order = useMemo(
+    () => (american ? [0, ...Array.from({ length: 36 }, (_, i) => i + 1), 37] : [0, ...Array.from({ length: 36 }, (_, i) => i + 1)]),
+    [american],
+  )
+  const segment = 360 / pool
+  const wheelGradient = useMemo(
+    () =>
+      `conic-gradient(from ${-segment / 2}deg, ${order
+        .map((n, i) => {
+          const c = colorOf(n) === 'red' ? '#c31226' : colorOf(n) === 'green' ? '#22a06b' : '#15181f'
+          return `${c} ${(i * segment).toFixed(3)}deg ${((i + 1) * segment).toFixed(3)}deg`
+        })
+        .join(', ')})`,
+    [order, segment],
+  )
+
   const addBet = (label: string, numbers: number[], pay: number) => {
     if (spinning) return
     setBets((prev) => {
@@ -66,7 +82,9 @@ export function RouletteGame({ game }: { game: Game }) {
     setResult(null)
     setLastWin(0)
     const outcome = randInt(0, pool - 1) // 37 = 00 on american
-    setRotation((r) => r + 360 * 5 + randInt(0, 359))
+    const landingIndex = outcome === 37 ? pool - 1 : outcome
+    const jitter = randInt(-Math.round(segment * 0.22), Math.round(segment * 0.22))
+    setRotation((r) => r + 360 * 6 + (360 - ((r + landingIndex * segment) % 360)) % 360 + jitter)
     play('spin')
     settleTimer.current = setTimeout(() => {
       settleTimer.current = null
@@ -82,7 +100,7 @@ export function RouletteGame({ game }: { game: Game }) {
         payout(win, game.name, game.id, `Saiu ${labelOf(outcome)}`)
         play('win')
       } else play('lose')
-    }, 3600)
+    }, 3500)
   }
 
   const outside: { label: string; numbers: number[]; pay: number; color?: string }[] = [
@@ -107,15 +125,15 @@ export function RouletteGame({ game }: { game: Game }) {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="relative h-24 w-24 shrink-0 sm:h-32 sm:w-32">
                 <div
-                  className="absolute inset-0 rounded-full border-4 border-[#221a10] shadow-[0_10px_30px_rgba(0,0,0,.5)]"
+                  className={`absolute inset-0 rounded-full border-4 border-[#221a10] shadow-[0_10px_30px_rgba(0,0,0,.5)] ${spinning ? 'wheel-spin' : ''}`}
                   style={{
-                    background:
-                      'repeating-conic-gradient(from 0deg, #c31226 0deg 9.73deg, #15181f 9.73deg 19.46deg, #22a06b 19.46deg 19.73deg)',
+                    background: wheelGradient,
                     transform: `rotate(${rotation}deg)`,
-                    transition: spinning ? 'transform 3.4s cubic-bezier(.15,.8,.2,1)' : undefined,
+                    transitionDuration: spinning ? '3.4s' : undefined,
                   }}
                 >
-                  <div className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-[#221a10] bg-[#0b0e15] text-[9px] font-bold text-white/40">
+                  <div className="absolute inset-[18%] rounded-full border border-white/20 bg-gradient-to-b from-[#141822] to-[#080a10] shadow-[inset_0_0_18px_rgba(0,0,0,.8)]" />
+                  <div className="absolute left-1/2 top-1/2 grid h-9 w-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-[#221a10] bg-[#0b0e15] text-[9px] font-bold text-white/50">
                     {american ? '00' : '0'}
                   </div>
                 </div>
@@ -138,15 +156,50 @@ export function RouletteGame({ game }: { game: Game }) {
               </div>
             </div>
 
+            {bets.length > 0 && (
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                {bets.map((b) => (
+                  <span key={b.id} className="chip chip-active px-2 py-1 text-[10px]">
+                    {b.label} · {fmt(b.amount)} <span className="font-bold text-gold">×{b.payout}</span>
+                  </span>
+                ))}
+                <span className="ml-auto text-[10px] font-bold tabular text-white/50">Total {fmt(total)} B$</span>
+              </div>
+            )}
+            <div className="mb-2 flex items-center gap-2">
+              <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-white/30">Últimos</span>
+              <div className="no-scrollbar flex min-w-0 flex-1 gap-1 overflow-x-auto">
+                {history.length === 0 ? (
+                  <span className="text-[10px] text-white/20">sem resultados</span>
+                ) : (
+                  history.slice(0, 14).map((n, i) => (
+                    <span
+                      key={i}
+                      className={`grid h-7 min-w-7 shrink-0 place-items-center rounded-full border px-1 text-[10px] font-bold tabular ${
+                        colorOf(n) === 'red'
+                          ? 'border-brand/40 bg-brand/10 text-brand'
+                          : colorOf(n) === 'green'
+                            ? 'border-white/25 bg-white/10 text-white'
+                            : 'border-white/15 bg-white/[.03] text-white/55'
+                      }`}
+                    >
+                      {labelOf(n)}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
               <ActionButton
                 tone="ghost"
                 size="compact"
                 onClick={() => addBet('0', [0], 36)}
-                className="relative border-good/40 bg-good/15 text-good hover:bg-good/25"
+                className="relative text-white/80 hover:border-white/30 hover:bg-white/10"
               >
+                <span className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-[#22a06b]" />
                 0
-                {bets.find((b) => b.label === '0') && <span className="absolute -right-1 -top-1 rounded-full bg-gold px-1 text-[8px] text-black">{bets.find((b) => b.label === '0')!.amount}</span>}
+                {bets.find((b) => b.label === '0') && <span className="absolute -right-1 -top-1 rounded-full bg-white/90 px-1 text-[8px] font-bold text-black">{bets.find((b) => b.label === '0')!.amount}</span>}
               </ActionButton>
               {numbers.map((n) => {
                 const c = colorOf(n)
@@ -157,12 +210,11 @@ export function RouletteGame({ game }: { game: Game }) {
                     tone="ghost"
                     size="compact"
                     onClick={() => addBet(String(n), [n], 36)}
-                    className={`relative text-xs hover:brightness-125 ${
-                      c === 'red' ? 'border-[#ff5b6b]/30 bg-[#c31226] text-white' : 'border-white/10 bg-[#15181f] text-white/80'
-                    }`}
+                    className="relative text-xs text-white/80 hover:border-white/30 hover:bg-white/10"
                   >
+                    <span className={`absolute left-1 top-1 h-1.5 w-1.5 rounded-full ${c === 'red' ? 'bg-[#c31226]' : 'bg-white/25'}`} />
                     {n}
-                    {bet && <span className="absolute -right-1 -top-1 rounded-full bg-gold px-1 text-[8px] font-bold text-black">{bet.amount}</span>}
+                    {bet && <span className="absolute -right-1 -top-1 rounded-full bg-white/90 px-1 text-[8px] font-bold text-black">{bet.amount}</span>}
                   </ActionButton>
                 )
               })}
@@ -171,9 +223,11 @@ export function RouletteGame({ game }: { game: Game }) {
                   tone="ghost"
                   size="compact"
                   onClick={() => addBet('00', [37], 36)}
-                  className="border-good/40 bg-good/15 text-good hover:bg-good/25"
+                  className="relative text-white/80 hover:border-white/30 hover:bg-white/10"
                 >
+                  <span className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full bg-[#22a06b]" />
                   00
+                  {bets.find((b) => b.label === '00') && <span className="absolute -right-1 -top-1 rounded-full bg-white/90 px-1 text-[8px] font-bold text-black">{bets.find((b) => b.label === '00')!.amount}</span>}
                 </ActionButton>
               )}
             </div>
@@ -185,11 +239,11 @@ export function RouletteGame({ game }: { game: Game }) {
                   tone="ghost"
                   size="compact"
                   onClick={() => addBet(o.label, o.numbers, o.pay)}
-                  className={`relative border-white/10 text-white/80 hover:border-white/30 ${o.color ?? 'bg-white/[.04]'}`}
+                  className="relative border-white/10 bg-white/[.04] text-[11px] text-white/80 hover:border-white/30 hover:bg-white/10"
                 >
                   {o.label}
                   {bets.find((b) => b.label === o.label) && (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-gold px-1 text-[8px] font-bold text-black">
+                    <span className="absolute -right-1 -top-1 rounded-full bg-white/90 px-1 text-[8px] font-bold text-black">
                       {bets.find((b) => b.label === o.label)!.amount}
                     </span>
                   )}
@@ -211,7 +265,7 @@ export function RouletteGame({ game }: { game: Game }) {
                     tone="ghost"
                     size="compact"
                     onClick={() => setChip(c)}
-                    className={chip === c ? 'border-gold/60 bg-gold/20 text-gold' : ''}
+                    className={chip === c ? 'border-white/50 bg-white/10 text-white' : ''}
                   >
                     {c}
                   </ActionButton>
