@@ -626,7 +626,7 @@ export function CrashGame({ game }: { game: Game }) {
     <GameLayout
       dock={false}
       stage={
-        <Stage className="overflow-hidden">
+        <Stage className="overflow-x-hidden">
           {/* ZONA A — uma entrada por ronda concluída, mais recente primeiro; nunca apostas individuais */}
           <div className="crash-history-strip no-scrollbar flex items-center gap-1.5 overflow-x-auto border-b border-line/70 bg-black/35 px-3 py-2">
             <span className="shrink-0 pr-1 text-[9px] font-bold uppercase tracking-[.16em] text-white/35">Histórico</span>
@@ -648,7 +648,7 @@ export function CrashGame({ game }: { game: Game }) {
           {/* ZONA B — palco dominante: canvas grande e leituras, sem botões nem listas sobrepostas */}
           <div className="crash-main">
           <div className="relative">
-            <canvas ref={canvasRef} className="block aspect-[4/3] w-full min-h-[280px] sm:aspect-[16/9] sm:min-h-[360px]" />
+            <canvas ref={canvasRef} className="block aspect-[4/3] w-full min-h-[220px] sm:aspect-[16/9] sm:min-h-[320px]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
                 <p className={`crash-mult font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
@@ -738,8 +738,8 @@ export function CrashGame({ game }: { game: Game }) {
           </div>
 
           {/* PAINEL DE APOSTAS — apenas controlos de aposta, sempre dentro do Stage */}
-          <div className="crash-bet-panel bet-bar relative z-10 mt-3">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="crash-bet-panel bet-bar relative z-10 mt-2 p-2 sm:mt-3 sm:p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[.14em] text-white/75">Painel de aposta</p>
                 <p className="text-[9px] uppercase tracking-wider text-white/35">
@@ -756,7 +756,7 @@ export function CrashGame({ game }: { game: Game }) {
               </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div>
                 <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-black/40 focus-within:border-brand/50">
                   <button type="button" aria-label="Diminuir valor da aposta" onClick={() => setAmount(betAmount - 10)} className="h-11 w-11 shrink-0 text-lg text-white/60 transition hover:bg-white/5 hover:text-white">−</button>
@@ -794,7 +794,7 @@ export function CrashGame({ game }: { game: Game }) {
                   tone={primaryTone}
                   onClick={() => (primaryLabel === 'CASHOUT' ? cashoutAll() : betAll())}
                   disabled={primaryDisabled}
-                  className="mt-3 min-h-[48px]"
+                  className="mt-2 min-h-[48px]"
                 >
                   {primaryLabel}
                 </ActionButton>
@@ -802,7 +802,7 @@ export function CrashGame({ game }: { game: Game }) {
               <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             </div>
 
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {slots.map((s, i) => {
                 const p = playerBets.find((b) => b.idx === i)
                 const wonAt = s.cashedAt ?? p?.cashedAt ?? null
@@ -818,7 +818,7 @@ export function CrashGame({ game }: { game: Game }) {
                 return (
                   <div
                     key={i}
-                    className={`crash-slot rounded-xl border p-2.5 transition-colors duration-300 ${
+                    className={`crash-slot rounded-xl border p-2 transition-colors duration-300 sm:p-2.5 ${
                       wonAt !== null
                         ? 'border-good/40 bg-good/[.06]'
                         : lost
@@ -829,7 +829,7 @@ export function CrashGame({ game }: { game: Game }) {
                     }`}
                     data-state={slotState}
                   >
-                    <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="mb-1.5 flex items-center justify-between gap-2">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Aposta {i + 1}</span>
                       <span className={`text-[10px] font-bold ${wonAt !== null ? 'text-good' : lost ? 'text-brand' : s.active ? 'text-good' : 'text-white/35'}`}>{stateLabel}</span>
                     </div>
@@ -840,7 +840,7 @@ export function CrashGame({ game }: { game: Game }) {
                       max={max}
                       disabled={s.active || phase !== 'betting'}
                       onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
-                      className="input w-full py-2 text-center text-sm tabular"
+                      className="input w-full py-1.5 text-center text-sm tabular"
                     />
                     {/* rápidos por slot, sempre dentro de min/max */}
                     <div className="mt-1.5 grid grid-cols-4 gap-1">
@@ -863,7 +863,7 @@ export function CrashGame({ game }: { game: Game }) {
                         )
                       })}
                     </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                       <ActionButton tone={s.active ? 'placed' : 'bet'} size="compact" onClick={() => bet(i)} disabled={phase !== 'betting' || s.active} className="w-full">
                         {s.active ? 'APOSTADO' : 'APOSTAR'}
                       </ActionButton>
