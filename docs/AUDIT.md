@@ -217,20 +217,27 @@ QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam co
   viewport. A agravar: `overflow-hidden` no `.game-immersive-page` e a dock móvel
   fixa. O jsdom confirmava a presença dos controlos no DOM, mas não a sua
   **visibilidade** — daí a diferença entre "passa no teste" e "não se vê".
-- **Correções em curso (integração pelo supervisor):**
-  - **Agente A:** remove o overflow do `Stage` do Crash e compacta o painel de
-    aposta para caber no palco.
-  - **Agente B:** colocou scroll no palco (`overflow-y:auto`,
-    `overscroll-behavior:contain`, `-webkit-overflow-scrolling:touch`) e tirou o
-    `overflow` da página imersiva e da dock móvel.
-  - **Agente C:** acrescentou checks de visibilidade ao smoke e ao runtime, para
-    não bastar apenas encontrar os nós no DOM.
-  - **Agente D:** revisão das alterações e dos contratos de UI.
+- **Causa P0 descoberta na revisão (Agente D):** mesmo sem `overflow-hidden`, em
+  mobile o `side` em fluxo partilhava a linha flexível da grelha imersiva
+  (`grid-template-rows:minmax(0,1fr)` + `h-full`); o side (~550px) deixava o palco
+  com ~230px e o painel começava a ~340px — fora do primeiro ecrã.
+- **Correções integradas (supervisão):**
+  - **Agente A:** `Stage` com `overflow-x-hidden`, canvas base
+    `aspect-[16/9] min-h-[200px]`, painel compacto e botões rápidos marcados
+    `quick-bet`.
+  - **Agente B:** em mobile a grelha passa a `grid-template-rows:auto`/`height:auto`
+    e quem rola é o engine/página; o palco usa `overflow-x:clip` sem scroll
+    aninhado. Em desktop mantém-se o palco como scroller. Quick bets com 32px;
+    APOSTAR/CASHOUT mantêm 44px.
+  - **Agente C:** checks de visibilidade no smoke e no runtime (Stage sem
+    `overflow-hidden`, painel antes das zonas C/D, botões habilitados).
+  - **Agente D:** revisão dos bloqueadores e cálculo de altura em 390×844.
   - **Agente E:** sonda temporária em `/tmp/opencode/probe-crash-visibility.mjs`
-    para medir a caixa do painel e confirmar se é efectivamente visível.
-- **Estado:** alterações ainda em integração; a validação final e a publicação
-  ficam para o supervisor depois da integração. A correção não é declarada
-  concluída enquanto os testes não tiverem rodado com sucesso na versão integrada.
+    (8/8 OK) para verificar classes, ordem e orçamento de altura do canvas.
+- **Estado:** integrado e validado — `typecheck`, `build`, `check` e
+  `check:runtime` verdes: 66/66 jogos, 9/9 crash com contrato DOM completo e
+  painel visível/operável, zero botões gold. Continua sem medição em Android
+  real/browser headless neste ambiente.
 
 ## Verificações feitas
 
