@@ -206,6 +206,32 @@ QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam co
 - **QA:** contrato DOM verificado estaticamente e em jsdom nos 9 jogos;
   66/66 jogos, 9/9 contrato completo, zero botões gold.
 
+## Décima passagem — painel de aposta clipping/visibilidade
+
+- **Sintoma reportado pelo utilizador:** "a controle de apostas sumiu e nada está
+  como pedi". O painel de aposta dos jogos Crash da BLAZE existia no DOM mas não
+  aparecia no ecrã, sobretudo em ecrãs imersivos/Android.
+- **Causa raiz encontrada pelo supervisor:** `<Stage className="overflow-hidden">`
+  do Crash, combinado com o layout imersivo `100dvh` e
+  `.crash-main { flex:1 1 auto }`, cortava o painel quando o conteúdo excedia a
+  viewport. A agravar: `overflow-hidden` no `.game-immersive-page` e a dock móvel
+  fixa. O jsdom confirmava a presença dos controlos no DOM, mas não a sua
+  **visibilidade** — daí a diferença entre "passa no teste" e "não se vê".
+- **Correções em curso (integração pelo supervisor):**
+  - **Agente A:** remove o overflow do `Stage` do Crash e compacta o painel de
+    aposta para caber no palco.
+  - **Agente B:** colocou scroll no palco (`overflow-y:auto`,
+    `overscroll-behavior:contain`, `-webkit-overflow-scrolling:touch`) e tirou o
+    `overflow` da página imersiva e da dock móvel.
+  - **Agente C:** acrescentou checks de visibilidade ao smoke e ao runtime, para
+    não bastar apenas encontrar os nós no DOM.
+  - **Agente D:** revisão das alterações e dos contratos de UI.
+  - **Agente E:** sonda temporária em `/tmp/opencode/probe-crash-visibility.mjs`
+    para medir a caixa do painel e confirmar se é efectivamente visível.
+- **Estado:** alterações ainda em integração; a validação final e a publicação
+  ficam para o supervisor depois da integração. A correção não é declarada
+  concluída enquanto os testes não tiverem rodado com sucesso na versão integrada.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.
