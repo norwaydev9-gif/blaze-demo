@@ -40,6 +40,31 @@ for (const name of ['FEATURED_IDS', 'POPULAR_IDS']) {
   list.forEach((id) => check(ids.includes(id), `${name}: o jogo ${id} não existe no catálogo`))
 }
 
+/* -------------------------------- imagens --------------------------------- */
+
+const imageNames = [
+  'hero.jpg',
+  'cards.jpg',
+  'crash.jpg',
+  'limbo.jpg',
+  'slots.jpg',
+  'roulette.jpg',
+  'mines.png',
+  'plinko.jpg',
+  'dice.jpg',
+  'wheel.jpg',
+  'keno.jpg',
+  'balloon.jpg',
+  'scratch.jpg',
+  'tower.jpg',
+  'arcade.jpg',
+]
+imageNames.forEach((name) => {
+  check(existsSync(new URL(`public/images/${name}`, root)), `Falta a imagem public/images/${name}`)
+})
+check(gamesLib.includes('gameImage'), 'games.ts: falta o helper gameImage para as capas')
+check(existsSync(new URL('docs/IMAGE_CREDITS.md', root)), 'Falta docs/IMAGE_CREDITS.md com os créditos das imagens')
+
 /* -------------------------------- marca ---------------------------------- */
 
 const walk = (dir) =>
@@ -99,7 +124,7 @@ if (existsSync(new URL('dist/index.html', root))) {
 
   const manifest = readJson('dist/manifest.webmanifest')
   check(manifest.name.includes('BLAZE'), 'dist/manifest.webmanifest: nome não usa BLAZE')
-  check(read('dist/sw.js').includes('blaze-demo-v2'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v2')
+  check(read('dist/sw.js').includes('blaze-demo-v3'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v3')
 }
 
 /* -------------------------------- resultado ------------------------------- */
@@ -111,5 +136,5 @@ if (errors.length) {
 }
 
 console.log(
-  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, marca BLAZE e build verificados.`,
+  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, marca BLAZE e build verificados.`,
 )

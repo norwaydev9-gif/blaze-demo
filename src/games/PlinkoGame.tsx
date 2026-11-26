@@ -204,7 +204,7 @@ export function PlinkoGame({ game }: { game: Game }) {
       stage={
         <Stage>
           <div className="relative">
-            <canvas ref={canvasRef} className="block h-[420px] w-full sm:h-[500px]" />
+            <canvas ref={canvasRef} className="block aspect-square w-full sm:aspect-[4/3]" />
             {dropping > 0 && (
               <span className="absolute right-3 top-3 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-[10px] font-bold text-brand">
                 {dropping} bola(s) em jogo

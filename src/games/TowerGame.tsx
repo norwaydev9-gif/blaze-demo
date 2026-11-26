@@ -113,7 +113,7 @@ export function TowerGame({ game }: { game: Game }) {
                             type="button"
                             disabled={!isCurrent}
                             onClick={() => choose(col)}
-                            className={`grid h-10 place-items-center rounded-lg border text-sm transition ${
+                            className={`grid h-11 place-items-center rounded-lg border text-sm transition ${
                               picked
                                 ? 'border-good/50 bg-good/15 text-good'
                                 : trap

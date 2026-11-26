@@ -61,3 +61,52 @@ export const FEATURED_IDS = ['crash', 'mines', 'fortune-spin', 'blackjack']
 export function gameCountByEngine(engine: string): number {
   return GAMES.filter((g) => g.engine === engine).length
 }
+
+const img = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
+
+export const HERO_IMAGE = img('hero.jpg')
+
+const IMAGE_BY_ENGINE: Record<string, string> = {
+  crash: img('crash.jpg'),
+  limbo: img('limbo.jpg'),
+  mines: img('mines.png'),
+  slots: img('slots.jpg'),
+  roulette: img('roulette.jpg'),
+  blackjack: img('cards.jpg'),
+  baccarat: img('cards.jpg'),
+  videoPoker: img('cards.jpg'),
+  texasHoldem: img('cards.jpg'),
+  threeCardPoker: img('cards.jpg'),
+  caribbeanPoker: img('cards.jpg'),
+  hiLo: img('cards.jpg'),
+  coinFlip: img('cards.jpg'),
+  plinko: img('plinko.jpg'),
+  dice: img('dice.jpg'),
+  wheel: img('wheel.jpg'),
+  colorPrediction: img('wheel.jpg'),
+  keno: img('keno.jpg'),
+  luckyNumber: img('keno.jpg'),
+  balloon: img('balloon.jpg'),
+  scratch: img('scratch.jpg'),
+  tower: img('tower.jpg'),
+  arcadeRunner: img('arcade.jpg'),
+  arcadeShooter: img('arcade.jpg'),
+  arcadeRace: img('arcade.jpg'),
+  arcadeCatcher: img('arcade.jpg'),
+  arcadeQuest: img('arcade.jpg'),
+}
+
+const IMAGE_BY_CATEGORY: Record<GameCategory, string> = {
+  crash: img('crash.jpg'),
+  mines: img('mines.png'),
+  slots: img('slots.jpg'),
+  instant: img('hero.jpg'),
+  card: img('cards.jpg'),
+  arcade: img('arcade.jpg'),
+  deluxe: img('cards.jpg'),
+}
+
+/** Capa original/licenciada usada em cartões, capas e palco de cada jogo. */
+export function gameImage(game: Game): string {
+  return IMAGE_BY_ENGINE[game.engine] ?? IMAGE_BY_CATEGORY[game.category] ?? HERO_IMAGE
+}

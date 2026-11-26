@@ -175,7 +175,7 @@ export function RouletteGame({ game }: { game: Game }) {
                   key={o.label}
                   type="button"
                   onClick={() => addBet(o.label, o.numbers, o.pay)}
-                  className={`relative grid h-10 place-items-center rounded-md border border-white/10 text-[10px] font-bold text-white/80 transition hover:border-white/30 ${o.color ?? 'bg-white/[.04]'}`}
+                  className={`relative grid h-11 place-items-center rounded-md border border-white/10 text-[10px] font-bold text-white/80 transition hover:border-white/30 ${o.color ?? 'bg-white/[.04]'}`}
                 >
                   {o.label}
                   {bets.find((b) => b.label === o.label) && (
@@ -200,7 +200,7 @@ export function RouletteGame({ game }: { game: Game }) {
                     key={c}
                     type="button"
                     onClick={() => setChip(c)}
-                    className={`rounded-full border py-2 text-[10px] font-bold transition ${
+                    className={`grid h-11 place-items-center rounded-full border text-[10px] font-bold transition ${
                       chip === c ? 'border-gold/60 bg-gold/20 text-gold' : 'border-line text-white/35 hover:text-white'
                     }`}
                   >

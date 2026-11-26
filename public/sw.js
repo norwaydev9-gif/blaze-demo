@@ -1,4 +1,4 @@
-const CACHE = 'blaze-demo-v2'
+const CACHE = 'blaze-demo-v3'
 const SCOPE = self.registration.scope
 const url = (path) => new URL(path, SCOPE).toString()
 const SHELL = [
@@ -8,6 +8,11 @@ const SHELL = [
   url('icon-192.png'),
   url('icon-512.png'),
   url('manifest.webmanifest'),
+  url('images/hero.jpg'),
+  url('images/cards.jpg'),
+  url('images/crash.jpg'),
+  url('images/slots.jpg'),
+  url('images/roulette.jpg'),
 ]
 
 self.addEventListener('install', (event) => {

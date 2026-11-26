@@ -329,6 +329,24 @@ const LEGAL = {
   },
 } as const
 
+const IMAGE_CREDITS = [
+  ['hero.jpg', 'Santeri Viinamäki', 'CC BY-SA 4.0'],
+  ['crash.jpg', 'Glenn Beltz', 'CC BY 4.0'],
+  ['slots.jpg', 'Millethills', 'CC0'],
+  ['cards.jpg', 'Personal Creations', 'CC BY 2.0'],
+  ['roulette.jpg', 'Legoloiii', 'CC BY-SA 4.0'],
+  ['mines.png', 'AlaskaMining', 'CC BY 2.5'],
+  ['plinko.jpg', 'Gilgongo', 'CC BY-SA 2.0'],
+  ['dice.jpg', 'Niklas Morberg', 'CC BY-SA 2.0'],
+  ['wheel.jpg', 'Staff Sgt. Matthew Winstead', 'Public domain'],
+  ['arcade.jpg', 'Dominic Alves', 'CC BY 2.0'],
+  ['balloon.jpg', 'Max Grobecker', 'CC BY-SA 2.0'],
+  ['scratch.jpg', 'Bdviets', 'Public domain'],
+  ['limbo.jpg', 'NASA', 'Public domain'],
+  ['keno.jpg', 'elizaIO', 'CC BY-SA 2.0'],
+  ['tower.jpg', 'Reseletti', 'CC0'],
+]
+
 export function LegalPage({ kind }: { kind: 'termos' | 'privacidade' }) {
   const doc = LEGAL[kind]
   return (
@@ -349,6 +367,24 @@ export function LegalPage({ kind }: { kind: 'termos' | 'privacidade' }) {
           Abrir suporte →
         </button>
       </div>
+
+      {kind === 'termos' && (
+        <div className="panel p-5 sm:p-6">
+          <h2 className="font-display text-sm font-bold text-white/85">Créditos das imagens</h2>
+          <p className="mt-1 text-[12px] leading-relaxed text-white/45">
+            Capas obtidas da Wikimedia Commons e servidas localmente. A lista completa também está em
+            <code className="mx-1 text-white/60">docs/IMAGE_CREDITS.md</code>.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {IMAGE_CREDITS.map(([file, author, license]) => (
+              <div key={file} className="flex items-center justify-between gap-2 rounded-lg bg-black/20 px-3 py-2">
+                <span className="min-w-0 truncate text-[11px] font-semibold text-white/60">{file}</span>
+                <span className="shrink-0 text-[10px] text-white/30">{author} · {license}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

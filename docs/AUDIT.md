@@ -33,6 +33,23 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 | 17 | O bónus aparecia como “diário” mas era concedido a cada 4 horas. | Textos corrigidos para “Bónus de 4 horas”. |
 | 18 | PWA só com ícone SVG e sem `apple-touch-icon`. | Ícones PNG 192/512, `apple-touch-icon` e service worker atualizado. |
 | 19 | Não havia verificação automática de consistência. | `npm run check` (`scripts/smoke.mjs`) valida catálogo, motores, rotas, marca e build sem dependências. |
+| 20 | A dock móvel podia tapar o fim do tabuleiro quando havia `safe-area-inset-bottom`; toasts também ficavam sobre os controlos. | Variáveis `--mobile-nav-h`/`--dock-handle-h` passaram a incluir a nav de 48px + safe-area; dock e toasts usam essas variáveis e o `<main>` reserva o espaço correcto. |
+| 21 | Canvas de Crash/Plinko e sobretudo Arcade eram achatados em 360–430px (`h-[360px]` com memória 640×420). | Todos passaram a `aspect-ratio` (4/3, quadrado, 640/420), com `max-height: 52vh` em telemóvel. |
+| 22 | Keno tinha botões de ~24×28px e exigia scroll dentro do tabuleiro. | Grelha passou a 5 colunas em mobile (44px por botão) e 10 colunas em `sm`. |
+| 23 | Vários controlos tinham 25–40px de altura (aposta, favoritos, navegação, roleta, torre, poker). | Regra global `min-height: 44px` em mobile + ajustes específicos; slider com thumb de 26px. |
+| 24 | Jogos de cartas podiam sair do tabuleiro em 360px. | Cartas responsivas (`w-16` em mobile, `w-24` em `sm`), `flex-wrap` nas mãos e `min-height` maior para mesas grandes. |
+| 25 | Catálogo e palcos eram só gradientes/emoji, sem identidade visual. | 15 imagens licenciadas (Wikimedia Commons) ligadas por motor/categoria em cartões, capa do jogo, palco e hero; créditos documentados. |
+| 26 | Service worker ainda usava `blaze-demo-v2` e não cacheava arte. | Passou a `blaze-demo-v3` e pré-cacheia as capas principais. |
+
+## Segunda passagem — visual e Android
+
+- Gerador de imagens indisponível (`Invalid credential`); foram usadas imagens com
+  licença livre da Wikimedia Commons, com inventário em `docs/IMAGE_CREDITS.md`.
+- Nenhuma imagem é carregada de domínios externos em runtime: todas estão em
+  `public/images/` e usam `import.meta.env.BASE_URL`, funcionando também no
+  GitHub Pages (base relativa `./`).
+- O fundo do palco usa `--game-bg`, definido pela página do jogo e removido ao
+  sair, para não contaminar outras rotas.
 
 ## Verificações feitas
 
@@ -42,7 +59,11 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 - Catálogo: 66 jogos, 0 IDs duplicados, 27 engines, todos os `FEATURED_IDS` e `POPULAR_IDS` existem.
 - Rotas: todos os destinos de `navigate()` e do menu têm tratamento no router.
 - Título do documento atualizado por rota.
-- `npm run check` — catálogo (66 jogos/27 motores), rotas, marca e build verificados.
+- `npm run check` — catálogo (66 jogos/27 motores), rotas, 15 imagens, marca e build verificados.
+- Segunda passagem: `npm run typecheck`, `npm run build` e `npm run check` repetidos após as
+  alterações visuais/mobile; todos passaram.
+- Demo publicada em <https://norwaydev9-gif.github.io/blaze-demo/>; `/`, JS, CSS,
+  imagens, manifest e service worker respondem `200`.
 
 ## Limitações conhecidas (não “corrigidas” de propósito)
 

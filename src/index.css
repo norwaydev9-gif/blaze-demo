@@ -125,9 +125,14 @@ body {
 /* ------- game surfaces ------- */
 .game-stage {
   @apply relative overflow-hidden rounded-2xl border border-line/70;
-  background:
-    radial-gradient(120% 90% at 50% -10%, rgba(255, 45, 63, 0.12), transparent 55%),
-    linear-gradient(180deg, #0a0d14, #070910);
+  background-color: #070910;
+  background-image:
+    radial-gradient(120% 90% at 50% -10%, rgba(255, 45, 63, 0.16), transparent 55%),
+    linear-gradient(180deg, rgba(7, 9, 16, 0.72), rgba(5, 6, 10, 0.93)),
+    var(--game-bg, none);
+  background-size: cover, cover, cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .reel {
@@ -233,20 +238,21 @@ input[type='number'] {
 
 /* ------- mobile game dock ------- */
 :root {
-  --mobile-nav-h: 66px;
-  --dock-handle-h: 46px;
+  --nav-content-h: 48px;
+  --mobile-nav-h: calc(var(--nav-content-h) + env(safe-area-inset-bottom));
+  --dock-handle-h: 48px;
 }
 
 @media (max-width: 1023px) {
   .game-layout {
-    padding-bottom: 22px;
+    padding-bottom: 12px;
   }
 
   .game-side {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));
+    bottom: var(--mobile-nav-h);
     z-index: 45;
     max-height: min(68vh, 520px);
     overflow: hidden;
@@ -330,6 +336,27 @@ input[type='number'] {
     overflow: visible;
     padding: 0;
   }
+
+  /* alvos de toque confortáveis em Android/iOS */
+  main button,
+  nav button,
+  .game-side-content button,
+  .game-stage button {
+    min-height: 44px;
+  }
+
+  input[type='range'] {
+    height: 44px;
+    background: linear-gradient(#222938, #222938) center / 100% 6px no-repeat;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    height: 26px;
+    width: 26px;
+  }
+  input[type='range']::-moz-range-thumb {
+    height: 26px;
+    width: 26px;
+  }
 }
 
 /* ------- small phone tuning (360–430px) ------- */
@@ -350,31 +377,29 @@ input[type='number'] {
     margin-top: 12px;
   }
 
-  .game-stage canvas.h-\[320px\] {
-    height: 250px;
-  }
-
-  .game-stage canvas.h-\[360px\] {
-    height: 280px;
-  }
-
-  .game-stage canvas.h-\[420px\] {
-    height: 300px;
+  .game-stage canvas {
+    height: auto;
+    max-height: 52vh;
   }
 
   .game-stage .min-h-\[380px\],
   .game-stage .min-h-\[400px\],
-  .game-stage .min-h-\[420px\],
-  .game-stage .min-h-\[440px\],
-  .game-stage .min-h-\[460px\] {
+  .game-stage .min-h-\[420px\] {
     min-height: 320px;
     padding-top: 12px;
     padding-bottom: 12px;
   }
 
+  .game-stage .min-h-\[440px\],
+  .game-stage .min-h-\[460px\] {
+    min-height: 360px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
   /* evita que cartas largas empurrem o tabuleiro para fora do ecrã */
   .game-stage .playing-card,
   .game-stage .card-back {
-    max-width: 26vw;
+    max-width: 24vw;
   }
 }

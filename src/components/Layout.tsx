@@ -274,7 +274,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
                 ? push('info', 'Bónus disponível', 'Tens +500 B$ prontos a receber nas promoções.')
                 : push('info', 'Sem notificações novas', 'O próximo bónus fica disponível mais tarde.')
             }
-            className="relative hidden h-9 w-9 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white sm:grid"
+            className="relative hidden h-11 w-11 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white sm:grid"
             aria-label="Notificações"
           >
             <Icon name="bell" size={16} />
@@ -283,7 +283,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
           <button
             type="button"
             onClick={() => navigate('/carteira')}
-            className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#2a3142] to-[#141925] text-xs font-bold text-white ring-1 ring-white/10"
+            className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#2a3142] to-[#141925] text-xs font-bold text-white ring-1 ring-white/10"
             aria-label="Conta demo"
           >
             B
@@ -313,7 +313,7 @@ function MobileNav() {
               key={it.to}
               type="button"
               onClick={() => navigate(it.to)}
-              className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold transition ${active ? 'text-brand' : 'text-white/40'}`}
+              className={`flex min-h-[48px] flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold transition ${active ? 'text-brand' : 'text-white/40'}`}
             >
               <Icon name={it.icon} size={19} />
               {it.label}
@@ -328,7 +328,7 @@ function MobileNav() {
 export function Toasts() {
   const { toasts, dismiss } = useToast()
   return (
-    <div className="pointer-events-none fixed bottom-20 right-4 z-[60] flex w-[min(92vw,340px)] flex-col gap-2 lg:bottom-6">
+    <div className="pointer-events-none fixed bottom-[calc(var(--mobile-nav-h)+56px)] right-4 z-[60] flex w-[min(92vw,340px)] flex-col gap-2 lg:bottom-6">
       {toasts.map((t) => (
         <button
           key={t.id}
@@ -379,7 +379,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-[270px] border-r border-line bg-[#070910] animate-riseIn">
-            <button type="button" className="absolute right-2 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg text-white/40" onClick={() => setOpen(false)}>
+            <button type="button" className="absolute right-2 top-3 z-10 grid h-11 w-11 place-items-center rounded-lg text-white/40" onClick={() => setOpen(false)}>
               <Icon name="close" size={18} />
             </button>
             <SidebarContent onNavigate={() => setOpen(false)} />
@@ -388,7 +388,7 @@ export function Layout({ children }: { children: ReactNode }) {
       )}
 
       <Topbar onMenu={() => setOpen(true)} />
-      <main className="mx-auto w-full max-w-[1400px] px-3 pb-24 pt-4 sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
+      <main className="mx-auto w-full max-w-[1400px] px-3 pt-4 pb-[calc(var(--mobile-nav-h)+var(--dock-handle-h)+16px)] sm:px-6 sm:pt-5 lg:pb-10">{children}</main>
       <MobileNav />
       <Toasts />
     </div>

@@ -436,7 +436,7 @@ export function ArcadeGame({ game }: { game: Game }) {
               ref={canvasRef}
               width={W}
               height={H}
-              className="block h-[360px] w-full touch-none sm:h-[440px]"
+              className="block aspect-[640/420] w-full touch-none"
               onPointerMove={pointer}
               onPointerDown={pointer}
             />

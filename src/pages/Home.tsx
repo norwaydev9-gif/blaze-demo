@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { GAMES, FEATURED_IDS, POPULAR_IDS, getGame } from '../lib/games'
+import { GAMES, FEATURED_IDS, POPULAR_IDS, HERO_IMAGE, getGame } from '../lib/games'
 import { navigate } from '../lib/router'
 import { useWallet } from '../lib/wallet'
 import { useRecent } from '../lib/favorites'
@@ -31,6 +31,10 @@ export function HomePage() {
       {/* hero */}
       <section className="relative overflow-hidden rounded-3xl border border-line/70 bg-[#080a11]">
         <div className="absolute inset-0 bg-[radial-gradient(900px_420px_at_20%_-20%,rgba(255,45,63,.22),transparent_60%),radial-gradient(700px_420px_at_95%_10%,rgba(120,60,255,.12),transparent_60%)]" />
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-[.18]"
+          style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+        />
         <div className="absolute inset-0 bg-grid opacity-25" />
         <div className="relative grid gap-6 p-6 sm:p-10 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
           <div>
@@ -169,6 +173,7 @@ export function HomePage() {
       </section>
 
       <section className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-r from-[#1c1505] via-[#120d03] to-[#0a0d14] p-5 sm:p-7">
+        <div className="absolute inset-0 bg-cover bg-center opacity-[.14]" style={{ backgroundImage: `url(${HERO_IMAGE})` }} />
         <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">

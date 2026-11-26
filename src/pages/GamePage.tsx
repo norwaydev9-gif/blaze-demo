@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { categoryLabel, getGame, GAMES } from '../lib/games'
+import { categoryLabel, gameImage, getGame, GAMES } from '../lib/games'
 import { navigate, useRoute } from '../lib/router'
 import { useFavorites, useRecent } from '../lib/favorites'
 import { useWallet } from '../lib/wallet'
@@ -17,7 +17,12 @@ export function GamePage() {
   const { balance, tx } = useWallet()
 
   useEffect(() => {
-    if (game) visit(game.id)
+    if (!game) return
+    visit(game.id)
+    document.documentElement.style.setProperty('--game-bg', `url("${gameImage(game)}")`)
+    return () => {
+      document.documentElement.style.removeProperty('--game-bg')
+    }
   }, [game, visit])
 
   const stats = useMemo(() => {
@@ -48,12 +53,12 @@ export function GamePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <button type="button" onClick={() => navigate('/jogos')} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white" aria-label="Voltar">
+          <button type="button" onClick={() => navigate('/jogos')} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white" aria-label="Voltar">
             <Icon name="back" size={17} />
           </button>
           <div
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 text-xl shadow-lg"
-            style={{ background: `linear-gradient(135deg,${game.theme.from},${game.theme.to})` }}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-cover bg-center text-xl shadow-lg"
+            style={{ backgroundImage: `linear-gradient(135deg,${game.theme.from}cc,${game.theme.to}cc), url(${gameImage(game)})` }}
           >
             {game.theme.icon}
           </div>
@@ -72,13 +77,13 @@ export function GamePage() {
           <button
             type="button"
             onClick={() => toggle(game.id)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-semibold transition ${
+            className={`flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-semibold transition ${
               fav ? 'border-brand/40 bg-brand/10 text-brand' : 'border-line text-white/40 hover:text-white'
             }`}
           >
             <Icon name="heart" size={14} /> {fav ? 'Favorito' : 'Favoritar'}
           </button>
-          <button type="button" onClick={() => navigate('/carteira')} className="flex items-center gap-2 rounded-xl border border-line bg-white/[.04] px-3 py-2">
+          <button type="button" onClick={() => navigate('/carteira')} className="flex min-h-[44px] items-center gap-2 rounded-xl border border-line bg-white/[.04] px-3 py-2">
             <span className="text-[9px] font-semibold uppercase tracking-wider text-white/30">Saldo</span>
             <span className="text-xs font-bold tabular">{fmt(balance)} B$</span>
           </button>

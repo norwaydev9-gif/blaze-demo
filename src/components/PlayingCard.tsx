@@ -13,7 +13,11 @@ export function PlayingCard({
   highlight?: boolean
 }) {
   const dims =
-    size === 'sm' ? 'w-10 text-[10px] p-1' : size === 'lg' ? 'w-24 text-base p-2' : 'w-16 text-xs p-1.5'
+    size === 'sm'
+      ? 'w-10 text-[10px] p-1'
+      : size === 'lg'
+        ? 'w-16 text-xs p-1 sm:w-24 sm:text-base sm:p-2'
+        : 'w-14 text-[11px] p-1 sm:w-16 sm:text-xs sm:p-1.5'
   if (!card) {
     return <div className={`card-back ${dims} ${dim ? 'opacity-50' : ''}`} />
   }

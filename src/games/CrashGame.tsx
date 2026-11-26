@@ -297,7 +297,7 @@ export function CrashGame({ game }: { game: Game }) {
       stage={
         <Stage className="overflow-hidden">
           <div className="relative">
-            <canvas ref={canvasRef} className="block h-[320px] w-full sm:h-[400px]" />
+            <canvas ref={canvasRef} className="block aspect-[4/3] w-full sm:aspect-[16/9]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
                 <p className={`font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
@@ -357,8 +357,8 @@ export function CrashGame({ game }: { game: Game }) {
                         : 'Apostar'}
                   </button>
                 </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <label className="flex flex-1 items-center gap-1.5 text-[10px] text-white/35">
+                <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
+                  <label className="flex min-w-0 items-center gap-1.5 text-[10px] text-white/35">
                     Auto-retirar
                     <input
                       type="number"
@@ -366,14 +366,14 @@ export function CrashGame({ game }: { game: Game }) {
                       min="1.01"
                       value={s.autoCash}
                       onChange={(e) => setSlot(i, { autoCash: Number(e.target.value) })}
-                      className="w-14 rounded-md border border-line bg-black/30 px-1.5 py-1 text-center text-[10px] font-bold text-white outline-none focus:border-brand/50"
+                      className="h-11 w-full min-w-0 rounded-md border border-line bg-black/30 px-1.5 text-center text-[10px] font-bold text-white outline-none focus:border-brand/50"
                     />
                     ×
                   </label>
                   <button
                     type="button"
                     onClick={() => setSlot(i, { auto: !s.auto })}
-                    className={`rounded-md border px-2 py-1 text-[10px] font-bold transition ${s.auto ? 'border-good/40 bg-good/15 text-good' : 'border-line text-white/30'}`}
+                    className={`h-11 rounded-md border px-3 text-[10px] font-bold transition ${s.auto ? 'border-good/40 bg-good/15 text-good' : 'border-line text-white/30'}`}
                   >
                     AUTO
                   </button>

@@ -337,7 +337,7 @@ export function KenoGame({ game }: { game: Game }) {
         <span>Escolhidos: {picks.length}</span>
         <span>Sorteados: {drawCount}</span>
       </div>
-      <div className="grid max-h-[220px] grid-cols-10 gap-1 overflow-y-auto pr-1">
+      <div className="no-scrollbar grid max-h-[264px] grid-cols-5 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-10 sm:gap-1">
         {Array.from({ length: pool }, (_, i) => i + 1).map((n) => {
           const chosen = picks.includes(n)
           const drawnNumber = drawn.includes(n)
@@ -346,7 +346,7 @@ export function KenoGame({ game }: { game: Game }) {
               key={n}
               type="button"
               onClick={() => toggle(n)}
-              className={`h-7 rounded-md border text-[10px] font-bold tabular transition ${
+              className={`h-11 rounded-md border text-[11px] font-bold tabular transition sm:h-9 sm:text-[10px] ${
                 drawnNumber && chosen ? 'border-gold bg-gold/25 text-gold' : chosen ? 'border-brand bg-brand/20 text-white' : drawnNumber ? 'border-white/20 bg-white/[.06] text-white/60' : 'border-line/60 bg-white/[.02] text-white/30 hover:text-white'
               }`}
             >

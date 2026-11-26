@@ -4,7 +4,7 @@ import { navigate } from '../lib/router'
 import { useFavorites } from '../lib/favorites'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
-import { categoryLabel } from '../lib/games'
+import { categoryLabel, gameImage } from '../lib/games'
 
 export function GameCard({ game, compact = false }: { game: Game; compact?: boolean }) {
   const { isFav, toggle } = useFavorites()
@@ -26,7 +26,10 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
       <div
         className={`relative overflow-hidden ${compact ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}
         style={{
-          background: `radial-gradient(120% 100% at 50% 0%, ${game.theme.to}38, transparent 60%), linear-gradient(150deg, ${game.theme.from}, #080a10 90%)`,
+          backgroundColor: '#080a10',
+          backgroundImage: `linear-gradient(160deg, ${game.theme.from}99, rgba(5,6,10,.35) 45%, rgba(5,6,10,.94) 100%), url(${gameImage(game)})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
         <div className="absolute inset-0 bg-grid opacity-40" />
@@ -61,7 +64,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
             e.stopPropagation()
             toggle(game.id)
           }}
-          className={`absolute right-2.5 top-2.5 grid h-8 w-8 place-items-center rounded-lg border backdrop-blur transition ${
+          className={`absolute right-2.5 top-2.5 grid h-11 w-11 place-items-center rounded-lg border backdrop-blur transition ${
             fav
               ? 'border-brand/50 bg-brand/20 text-brand'
               : 'border-white/10 bg-black/30 text-white/50 hover:text-white'

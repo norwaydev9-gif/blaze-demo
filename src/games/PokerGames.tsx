@@ -120,7 +120,7 @@ export function VideoPokerGame({ game }: { game: Game }) {
                       type="button"
                       disabled={phase !== 'draw'}
                       onClick={() => setHolds((h) => h.map((v, idx) => (idx === i ? !v : v)))}
-                      className={`rounded-md border px-2 py-1 text-[9px] font-bold uppercase transition ${
+                      className={`grid h-11 place-items-center rounded-md border px-2 text-[9px] font-bold uppercase transition ${
                         holds[i] ? 'border-gold/50 bg-gold/20 text-gold' : 'border-line text-white/30'
                       }`}
                     >
@@ -260,7 +260,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
                 <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Dealer</span>
                 {phase === 'done' && <span className="text-xs font-bold text-white/60">{HAND_PT[pokerScore(dealer).name] ?? pokerScore(dealer).name}</span>}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {dealer.map((c, i) => (
                   <PlayingCard key={i} card={phase === 'decide' ? undefined : c} size="sm" />
                 ))}
@@ -277,7 +277,7 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
                 <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Jogador</span>
                 {player.length > 0 && <span className="text-xs font-bold text-white/60">{HAND_PT[pokerScore(player).name] ?? pokerScore(player).name}</span>}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {player.length ? player.map((c, i) => <PlayingCard key={i} card={c} size="sm" />) : <span className="text-xs text-white/20">—</span>}
               </div>
             </div>
@@ -395,7 +395,7 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
                 <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Dealer</span>
                 {phase === 'done' && <span className="text-xs font-bold text-white/60">{HAND_PT[threeCardScore(dealer).name] ?? threeCardScore(dealer).name}</span>}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {dealer.map((c, i) => (
                   <PlayingCard key={i} card={phase === 'decide' ? undefined : c} size="md" />
                 ))}
@@ -412,7 +412,7 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
                 <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Jogador</span>
                 {player.length > 0 && <span className="text-xs font-bold text-white/60">{HAND_PT[threeCardScore(player).name] ?? threeCardScore(player).name}</span>}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {player.length ? player.map((c, i) => <PlayingCard key={i} card={c} size="md" />) : <span className="text-xs text-white/20">—</span>}
               </div>
             </div>
@@ -546,7 +546,7 @@ export function TexasHoldemGame({ game }: { game: Game }) {
                 <span className="rounded-md bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/50">Dealer</span>
                 {phase === 'done' && dBest && <span className="text-[10px] font-bold text-white/50">{HAND_PT[dBest.name] ?? dBest.name}</span>}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {dealer.map((c, i) => (
                   <PlayingCard key={i} card={phase === 'done' ? c : undefined} size="sm" />
                 ))}
@@ -561,7 +561,7 @@ export function TexasHoldemGame({ game }: { game: Game }) {
               </div>
             </div>
             <div className="relative">
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {player.map((c, i) => (
                   <PlayingCard key={i} card={c} size="sm" highlight={phase === 'done' && pBest ? pBest.cards.includes(c) : false} />
                 ))}

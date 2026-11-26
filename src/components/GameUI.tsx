@@ -96,7 +96,7 @@ export function BetInput({
         <span className="text-[10px] tabular text-white/30">máx. {fmt(Math.min(max, balance))}</span>
       </div>
       <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-black/30 focus-within:border-brand/50">
-        <button type="button" disabled={disabled} className="w-10 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
+        <button type="button" disabled={disabled} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
           −
         </button>
         <div className="relative flex-1">
@@ -113,7 +113,7 @@ export function BetInput({
           />
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/25">B$</span>
         </div>
-        <button type="button" disabled={disabled} className="w-10 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
+        <button type="button" disabled={disabled} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
           +
         </button>
       </div>
@@ -124,7 +124,7 @@ export function BetInput({
             type="button"
             disabled={disabled}
             onClick={() => set(n)}
-            className="rounded-lg border border-line bg-white/[.02] py-1.5 text-[10px] font-semibold text-white/50 transition hover:border-white/20 hover:text-white disabled:opacity-40"
+            className="h-11 rounded-lg border border-line bg-white/[.02] px-1 text-[11px] font-semibold text-white/50 transition hover:border-white/20 hover:text-white disabled:opacity-40"
           >
             {i === 3 ? '½ saldo' : fmt(n).replace(',00', '')}
           </button>

@@ -8,6 +8,8 @@ backend e sem dinheiro real.
 > levantamentos. Todos os créditos são virtuais e ficam no `localStorage` do
 > navegador.
 
+**Demo publicada:** <https://norwaydev9-gif.github.io/blaze-demo/>
+
 ## Como correr
 
 ```bash
@@ -51,7 +53,10 @@ npm run check
   favoritos, promoções, carteira, histórico de apostas, rankings, perfil,
   suporte, páginas legais e página de cada jogo.
 - **Responsiva**: sidebar em desktop, menu deslizante e navegação inferior em
-  telemóvel/tablet.
+  telemóvel/tablet. Em Android/iOS a dock de controlos respeita a navegação e a
+  `safe-area`, os canvas mantêm a proporção e os botões têm no mínimo 44px.
+- **Arte original/licenciada**: 15 imagens com capas por motor/categoria no
+  catálogo, na página do jogo e no palco; créditos em `docs/IMAGE_CREDITS.md`.
 - **Sons** gerados por WebAudio (com mute) e notificações toast.
 - **Persistência local** de carteira, favoritos, jogos recentes e preferência de
   som, com exportação/apagamento dos dados no perfil.
@@ -71,8 +76,11 @@ blaze/
 │   ├── lib/                      # carteira, router, RNG, cartas, som, toasts
 │   ├── pages/                    # lobby, catálogo, jogo, carteira, etc.
 │   └── data/games.json           # catálogo dos 66 jogos
-├── public/                       # ícones SVG/PNG, manifest e service worker
+├── public/
+│   ├── images/                   # 15 capas dos jogos (Wikimedia Commons)
+│   └── icon*.png, icon.svg, manifest, sw.js
 ├── docs/AUDIT.md                 # relatório da auditoria
+├── docs/IMAGE_CREDITS.md         # créditos/licenças das imagens
 ├── scripts/smoke.mjs             # verificação rápida (npm run check)
 └── server/                       # reservado para uma API futura
 ```
