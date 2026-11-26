@@ -17,7 +17,7 @@ node --check scripts/smoke.mjs && node --check scripts/runtime-smoke.mjs
 | --- | --- | --- | --- |
 | Catálogo | 66 jogos, `count`, IDs únicos, categorias válidas, 27 motores registados, listas `FEATURED_IDS`/`POPULAR_IDS` | `npm run check` | Regras de negócio de cada jogo |
 | Rotas e assets | 16 rotas do `App.tsx` (menu e `navigate`), 15 imagens e créditos | `npm run check` | Navegação real em browser |
-| Marca e PWA | Identidade BLAZE em `index.html`, `package.json`, `README.md`, manifesto, `start.sh`, `src/`, `public/` e `dist/`; ausência da grafia antiga; cache SW `blaze-demo-v5` | `npm run check` | Instalação/offline reais da PWA |
+| Marca e PWA | Identidade BLAZE em `index.html`, `package.json`, `README.md`, manifesto, `start.sh`, `src/`, `public/` e `dist/`; ausência da grafia antiga; cache SW `blaze-demo-v6` | `npm run check` | Instalação/offline reais da PWA |
 | Build | `dist/index.html`, título, manifesto e todos os assets locais referenciados | `npm run check` (após `npm run build`) | Erros de compilação em produção fora do `tsc -b` |
 | UI comum | Vectores `GameArt`, `autoPlay`, componentes de `GameUI`, barra de aposta no palco e ausência nos controlos, progresso de sessão, guarda de saldo | `npm run check` + `npm run check:runtime` | Contraste, spacing e responsividade reais (CSS do browser) |
 | Apostas e estabilidade | Aposta registada após cliques nos 66 jogos, montagem imersiva, zero erros de render/console/jsdom | `npm run check:runtime` | Montantes/fluxo económico real; sessões longas |

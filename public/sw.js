@@ -1,4 +1,4 @@
-const CACHE = 'blaze-demo-v5'
+const CACHE = 'blaze-demo-v6'
 const SCOPE = self.registration.scope
 const url = (path) => new URL(path, SCOPE).toString()
 const SHELL = [

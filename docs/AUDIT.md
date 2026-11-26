@@ -141,6 +141,26 @@ Motor (`rng.ts`, `wallet.ts`, `storage.ts`, `ENGINE.md`), Mobile (`GamePage`, `G
 QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam com o agente principal.
 `Stage` passou a expor `data-category`/`data-game` para fundos próprios por categoria.
 
+## Sétima passagem — execução multi-agente (Fases 2–8)
+
+- **Hierarquia visual:** fundo da página `#0b101b`, painéis `#1a2130` e superfícies
+  iluminadas por categoria (`data-category`/`data-game` no `Stage`). Tokens do Tailwind
+  alinhados com o CSS. Fim do “preto sobre preto”; rótulos pequenos subiram para
+  `white/55–60` nos componentes partilhados.
+- **Crash:** nove variantes com glifo, curva, cores, efeito e texto de vantagem/desvantagem
+  próprios; rounds contínuos com cronómetro, histórico, multiplicador em tempo real e
+  bots **DEMONSTRAÇÃO** (apostas/retiradas simuladas, sem carteira). `crashFromSeed`
+  continua a decidir o resultado.
+- **Casino:** Slots com linhas selecionáveis e pagamentos visíveis; Roleta com roda
+  alinhada ao resultado; Blackjack com animação de cartas e ás suave; Mines com escada
+  de multiplicadores; Plinko com queda/gravidade; Dado com atalhos e zonas de vitória.
+- **Motor:** validação de aposta/payout, histórico limitado e persistência defendida;
+  `docs/ENGINE.md` explica a fronteira motor/UI e por que não há dinheiro real.
+- **Android:** chrome imersivo com botões de 44px, `Esc` e foco de teclado preservados,
+  palco com scroll interno para a `.bet-bar` nunca ficar cortada.
+- **QA:** 66/66 jogos renderizam, todos apostam, barra de aposta sempre no palco e nunca
+  nos controlos, 9/9 Crash com bots rotulados, zero botões dourados.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.

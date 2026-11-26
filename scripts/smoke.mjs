@@ -171,7 +171,7 @@ if (existsSync(new URL('dist/index.html', root))) {
 
   const manifest = readJson('dist/manifest.webmanifest')
   check(manifest.name.includes('BLAZE'), 'dist/manifest.webmanifest: nome não usa BLAZE')
-  check(read('dist/sw.js').includes('blaze-demo-v5'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v5')
+  check(read('dist/sw.js').includes('blaze-demo-v6'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v6')
 }
 
 /* -------------------------------- resultado ------------------------------- */
