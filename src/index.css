@@ -367,9 +367,11 @@ body {
   z-index: 10;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 12px;
-  background: rgba(5, 8, 15, 0.5);
+  /* superfície mais clara que o fundo do jogo: nunca preto sobre preto */
+  background: rgba(32, 41, 58, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(6px);
   overscroll-behavior: contain;
 }
