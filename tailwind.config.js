@@ -4,9 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#05060a',
-        panel: '#0b0e15',
-        panel2: '#11151f',
+        // Mesma escala de superfícies de src/index.css: página < painel < cartão.
+        ink: '#0b101b',
+        panel: '#1a2130',
+        panel2: '#232c3e',
         line: '#1e2431',
         brand: '#ff2d3f',
         red: '#ff2d3f',

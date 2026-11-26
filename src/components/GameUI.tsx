@@ -43,7 +43,7 @@ export function GameLayout({
             <Icon
               name="chevron"
               size={16}
-              className={`ml-auto shrink-0 text-white/40 transition-transform duration-200 ${open ? 'rotate-90' : '-rotate-90'}`}
+              className={`ml-auto shrink-0 text-white/60 transition-transform duration-200 ${open ? 'rotate-90' : '-rotate-90'}`}
             />
           </button>
         )}
@@ -72,8 +72,8 @@ export function SidePanel({ children, title, icon = 'wallet' }: { children: Reac
     <div className="panel overflow-hidden">
       {title && (
         <div className="flex items-center gap-2 border-b border-line/70 px-4 py-3">
-          <Icon name={icon} size={14} className="text-white/30" />
-          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-white/40">{title}</span>
+          <Icon name={icon} size={14} className="text-white/55" />
+          <span className="text-[11px] font-bold uppercase tracking-[.14em] text-white/60">{title}</span>
         </div>
       )}
       <div className="p-4">{children}</div>
@@ -110,12 +110,12 @@ export function BetInput({
     <div>
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <span className="label">{label}</span>
-        <span className={`text-[10px] tabular ${canBet ? 'text-white/30' : 'text-brand'}`}>
+        <span className={`text-[10px] tabular ${canBet ? 'text-white/55' : 'text-brand'}`}>
           {canBet ? `máx. ${fmt(ceiling)}` : 'saldo insuficiente'}
         </span>
       </div>
       <div className="flex items-stretch overflow-hidden rounded-xl border border-line bg-black/30 focus-within:border-brand/50">
-        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
+        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/60 transition hover:bg-white/5 hover:text-white" onClick={() => set(value - 10)}>
           −
         </button>
         <div className="relative flex-1">
@@ -133,9 +133,9 @@ export function BetInput({
             onBlur={() => set(Number.isFinite(value) ? value : min)}
             className="w-full bg-transparent py-2.5 text-center text-base font-bold tabular text-white outline-none disabled:opacity-50"
           />
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/25">B$</span>
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/55">B$</span>
         </div>
-        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/40 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
+        <button type="button" disabled={blocked} className="h-11 w-11 shrink-0 text-lg text-white/60 transition hover:bg-white/5 hover:text-white" onClick={() => set(value + 10)}>
           +
         </button>
       </div>
@@ -189,7 +189,7 @@ export function ResultBanner({
       </span>
       <div className="relative z-10 min-w-0 flex-1">
         <p className={`text-xs font-bold ${good ? 'text-good' : state === 'push' ? 'text-white/70' : 'text-brand'}`}>{text}</p>
-        {sub && <p className="truncate text-[10px] text-white/40">{sub}</p>}
+        {sub && <p className="truncate text-[10px] text-white/60">{sub}</p>}
       </div>
       {win !== undefined && win > 0 && <span className="relative z-10 shrink-0 text-sm font-extrabold tabular text-good">+{fmt(win)}</span>}
     </div>
@@ -209,10 +209,10 @@ export function RecentStrip({
     <div>
       <div className="mb-1.5 flex items-center justify-between">
         <span className="label">{label}</span>
-        <span className="text-[10px] text-white/25">ao vivo</span>
+        <span className="text-[10px] text-white/55">ao vivo</span>
       </div>
       <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
-        {items.length === 0 && <span className="text-[11px] text-white/25">Ainda sem rondas.</span>}
+        {items.length === 0 && <span className="text-[11px] text-white/55">Ainda sem rondas.</span>}
         {items.map((it, i) => (
           <span
             key={`${it}-${i}`}
@@ -229,7 +229,7 @@ export function RecentStrip({
 export function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="rounded-xl border border-line/60 bg-black/20 px-3 py-2">
-      <p className="text-[9px] font-semibold uppercase tracking-wider text-white/30">{label}</p>
+      <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{label}</p>
       <p className={`mt-0.5 text-sm font-bold tabular ${accent ? 'text-gold' : 'text-white'}`}>{value}</p>
     </div>
   )
@@ -390,7 +390,7 @@ export function AutoControl({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="mt-1 text-[9px] text-white/35">
+          <p className="mt-1 text-[9px] text-white/55">
             {reached ? 'Alvo atingido — a retirar agora.' : `Retirada automática aos ${fmtMult(target)}.`}
           </p>
         </div>
@@ -453,7 +453,7 @@ export function AutoBetControl({
         </ActionButton>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-bold text-white/80">{label}</p>
-          <p className="truncate text-[10px] text-white/45">
+          <p className="truncate text-[10px] text-white/60">
             {active ? 'A repetir a ronda automaticamente' : hint}
           </p>
         </div>
@@ -486,15 +486,15 @@ export function AutoBetControl({
           </div>
           <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
             <div className="rounded-lg bg-white/[.04] py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/35">Acertos</p>
+              <p className="text-[9px] uppercase tracking-wider text-white/55">Acertos</p>
               <p className="text-xs font-extrabold tabular text-white/85">{rate}%</p>
             </div>
             <div className="rounded-lg bg-white/[.04] py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/35">Retorno</p>
+              <p className="text-[9px] uppercase tracking-wider text-white/55">Retorno</p>
               <p className={`text-xs font-extrabold tabular ${roi >= 100 ? 'text-good' : 'text-gold'}`}>{roi}%</p>
             </div>
             <div className="rounded-lg bg-white/[.04] py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/35">Sessão</p>
+              <p className="text-[9px] uppercase tracking-wider text-white/55">Sessão</p>
               <p className={`text-xs font-extrabold tabular ${stats.net >= 0 ? 'text-good' : 'text-brand'}`}>
                 {stats.net >= 0 ? '+' : '−'}{fmt(Math.abs(stats.net))}
               </p>
@@ -509,7 +509,7 @@ export function AutoBetControl({
 export function Payout({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg bg-black/20 px-3 py-2">
-      <span className="text-[11px] text-white/40">{label}</span>
+      <span className="text-[11px] text-white/60">{label}</span>
       <span className="text-xs font-bold tabular text-white/80">{value}</span>
     </div>
   )

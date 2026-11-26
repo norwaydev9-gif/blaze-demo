@@ -92,7 +92,8 @@ const readCrashUi = (scope) => {
   const missing = crashSelectors.filter((sel) => !scope.querySelector(sel))
   if (!bots.length) missing.push('.crash-bot')
   if (bots.some((b) => !(b.getAttribute('data-status') || '').trim())) missing.push('.crash-bot[data-status]')
-  const text = `${container?.textContent || ''} ${bots.map((b) => b.textContent || '').join(' ')}`
+  // O rótulo de demonstração vive no cabeçalho do painel, fora do container .crash-bots.
+  const text = `${container?.textContent || ''} ${bots.map((b) => b.textContent || '').join(' ')} ${scope.textContent || ''}`
   return { bots: bots.length, missing, demoLabeled: bots.length > 0 && /demo|simulad/i.test(text) }
 }
 const mergeCrashUi = (a, b) => ({
