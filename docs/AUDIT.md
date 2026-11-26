@@ -161,6 +161,29 @@ QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam co
 - **QA:** 66/66 jogos renderizam, todos apostam, barra de aposta sempre no palco e nunca
   nos controlos, 9/9 Crash com bots rotulados, zero botões dourados.
 
+## Oitava passagem — auditoria Crash antes da reconstrução
+
+1. **Jogos:** 9 entradas com `engine: crash` — `crash`, `aviator`, `space-flight`,
+   `rocket-rush`, `sky-multiplier`, `cosmic-crash`, `turbo-crash`, `jet-rush` e
+   `crash-deluxe` (categoria `deluxe`). Todos caem em `CrashGame.tsx` via `registry.tsx`.
+2. **Gráfico:** canvas desenhado em `CrashGame.tsx:75-299`, com multiplicador sobreposto
+   em `:497` e cronómetro em `:526`; a área era pequena e dividida com cartões.
+3. **Controlos:** `.bet-bar` dentro do `Stage` em `:566-619` — input, Apostar/Retirar e
+   `AutoControl` por slot. O `AutoBetControl` e as estatísticas estavam no `side` (`:624-654`).
+4. **Participantes:** lista de bots no **painel lateral** (`SidePanel` `:679-724`), fora da
+   área de jogo — é a correção principal pedida.
+5. **Histórico:** `history` em `:39`, gravado em `:332` e mostrado por `RecentStrip` dentro
+   do painel da sessão (`:635-643`), misturado com saldo/auto-aposta — não era faixa superior.
+6. **Ganhos/cashouts:** não havia componente de atividade; só um agregado `simulatedCashouts`
+   e o `ResultBanner` do utilizador. Faltava separar cashouts recentes de histórico e apostas ao vivo.
+7. **Motor de rondas:** `betting → flying → crashed` em `:301-432`; `crashFromSeed` em `:413`;
+   liquidação por `paidRef`+`payout` em `:457-466`; auto-retirada em `:472-475`. Bots derivados
+   da semente em `crashBots.ts:204-228`, sem tocar na carteira.
+8. **Frontend/backend:** não existe backend; resultado, carteira e persistência são locais.
+   O hash da semente era mostrado, mas `verifyCrash` (`rng.ts:76`) não era usado — falta
+   compromisso/revelação verificável. Um servidor autoritativo só existiria num operador
+   licenciado; esta demo continuará a ser explicitamente fictícia (B$).
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.
