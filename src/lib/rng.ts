@@ -1,4 +1,9 @@
-/** Random helpers. Uses WebCrypto when available, with a safe fallback. */
+/**
+ * Random helpers. Uses WebCrypto when available, with a safe fallback.
+ * Contrato demo: `rand*` alimenta o jogo; `seedRoll`/`crashFromSeed` são puros e
+ * verificáveis a partir do seed. Nenhum valor pode ser imposto pelo frontend sem
+ * alterar o código — e, mesmo assim, isso não teria validade num operador licenciado.
+ */
 
 function cryptoObj(): Crypto | null {
   if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.getRandomValues === 'function') {
@@ -45,16 +50,31 @@ export function crashPoint(edge = 0.03, max = 5000): number {
   return Math.min(max, Math.max(1, (1 - edge) / (1 - u)))
 }
 
-/** Deterministic crash from a hex seed (provably-fair demo). */
-export function crashFromSeed(seed: string, edge = 0.03, max = 5000): number {
+/** Roll em [0,1) derivado apenas do seed — mesma entrada, sempre o mesmo valor. */
+export function seedRoll(seed: string): number {
   let h = 2166136261
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i)
     h = Math.imul(h, 16777619)
   }
-  const u = (h >>> 0) / 4294967296
+  return (h >>> 0) / 4294967296
+}
+
+/**
+ * Deterministic crash from a hex seed (provably-fair demo).
+ * O resultado depende apenas de `seed`, `edge` e `max`: qualquer cliente pode
+ * recalculá-lo. O seed vem de `uid()`/`rand()` (WebCrypto quando disponível),
+ * não de uma escolha livre do utilizador. Isto é demonstração local, não autoridade de servidor.
+ */
+export function crashFromSeed(seed: string, edge = 0.03, max = 5000): number {
+  const u = seedRoll(seed)
   if (u < edge) return 1
   return Math.min(max, Math.max(1, (1 - edge) / (1 - u)))
+}
+
+/** Verificação local: confirma que o ponto apresentado resulta do seed publicado. */
+export function verifyCrash(seed: string, point: number, edge = 0.03, max = 5000): boolean {
+  return Number.isFinite(point) && Math.abs(crashFromSeed(seed, edge, max) - point) < 1e-9
 }
 
 /** Simple FNV-1a hash, hex encoded (demo only). */
