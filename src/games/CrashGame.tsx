@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Game } from '../lib/types'
 import { fmt, fmtMult, clamp } from '../lib/format'
 import { crashFromSeed, hashHex, uid } from '../lib/rng'
+import { BOT_STYLE_LABEL, botCashout, botStatus, crashVariant, makeBotRound } from '../lib/crashBots'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
@@ -25,16 +26,21 @@ export function CrashGame({ game }: { game: Game }) {
   const max = game.maxBet
   const growth = Number(game.config.growth ?? 0.09)
   const maxMult = Number(game.config.maxMult ?? 5000)
+  const configuredSlots = Number(game.config.slots)
+  const slotCount = Number.isFinite(configuredSlots) ? clamp(Math.floor(configuredSlots), 1, 3) : 2
+  const variant = useMemo(() => crashVariant(game.id), [game.id])
   const { balance, placeBet, payout } = useWallet()
   const { play } = useSound()
 
   const [phase, setPhase] = useState<Phase>('betting')
   const [countdown, setCountdown] = useState(7)
   const [mult, setMult] = useState(1)
-  const [slots, setSlots] = useState<Slot[]>([EMPTY_SLOT(min), EMPTY_SLOT(min)])
+  const [slots, setSlots] = useState<Slot[]>(() => Array.from({ length: slotCount }, () => EMPTY_SLOT(min)))
   const [history, setHistory] = useState<number[]>([])
   const [autoReplay, setAutoReplay] = useState(false)
   const [seed, setSeed] = useState(() => hashHex(uid()))
+  const [botSeed, setBotSeed] = useState(seed)
+  const [nextIn, setNextIn] = useState(7)
   const seedRef = useRef(seed)
 
   const phaseRef = useRef<Phase>('betting')
@@ -50,9 +56,21 @@ export function CrashGame({ game }: { game: Game }) {
   const rafRef = useRef(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const nextTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const nextAtRef = useRef(performance.now() + 7000)
+  const nextTotalRef = useRef(7)
 
   slotsRef.current = slots
   seedRef.current = seed
+
+  // Visual bots only: deterministic per round, derived from the round seed.
+  const bots = useMemo(() => makeBotRound(botSeed, min, max, variant), [botSeed, min, max, variant])
+  const botViews = bots.map((bot) => {
+    const status = botStatus(bot, phase, mult, crashRef.current)
+    return { ...bot, status, simulatedPayout: botCashout(bot, status) }
+  })
+  const cashedBots = botViews.filter((bot) => bot.status === 'cashed')
+  const simulatedCashouts = cashedBots.reduce((sum, bot) => sum + bot.simulatedPayout, 0)
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -68,6 +86,11 @@ export function CrashGame({ game }: { game: Game }) {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
+    const wash = ctx.createLinearGradient(0, 0, w, h)
+    wash.addColorStop(0, variant.wash)
+    wash.addColorStop(1, 'rgba(5,6,10,0)')
+    ctx.fillStyle = wash
+    ctx.fillRect(0, 0, w, h)
 
     const padL = 46
     const padR = 26
@@ -114,10 +137,10 @@ export function CrashGame({ game }: { game: Game }) {
       ctx.fillText(`${((i * 20) / 5).toFixed(0)}s`, padL + (plotW * i) / 5, h - 12)
     }
 
-    // curve
+    // curve — the multiplier math is identical for every variant; only the styling changes
     const tMax = Math.max(flying ? elapsed : crashed ? 20 : 1, 4)
     const points = 90
-    const color = crashed ? '#ff2d3f' : '#ff6b3d'
+    const color = crashed ? '#ff2d3f' : variant.line
     ctx.beginPath()
     for (let i = 0; i <= points; i++) {
       const t = (i / points) * Math.max(tMax, 0.001)
@@ -127,11 +150,16 @@ export function CrashGame({ game }: { game: Game }) {
       if (i === 0) ctx.moveTo(x, y)
       else ctx.lineTo(x, y)
     }
-    ctx.lineWidth = 3
-    ctx.strokeStyle = color
+    const stroke = ctx.createLinearGradient(padL, padT + plotH, w - padR, padT)
+    stroke.addColorStop(0, color)
+    stroke.addColorStop(1, crashed ? '#ff2d3f' : variant.accent)
+    ctx.lineWidth = variant.mechanic === 'jet' ? 4 : 3
+    ctx.setLineDash(variant.dash)
+    ctx.strokeStyle = stroke
     ctx.shadowColor = color
     ctx.shadowBlur = 16
     ctx.stroke()
+    ctx.setLineDash([])
     ctx.shadowBlur = 0
 
     // fill under curve
@@ -139,20 +167,123 @@ export function CrashGame({ game }: { game: Game }) {
     ctx.lineTo(padL, padT + plotH)
     ctx.closePath()
     const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH)
-    grad.addColorStop(0, crashed ? 'rgba(255,45,63,.22)' : 'rgba(255,107,61,.20)')
+    grad.addColorStop(0, crashed ? 'rgba(255,45,63,.22)' : variant.wash)
     grad.addColorStop(1, 'rgba(255,45,63,0)')
     ctx.fillStyle = grad
     ctx.fill()
 
-    // plane at tip
+    // vehicle + variant flourish at tip (purely visual — no effect on the multiplier)
     if (flying || crashed) {
       const t = crashed ? Math.max(4, 20) : elapsed
       const m = crashed ? crashRef.current : multRef.current
       const x = padL + (plotW * Math.min(1, t / Math.max(6, tMax)))
       const y = padT + plotH - plotH * Math.min(1, yScale(m))
+      const now = performance.now()
+      const trail = (dx: number, dy: number, alpha: number) => {
+        ctx.globalAlpha = alpha
+        ctx.fillStyle = variant.accent
+        for (let i = 1; i <= 3; i++) {
+          ctx.beginPath()
+          ctx.arc(x - i * dx, y + i * dy, Math.max(1.5, 3 - i * 0.5), 0, Math.PI * 2)
+          ctx.fill()
+        }
+        ctx.globalAlpha = 1
+      }
+      switch (variant.mechanic) {
+        case 'trail':
+          trail(9, 6, 0.55)
+          break
+        case 'jet':
+          trail(13, 3, 0.7)
+          trail(13, -3, 0.35)
+          break
+        case 'turbo':
+          ctx.strokeStyle = variant.accent
+          ctx.globalAlpha = 0.5
+          ctx.lineWidth = 1.5
+          for (let i = 0; i < 4; i++) {
+            const yy = y + (i - 1.5) * 7
+            ctx.beginPath()
+            ctx.moveTo(x - 12 - i * 6, yy)
+            ctx.lineTo(x - 30 - i * 10, yy)
+            ctx.stroke()
+          }
+          ctx.globalAlpha = 1
+          break
+        case 'wind':
+          ctx.strokeStyle = variant.accent
+          ctx.globalAlpha = 0.35
+          for (let i = 0; i < 4; i++) {
+            const yy = padT + 18 + i * 22
+            const xx = padL + ((now / 45 + i * 70) % Math.max(1, plotW))
+            ctx.beginPath()
+            ctx.moveTo(xx, yy)
+            ctx.lineTo(xx + 26, yy - 3)
+            ctx.stroke()
+          }
+          ctx.globalAlpha = 1
+          break
+        case 'orbit':
+          ctx.strokeStyle = variant.accent
+          ctx.globalAlpha = 0.35
+          ctx.beginPath()
+          ctx.arc(x, y, 16, 0, Math.PI * 2)
+          ctx.stroke()
+          for (let i = 0; i < 3; i++) {
+            const a = now / 500 + i * 2.1
+            ctx.beginPath()
+            ctx.arc(x + Math.cos(a) * 16, y + Math.sin(a) * 16, 2.5, 0, Math.PI * 2)
+            ctx.fillStyle = variant.accent
+            ctx.fill()
+          }
+          ctx.globalAlpha = 1
+          break
+        case 'boost':
+          if (elapsed > 3) {
+            ctx.fillStyle = variant.accent
+            ctx.font = '12px Inter, system-ui, sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText('BOOST', x, y - 28)
+          }
+          for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = i % 2 ? variant.line : variant.accent
+            ctx.beginPath()
+            ctx.moveTo(x - 8 - i * 7, y + 6)
+            ctx.lineTo(x - 14 - i * 7, y + 12)
+            ctx.lineTo(x - 2 - i * 7, y + 11)
+            ctx.closePath()
+            ctx.fill()
+          }
+          break
+        case 'jump':
+          ctx.strokeStyle = variant.accent
+          ctx.globalAlpha = 0.45
+          ctx.beginPath()
+          ctx.moveTo(x - 26, y + 16)
+          ctx.quadraticCurveTo(x - 12, y + 2, x, y)
+          ctx.stroke()
+          ctx.globalAlpha = 1
+          break
+        case 'tower': {
+          ctx.strokeStyle = variant.accent
+          ctx.globalAlpha = 0.55
+          const levels = Math.min(6, Math.max(1, Math.floor(Math.log(Math.max(1, m)) * 2)))
+          for (let i = 1; i <= levels; i++) {
+            const yy = padT + plotH - (plotH * i) / 6
+            ctx.beginPath()
+            ctx.moveTo(padL, yy)
+            ctx.lineTo(w - padR, yy)
+            ctx.stroke()
+          }
+          ctx.globalAlpha = 1
+          break
+        }
+        default:
+          trail(6, 5, 0.35)
+      }
       ctx.font = '26px serif'
       ctx.textAlign = 'center'
-      ctx.fillText(crashed ? '💥' : '✈️', x, y - 10)
+      ctx.fillText(crashed ? '💥' : variant.glyph, x, y - 10)
     }
 
     // idle hint
@@ -161,8 +292,11 @@ export function CrashGame({ game }: { game: Game }) {
       ctx.font = '600 12px Inter, system-ui, sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText('Aguardando próxima ronda…', w / 2, padT + plotH / 2)
+      ctx.fillStyle = 'rgba(255,255,255,.28)'
+      ctx.font = '10px Inter, system-ui, sans-serif'
+      ctx.fillText(variant.mechanicLabel, w / 2, padT + plotH / 2 + 16)
     }
-  }, [growth])
+  }, [growth, variant])
 
   const reset = useCallback(() => {
     if (resetTimerRef.current) {
@@ -178,6 +312,10 @@ export function CrashGame({ game }: { game: Game }) {
     const nextSeed = hashHex(uid())
     seedRef.current = nextSeed
     setSeed(nextSeed)
+    setBotSeed(nextSeed)
+    nextAtRef.current = performance.now() + 7000
+    nextTotalRef.current = 7
+    setNextIn(7)
     setSlots((prev) => prev.map((s) => ({ ...s, active: false, cashedAt: null })))
     paidRef.current = new Set()
     play('click')
@@ -193,6 +331,8 @@ export function CrashGame({ game }: { game: Game }) {
     play('crash')
     setHistory((h) => [crash, ...h].slice(0, 18))
     setSlots((prev) => prev.map((s) => (s.active ? { ...s, active: false, cashedAt: null } : s)))
+    nextAtRef.current = performance.now() + 3600
+    nextTotalRef.current = 3.6
     if (resetTimerRef.current) window.clearTimeout(resetTimerRef.current)
     resetTimerRef.current = window.setTimeout(() => {
       resetTimerRef.current = null
@@ -212,6 +352,23 @@ export function CrashGame({ game }: { game: Game }) {
     if (resetTimerRef.current) {
       window.clearTimeout(resetTimerRef.current)
       resetTimerRef.current = null
+    }
+    if (nextTimerRef.current) {
+      clearInterval(nextTimerRef.current)
+      nextTimerRef.current = null
+    }
+  }, [])
+
+  // next-round clock keeps ticking through betting, flight and crash
+  useEffect(() => {
+    const tick = () => setNextIn(Math.max(0, (nextAtRef.current - performance.now()) / 1000))
+    tick()
+    nextTimerRef.current = window.setInterval(tick, 250)
+    return () => {
+      if (nextTimerRef.current) {
+        window.clearInterval(nextTimerRef.current)
+        nextTimerRef.current = null
+      }
     }
   }, [])
 
@@ -254,6 +411,10 @@ export function CrashGame({ game }: { game: Game }) {
         if (countdownRef.current !== null) clearInterval(countdownRef.current)
         countdownRef.current = null
         crashRef.current = crashFromSeed(seedRef.current, 0.03, maxMult)
+        const flightSeconds = Math.max(0.2, Math.log(Math.max(1.01, crashRef.current)) / growth)
+        nextAtRef.current = performance.now() + (flightSeconds + 3.6) * 1000
+        nextTotalRef.current = flightSeconds + 3.6
+        setBotSeed(seedRef.current)
         startRef.current = performance.now()
         tickRef.current = 1
         multRef.current = 1
@@ -268,7 +429,7 @@ export function CrashGame({ game }: { game: Game }) {
       if (countdownRef.current) clearInterval(countdownRef.current)
       countdownRef.current = null
     }
-  }, [phase, maxMult, play])
+  }, [phase, maxMult, growth, play])
 
   // auto-bet when a new betting round opens
   useEffect(() => {
@@ -284,7 +445,7 @@ export function CrashGame({ game }: { game: Game }) {
 
   const bet = (idx: number) => {
     const s = slots[idx]
-    if (phase !== 'betting') return
+    if (!s || phase !== 'betting') return
     if (s.active) return
     if (placeBet(s.amount, game.name, game.id, 'Aposta crash')) {
       paidRef.current.delete(idx)
@@ -295,7 +456,7 @@ export function CrashGame({ game }: { game: Game }) {
 
   const cashout = (idx: number) => {
     const s = slots[idx]
-    if (phase !== 'flying' || !s.active) return
+    if (!s || phase !== 'flying' || !s.active) return
     const at = multRef.current
     if (paidRef.current.has(idx)) return
     paidRef.current.add(idx)
@@ -308,8 +469,10 @@ export function CrashGame({ game }: { game: Game }) {
     setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, ...patch } : x)))
   }
 
-  useAutoCashout({ active: slots[0].active, value: mult, target: slots[0].autoCash, enabled: slots[0].auto, onCashout: () => cashout(0) })
-  useAutoCashout({ active: slots[1].active, value: mult, target: slots[1].autoCash, enabled: slots[1].auto, onCashout: () => cashout(1) })
+  const autoSlots = [0, 1, 2].map((i) => slots[i] ?? EMPTY_SLOT(min))
+  useAutoCashout({ active: slotCount > 0 && autoSlots[0].active, value: mult, target: autoSlots[0].autoCash, enabled: slotCount > 0 && autoSlots[0].auto, onCashout: () => cashout(0) })
+  useAutoCashout({ active: slotCount > 1 && autoSlots[1].active, value: mult, target: autoSlots[1].autoCash, enabled: slotCount > 1 && autoSlots[1].auto, onCashout: () => cashout(1) })
+  useAutoCashout({ active: slotCount > 2 && autoSlots[2].active, value: mult, target: autoSlots[2].autoCash, enabled: slotCount > 2 && autoSlots[2].auto, onCashout: () => cashout(2) })
   useAutoReplay({
     idle: phase === 'betting',
     enabled: autoReplay,
@@ -331,7 +494,7 @@ export function CrashGame({ game }: { game: Game }) {
             <canvas ref={canvasRef} className="block aspect-[4/3] w-full sm:aspect-[16/9]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
-                <p className={`font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
+                <p className={`crash-mult font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
                   {phase === 'betting' ? `${countdown}s` : fmtMult(phase === 'crashed' ? crashRef.current : mult)}
                 </p>
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">
@@ -342,18 +505,40 @@ export function CrashGame({ game }: { game: Game }) {
             {(phase === 'flying' || phase === 'crashed') && (
               <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className={`absolute left-[16%] top-[42%] ${phase === 'flying' ? 'game-float' : ''}`}>
-                  <svg viewBox="0 0 64 64" className={`h-10 w-10 drop-shadow-[0_0_18px_rgba(255,107,61,.65)] ${phase === 'crashed' ? 'opacity-40' : ''}`} fill="none">
-                    <path d="M4 34 60 12 44 56 35 38 18 52 22 34Z" fill="#ff6b3d" stroke="#ffd0a8" strokeWidth="2" />
-                    <path d="M22 34 44 56 35 38Z" fill="#c50b20" opacity=".7" />
-                  </svg>
-                  <div className="absolute -left-9 top-6 flex gap-1">
+                  <span
+                    className={`block text-4xl leading-none ${phase === 'crashed' ? 'opacity-40' : ''}`}
+                    style={{ filter: `drop-shadow(0 0 14px ${variant.accent})` }}
+                  >
+                    {phase === 'crashed' ? '💥' : variant.glyph}
+                  </span>
+                  <div className="absolute -left-6 top-7 flex gap-1">
                     {[0, 1, 2].map((p) => (
-                      <span key={p} className="animate-floaty h-1.5 w-1.5 rounded-full bg-orange-200/80" style={{ animationDelay: `${p * 180}ms` }} />
+                      <span
+                        key={p}
+                        className="animate-floaty h-1.5 w-1.5 rounded-full"
+                        style={{ background: variant.accent, animationDelay: `${p * 180}ms` }}
+                      />
                     ))}
                   </div>
                 </div>
               </div>
             )}
+            <div className="crash-timer pointer-events-none absolute bottom-2 left-3 right-3 z-10 flex items-center gap-2 rounded-lg border border-white/10 bg-black/55 px-2.5 py-1.5 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full" style={{ background: variant.accent }} />
+              <span className="min-w-0 flex-1 truncate text-[10px] font-bold uppercase tracking-wider text-white/60">
+                {phase === 'flying' ? 'Próxima ronda estimada' : 'Próxima ronda em'}{' '}
+                <span className="tabular text-white">{Math.ceil(nextIn)}s</span>
+              </span>
+              <span className="h-1 w-14 shrink-0 overflow-hidden rounded-full bg-white/10">
+                <span
+                  className="block h-full rounded-full transition-all duration-200"
+                  style={{
+                    width: `${clamp((1 - nextIn / Math.max(0.1, nextTotalRef.current)) * 100, 0, 100)}%`,
+                    background: `linear-gradient(90deg, ${variant.line}, ${variant.accent})`,
+                  }}
+                />
+              </span>
+            </div>
             <div className="absolute left-3 top-3 flex items-center gap-2">
               <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                 phase === 'betting' ? 'border-gold/30 bg-gold/10 text-gold' : phase === 'flying' ? 'border-good/30 bg-good/10 text-good' : 'border-brand/30 bg-brand/10 text-brand'
@@ -373,7 +558,7 @@ export function CrashGame({ game }: { game: Game }) {
                 phase === 'crashed'
                   ? slots.some((s) => s.cashedAt !== null)
                     ? `+${fmt(slots.reduce((sum, s) => sum + (s.cashedAt !== null ? s.amount * s.cashedAt : 0), 0))} B$`
-                    : 'O avião caiu. Sem retirada.'
+                    : 'O voo caiu antes da retirada.'
                   : ''
               }
             />
@@ -395,23 +580,29 @@ export function CrashGame({ game }: { game: Game }) {
                       max={max}
                       disabled={s.active || phase !== 'betting'}
                       onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
-                      className="input py-2 text-center text-sm tabular"
+                      className="input w-full py-2 text-center text-sm tabular"
                     />
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     <ActionButton
-                      tone={phase === 'flying' && s.active ? 'cashout' : s.active ? 'placed' : 'bet'}
-                      icon={phase === 'flying' && s.active ? 'check' : 'bolt'}
+                      tone={s.active ? 'placed' : 'bet'}
+                      icon={s.active ? 'check' : 'bolt'}
                       size="compact"
-                      onClick={() => (phase === 'flying' ? cashout(i) : bet(i))}
-                      disabled={phase === 'crashed' || (phase === 'flying' && !s.active) || (phase === 'betting' && s.active)}
-                      className="flex-1"
+                      onClick={() => bet(i)}
+                      disabled={phase !== 'betting' || s.active}
+                      className="w-full"
                     >
-                      {phase === 'flying'
-                        ? s.active
-                          ? `Retirar ${fmtMult(mult)}`
-                          : 'Em voo'
-                        : s.active
-                          ? 'Apostado'
-                          : 'Apostar'}
+                      {s.active ? 'Apostado' : 'Apostar'}
+                    </ActionButton>
+                    <ActionButton
+                      tone="cashout"
+                      icon="check"
+                      size="compact"
+                      onClick={() => cashout(i)}
+                      disabled={phase !== 'flying' || !s.active}
+                      className="w-full"
+                    >
+                      {phase === 'flying' && s.active ? `Retirar ${fmtMult(mult)}` : 'Retirar'}
                     </ActionButton>
                   </div>
                   <AutoControl
@@ -420,7 +611,7 @@ export function CrashGame({ game }: { game: Game }) {
                     active={s.auto}
                     onToggle={() => setSlot(i, { auto: !s.auto })}
                     current={phase === 'flying' ? mult : phase === 'crashed' ? crashRef.current : 1}
-                    currentLabel="Multiplicador do avião"
+                    currentLabel="Multiplicador do voo"
                   />
                 </div>
               ))}
@@ -441,7 +632,7 @@ export function CrashGame({ game }: { game: Game }) {
                 <p className="text-sm font-bold tabular text-gold">{(growth * 100).toFixed(1)}%/s</p>
               </div>
             </div>
-            <div className="mt-3">
+            <div className="crash-history mt-3">
               <RecentStrip
                 items={history.map((h) => fmtMult(h))}
                 colorFor={(v) => {
@@ -461,12 +652,82 @@ export function CrashGame({ game }: { game: Game }) {
               </p>
             </div>
           </SidePanel>
+          <SidePanel title={`Mecânica · ${variant.name}`} icon="info">
+            <div className="flex items-center gap-2">
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-xl"
+                style={{ background: variant.wash }}
+              >
+                {variant.glyph}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[11px] font-bold text-white/85">{variant.mechanicLabel}</p>
+                <p className="truncate text-[9px] uppercase tracking-wider text-white/35">
+                  {(growth * 100).toFixed(1)}%/s · teto {fmtMult(maxMult)}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2.5 space-y-1.5 text-[10px] leading-snug">
+              <p className="rounded-lg border border-good/25 bg-good/[.06] px-2.5 py-2 text-good">
+                <span className="font-bold">Vantagem:</span> {variant.perk}
+              </p>
+              <p className="rounded-lg border border-brand/25 bg-brand/[.06] px-2.5 py-2 text-brand/90">
+                <span className="font-bold">Desvantagem:</span> {variant.drawback}
+              </p>
+            </div>
+          </SidePanel>
+          <SidePanel title="Participantes · DEMONSTRAÇÃO" icon="info">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gold">Simulação · sem carteira real</span>
+              <span className="text-[10px] tabular text-white/40">
+                {cashedBots.length}/{bots.length} retiradas · {fmt(simulatedCashouts)} B$ simulado
+              </span>
+            </div>
+            <div className="crash-bots space-y-1.5">
+              {botViews.map((bot) => (
+                <div
+                  key={bot.id}
+                  className="crash-bot flex min-w-0 items-center gap-2 rounded-lg border border-line/60 bg-black/25 px-2.5 py-1.5"
+                  data-status={bot.status}
+                >
+                  <span
+                    className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[11px] font-extrabold text-ink"
+                    style={{ background: `linear-gradient(135deg, ${variant.line}, ${variant.accent})` }}
+                  >
+                    {bot.name.slice(4, 5)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-bold text-white/85">{bot.name}</p>
+                    <p className="truncate text-[9px] uppercase tracking-wider text-white/35">
+                      {BOT_STYLE_LABEL[bot.style]} · aposta {fmt(bot.bet)} B$ · alvo {fmtMult(bot.target)}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 text-right text-[10px] font-bold ${
+                      bot.status === 'cashed' ? 'text-good' : bot.status === 'crashed' ? 'text-brand' : 'text-white/45'
+                    }`}
+                  >
+                    {bot.status === 'waiting'
+                      ? 'à espera'
+                      : bot.status === 'flying'
+                        ? 'a voar'
+                        : bot.status === 'cashed'
+                          ? `retirado ${fmtMult(bot.target)}`
+                          : 'quebrou'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-[9px] leading-snug text-white/30">
+              Bots visuais de demonstração: apostas e retiradas simuladas, sem ligação à tua carteira BLAZE.
+            </p>
+          </SidePanel>
           <SidePanel title="Como jogar">
             <p className="text-[11px] leading-relaxed text-white/40">{game.rules}</p>
             <ul className="mt-2 space-y-1 text-[10px] text-white/30">
               <li>• Aposta mínima de {min} B$ e máxima de {fmt(max)} B$.</li>
               <li>• Retira antes do crash para garantir o multiplicador.</li>
-              <li>• Duas apostas independentes por ronda.</li>
+              <li>• {slotCount} aposta{slotCount === 1 ? '' : 's'} independente{slotCount === 1 ? '' : 's'} por ronda.</li>
             </ul>
           </SidePanel>
         </div>
