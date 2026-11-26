@@ -84,6 +84,23 @@ const wrap = (Provider, child) => React.createElement(Provider, null, child)
 const tree = [App, RecentProvider, FavoritesProvider, SoundProvider, ToastProvider, WalletProvider]
   .reduce((child, Component) => wrap(Component, child), null)
 
+// UI de crash: todos os problemas são reportados no fim, sem interromper os restantes jogos.
+const crashSelectors = ['.crash-bots', '.crash-history', '.crash-timer', '.crash-mult']
+const readCrashUi = (scope) => {
+  const bots = [...scope.querySelectorAll('.crash-bot')]
+  const container = scope.querySelector('.crash-bots')
+  const missing = crashSelectors.filter((sel) => !scope.querySelector(sel))
+  if (!bots.length) missing.push('.crash-bot')
+  if (bots.some((b) => !(b.getAttribute('data-status') || '').trim())) missing.push('.crash-bot[data-status]')
+  const text = `${container?.textContent || ''} ${bots.map((b) => b.textContent || '').join(' ')}`
+  return { bots: bots.length, missing, demoLabeled: bots.length > 0 && /demo|simulad/i.test(text) }
+}
+const mergeCrashUi = (a, b) => ({
+  bots: Math.max(a.bots, b.bots),
+  missing: a.missing.filter((m) => b.missing.includes(m)),
+  demoLabeled: a.demoLabeled || b.demoLabeled,
+})
+
 for (const game of GAMES) {
   errors.length = 0
   window.localStorage.setItem('blaze.wallet.v1', JSON.stringify({
@@ -99,6 +116,7 @@ for (const game of GAMES) {
     const text = container.textContent || ''
     const boundary = text.includes('Algo correu mal')
     const scope = container.querySelector('.game-immersive-engine') || container
+    const crashInitial = game.engine === 'crash' ? readCrashUi(scope) : null
     const stage = container.querySelector('.game-stage') || scope
     const side = container.querySelector('.game-side-content')
     const stageActions = stage.querySelectorAll('.bet-bar').length
@@ -134,9 +152,18 @@ for (const game of GAMES) {
       errors: [...errors],
       changed: after !== text,
       txDelta: readTx().length - txBefore,
+      crash: crashInitial ? mergeCrashUi(crashInitial, readCrashUi(scope)) : null,
+      goldButtons: scope.querySelectorAll('button.action-gold, button.btn-gold').length,
     })
   } catch (e) {
-    results.push({ id: game.id, engine: game.engine, fatal: String(e?.stack || e), errors: [...errors] })
+    results.push({
+      id: game.id,
+      engine: game.engine,
+      fatal: String(e?.stack || e),
+      errors: [...errors],
+      crash: null,
+      goldButtons: 0,
+    })
   }
   await act(async () => { root.unmount() })
   container.innerHTML = ''
@@ -153,4 +180,26 @@ for (const r of bad) {
   console.log(`\n[${r.id} / ${r.engine}] ${r.fatal || r.boundary ? 'FALHA DE RENDER' : 'ERRO'}`)
   for (const e of (r.errors || []).slice(0, 4)) console.log(`  ${e.slice(0, 500)}`)
 }
-process.exit(0)
+
+// Novos checks: elementos/estados da UI de crash e ausência de botões gold.
+// Correm depois de todos os jogos, para que nenhuma falha parcial esconda os restantes resultados.
+const crashGames = results.filter((r) => r.engine === 'crash' || r.id === 'crash')
+const crashProblems = []
+if (!crashGames.some((r) => r.id === 'crash')) crashProblems.push('crash: o jogo "crash" não foi testado')
+for (const r of crashGames) {
+  if (r.fatal || r.boundary) {
+    crashProblems.push(`${r.id}: render falhou`)
+    continue
+  }
+  if (!r.crash) {
+    crashProblems.push(`${r.id}: não foi possível inspecionar a UI de crash`)
+    continue
+  }
+  if (r.crash.missing.length) crashProblems.push(`${r.id}: faltam ${r.crash.missing.join(', ')}`)
+  if (!r.crash.demoLabeled) crashProblems.push(`${r.id}: bots sem marcação de demonstração (demo/simulad)`)
+}
+const goldGames = results.filter((r) => r.goldButtons > 0)
+console.log(`\nJogos com motor crash: ${crashGames.length}; problemas na UI: ${crashProblems.length}`)
+crashProblems.forEach((problem) => console.log(` - ${problem}`))
+console.log(`Botões gold no DOM: ${goldGames.length ? goldGames.map((r) => `${r.id} (${r.goldButtons})`).join(', ') : 'nenhum'}`)
+process.exit(crashProblems.length || goldGames.length ? 1 : 0)

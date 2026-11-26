@@ -107,6 +107,35 @@ brandFiles.forEach((file) => {
 const packageJson = readJson('package.json')
 check(packageJson.name === 'blaze', `package.json: nome é ${packageJson.name}, esperado blaze`)
 
+/* ------------------------- UI de crash / tons ---------------------------- */
+
+// Elementos estáveis prometidos pelo componente CrashGame (mesmo que a introdução
+// ainda esteja em curso, todos os problemas são acumulados — não abortamos aqui).
+const crashSource = read('src/games/CrashGame.tsx')
+const crashMarkers = [
+  [/\bcrash-bots\b/, '.crash-bots'],
+  [/\bcrash-bot\b/, '.crash-bot'],
+  [/\bcrash-history\b/, '.crash-history'],
+  [/\bcrash-timer\b/, '.crash-timer'],
+  [/\bcrash-mult\b/, '.crash-mult'],
+  [/\bdata-status\b/, 'data-status'],
+]
+crashMarkers.forEach(([pattern, label]) => {
+  check(pattern.test(crashSource), `CrashGame.tsx: falta o marcador ${label} da UI de crash`)
+})
+check(/demo|simulad/i.test(crashSource), 'CrashGame.tsx: os bots não estão identificados como demonstração (demo/simulad)')
+
+// Nenhum botão de jogo pode usar o tom "gold"; apenas bet/placed/cashout/auto/ghost.
+const goldTone = /\btone\s*=\s*(?:"gold"|'gold'|\{\s*(?:"gold"|'gold'|`gold`)\s*\})/
+const goldClass = /\b(?:action-gold|btn-gold)\b/
+walk('src/games')
+  .filter((file) => /\.(?:t|j)sx$/.test(file))
+  .forEach((file) => {
+    const source = read(file)
+    check(!goldTone.test(source), `${file}: encontrado botão com tone="gold" (usar bet/placed/cashout/auto/ghost)`)
+    check(!goldClass.test(source), `${file}: encontrada classe de botão gold (action-gold/btn-gold)`)
+  })
+
 /* -------------------------------- rotas ---------------------------------- */
 
 const app = read('src/App.tsx')
