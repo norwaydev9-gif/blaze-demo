@@ -3,13 +3,13 @@ import type { Game } from '../lib/types'
 
 type ArtProps = { p: string }
 
-function Defs({ p }: ArtProps) {
+function Defs({ p, accent = '#ff2d3f' }: ArtProps & { accent?: string }) {
   return (
     <defs>
       <linearGradient id={`${p}-red`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#ff7a6b" />
-        <stop offset="45%" stopColor="#ff2d3f" />
-        <stop offset="100%" stopColor="#b50b22" />
+        <stop offset="0%" stopColor={accent} />
+        <stop offset="45%" stopColor={accent} />
+        <stop offset="100%" stopColor={accent} stopOpacity=".55" />
       </linearGradient>
       <linearGradient id={`${p}-gold`} x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stopColor="#fff1b8" />
@@ -25,8 +25,8 @@ function Defs({ p }: ArtProps) {
         <stop offset="100%" stopColor="#4361ee" />
       </linearGradient>
       <radialGradient id={`${p}-glow`} cx="50%" cy="45%" r="55%">
-        <stop offset="0%" stopColor="#ff2d3f" stopOpacity=".55" />
-        <stop offset="100%" stopColor="#ff2d3f" stopOpacity="0" />
+        <stop offset="0%" stopColor={accent} stopOpacity=".5" />
+        <stop offset="100%" stopColor={accent} stopOpacity="0" />
       </radialGradient>
     </defs>
   )
@@ -329,57 +329,39 @@ function seedFor(id: string): number {
 
 function Decor({ p, seed }: ArtProps & { seed: number }) {
   const variant = seed % 4
-  const count = 4 + (seed % 4)
   return (
-    <g opacity=".55">
+    <g opacity=".32">
       {variant === 0 && (
         <>
-          <circle cx="100" cy="70" r="58" fill="none" stroke={`url(#${p}-gold)`} strokeWidth="1" strokeDasharray="3 9" opacity=".7" />
-          <circle cx="100" cy="70" r="44" fill="none" stroke="#fff" strokeOpacity=".12" strokeWidth="1" />
+          <circle cx="100" cy="70" r="64" fill="none" stroke={`url(#${p}-gold)`} strokeWidth="1" strokeDasharray="3 10" opacity=".5" />
+          <circle cx="100" cy="70" r="52" fill="none" stroke="#fff" strokeOpacity=".1" strokeWidth="1" />
         </>
       )}
       {variant === 1 && (
         <>
-          {[0, 1, 2, 3].map((i) => (
-            <path key={i} d={`M${18 + i * 12} 132 L${74 + i * 16} 8`} stroke={`url(#${p}-blue)`} strokeWidth="1.5" opacity=".35" />
+          {[0, 1, 2].map((i) => (
+            <path key={i} d={`M${22 + i * 16} 132 L${80 + i * 20} 10`} stroke={`url(#${p}-blue)`} strokeWidth="1" opacity=".25" />
           ))}
-          <circle cx="100" cy="70" r="54" fill="none" stroke="#ffc857" strokeOpacity=".18" strokeWidth="2" />
         </>
       )}
       {variant === 2 && (
         <>
-          {Array.from({ length: count }, (_, i) => (
-            <path
-              key={i}
-              d={`M${100 + Math.cos((i * Math.PI * 2) / count) * 58} ${70 + Math.sin((i * Math.PI * 2) / count) * 48} l4 8 l-9 0Z`}
-              fill={i % 2 ? '#ffc857' : '#ff5b6b'}
-              opacity=".7"
-            />
-          ))}
-          <rect x="36" y="18" width="128" height="104" rx="24" fill="none" stroke="#fff" strokeOpacity=".1" />
+          <circle cx="100" cy="70" r="64" fill="none" stroke="#ffc857" strokeOpacity=".16" strokeWidth="1.5" />
+          <rect x="24" y="10" width="152" height="120" rx="28" fill="none" stroke="#fff" strokeOpacity=".07" />
         </>
       )}
       {variant === 3 && (
         <>
-          {[0, 1, 2].map((i) => (
-            <path
-              key={i}
-              d={`M18 ${42 + i * 26} q24 -14 48 0 t48 0 t48 0`}
-              fill="none"
-              stroke={i === 1 ? '#22e3a0' : '#ffc857'}
-              strokeOpacity=".22"
-              strokeWidth="2"
-            />
-          ))}
-          <circle cx="100" cy="70" r="52" fill="none" stroke="#fff" strokeOpacity=".08" strokeWidth="8" />
+          <path d="M18 116 q82 -26 164 0" fill="none" stroke={`url(#${p}-green)`} strokeOpacity=".2" strokeWidth="2" />
+          <circle cx="100" cy="70" r="58" fill="none" stroke="#fff" strokeOpacity=".06" strokeWidth="6" />
         </>
       )}
-      {Array.from({ length: 3 + (seed % 3) }, (_, i) => (
+      {Array.from({ length: 2 + (seed % 2) }, (_, i) => (
         <path
           key={`spark-${i}`}
-          d={`M${20 + ((seed + i * 37) % 160)} ${16 + ((seed + i * 53) % 110)} l2 5 l5 2 l-5 2 l-2 5 l-2-5 l-5-2 l5-2Z`}
+          d={`M${24 + ((seed + i * 61) % 152)} ${18 + ((seed + i * 47) % 104)} l1.5 4 l4 1.5 l-4 1.5 l-1.5 4 l-1.5-4 l-4-1.5 l4-1.5Z`}
           fill="#fff"
-          opacity=".55"
+          opacity=".4"
         />
       ))}
     </g>
@@ -441,21 +423,21 @@ export function GameArt({ game, className = '' }: { game: Game; className?: stri
   const p = `art${useId().replace(/:/g, '')}`
   return (
     <svg viewBox="0 0 200 140" className={className} role="img" aria-label={`Arte de ${game.name}`} preserveAspectRatio="xMidYMid meet">
-      <Defs p={p} />
+      <Defs p={p} accent={game.theme.to} />
       <Decor p={p} seed={seedFor(game.id)} />
       {artFor(game, p)}
     </svg>
   )
 }
 
-/** Versão grande e suave para fundos de palco/hero. */
+/** Halo de fundo: nunca repete a arte principal, para não competir com o vector do jogo. */
 export function GameArtWatermark({ game, className = '' }: { game: Game; className?: string }) {
   const p = `wm${useId().replace(/:/g, '')}`
   return (
     <svg viewBox="0 0 200 140" className={className} aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <Defs p={p} />
-      <Decor p={p} seed={seedFor(game.id)} />
-      {artFor(game, p)}
+      <Defs p={p} accent={game.theme.to} />
+      <circle cx="100" cy="70" r="60" fill={`url(#${p}-glow)`} opacity=".45" />
+      <circle cx="100" cy="70" r="48" fill="none" stroke={`url(#${p}-gold)`} strokeOpacity=".16" strokeWidth="2" strokeDasharray="6 10" />
     </svg>
   )
 }
