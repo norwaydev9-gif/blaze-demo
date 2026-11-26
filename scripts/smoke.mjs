@@ -125,6 +125,76 @@ crashMarkers.forEach(([pattern, label]) => {
 })
 check(/demo|simulad/i.test(crashSource), 'CrashGame.tsx: os bots não estão identificados como demonstração (demo/simulad)')
 
+// Contrato DOM estável: quatro zonas distintas no palco, nunca nos controlos.
+const crashContractMarkers = [
+  [/\bcrash-history-strip\b/, '.crash-history-strip'],
+  [/\bcrash-history-item\b/, '.crash-history-item'],
+  [/\bcrash-main\b/, '.crash-main'],
+  [/\bcrash-status\b/, '.crash-status'],
+  [/\bcrash-fx\b/, '.crash-fx'],
+  [/\bcrash-live\b/, '.crash-live'],
+  [/\bcrash-activity\b/, '.crash-activity'],
+  [/\bcrash-bet-panel\b/, '.crash-bet-panel'],
+  [/\bcrash-slot\b/, '.crash-slot'],
+  [/\bdata-kind\b/, 'data-kind'],
+  [/\bdata-tier\b/, 'data-tier'],
+  [/\bverifyCrash\s*\(/, 'verifyCrash(...)'],
+]
+crashContractMarkers.forEach(([pattern, label]) => {
+  check(pattern.test(crashSource), `CrashGame.tsx: falta o marcador do contrato ${label}`)
+})
+for (const tier of ['low', 'mid', 'high']) {
+  check(new RegExp(`['"\`]${tier}['"\`]`).test(crashSource), `CrashGame.tsx: falta o nível "${tier}" de data-tier no histórico`)
+}
+for (const label of ['LIVE PLAYERS', 'ALL BETS', 'CASH OUT ACTIVITY', 'DEMONSTRAÇÃO']) {
+  check(crashSource.toLowerCase().includes(label.toLowerCase()), `CrashGame.tsx: falta o rótulo "${label}" da zona de crash`)
+}
+for (const amount of [50, 100, 200, 500]) {
+  check(new RegExp(`\\b${amount}\\b`).test(crashSource), `CrashGame.tsx: falta o valor rápido/clamp ${amount}`)
+}
+
+// Análise simples do JSX: tudo o que é específico do palco deve aparecer antes de `side={`.
+// Limitação: assume uma única prop `side={` e que todo o texto depois dela pertence aos
+// controlos; helpers definidos depois do JSX podem gerar falsos positivos. O DOM no
+// runtime-smoke é a verificação definitiva.
+const sideMarker = crashSource.indexOf('side={')
+check(sideMarker > 0, 'CrashGame.tsx: não foi possível localizar a prop side={ para isolar as zonas')
+if (sideMarker > 0) {
+  const beforeSide = crashSource.slice(0, sideMarker)
+  const afterSide = crashSource.slice(sideMarker)
+  for (const className of ['crash-bots', 'crash-history-strip', 'crash-activity', 'bet-bar', 'crash-slot']) {
+    const pattern = new RegExp(`\\b${className}\\b`)
+    check(pattern.test(beforeSide), `CrashGame.tsx: ${className} deve existir no palco (antes de side={)`)
+    check(!pattern.test(afterSide), `CrashGame.tsx: ${className} não pode aparecer depois de side={ (só no palco)`)
+  }
+}
+
+/* --------------- fundos próprios e som das variantes crash ------------------ */
+
+const crashVariantIds = [
+  'crash', 'aviator', 'space-flight', 'rocket-rush', 'sky-multiplier',
+  'cosmic-crash', 'turbo-crash', 'jet-rush', 'crash-deluxe',
+]
+const crashCss = read('src/index.css')
+crashVariantIds.forEach((id) => {
+  check(
+    new RegExp(`\\.game-stage\\[data-game\\s*=\\s*['"]${id}['"]\\]`).test(crashCss),
+    `index.css: falta o selector .game-stage[data-game='${id}'] com fundo da variante crash`,
+  )
+  check(games.some((g) => g.id === id && g.engine === 'crash'), `games.json: ${id} não é um jogo com motor crash`)
+})
+
+// Sons próprios por variante: as nove assinaturas e o uso do helper no componente.
+const crashSound = read('src/lib/crashSound.ts')
+crashVariantIds.forEach((id) => {
+  check(
+    new RegExp(`^[ \\t]*['"]?${id}['"]?[ \\t]*:`, 'm').test(crashSound),
+    `crashSound.ts: falta a assinatura sonora da variante ${id}`,
+  )
+})
+check(/\bplayCrashCue\s*\(/.test(crashSound), 'crashSound.ts: falta a exportação playCrashCue(...)')
+check(/\bplayCrashCue\b/.test(crashSource), 'CrashGame.tsx: falta a referência a playCrashCue nos eventos de som')
+
 // Nenhum botão de jogo pode usar o tom "gold"; apenas bet/placed/cashout/auto/ghost.
 const goldTone = /\btone\s*=\s*(?:"gold"|'gold'|\{\s*(?:"gold"|'gold'|`gold`)\s*\})/
 const goldClass = /\b(?:action-gold|btn-gold)\b/
@@ -183,5 +253,5 @@ if (errors.length) {
 }
 
 console.log(
-  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, vectores/acções, marca BLAZE e build verificados.`,
+  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, vectores/acções, marca BLAZE, build, contrato DOM do crash, ${crashVariantIds.length} fundos data-game e sons de crash verificados.`,
 )
