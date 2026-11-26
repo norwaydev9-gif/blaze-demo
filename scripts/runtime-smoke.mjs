@@ -203,6 +203,64 @@ const mergeCrashContract = (a, b) => ({
   quickMissing: a.quickMissing.filter((m) => b.quickMissing.includes(m)),
 })
 
+// Visibilidade real (dentro do que jsdom consegue observar): classes que escondem
+// o painel, clipping no Stage, ordem das zonas C/D e botões utilizáveis na fase
+// de apostas. Problemas em qualquer um dos estados observados são acumulados.
+const hidingClasses = ['hidden', 'sr-only', 'invisible', 'overflow-hidden']
+const classTokens = (el) => new Set(String(el?.className || '').split(/\s+/).filter(Boolean))
+const topLevelIndex = (stage, el) => {
+  if (!stage || !el) return -1
+  let node = el
+  while (node && node.parentElement && node.parentElement !== stage) node = node.parentElement
+  return node?.parentElement === stage ? [...stage.children].indexOf(node) : -1
+}
+const readCrashVisibility = (stage) => {
+  const issues = []
+  if (!stage) {
+    return { issues: ['palco .game-stage ausente'], apostar: false, cashout: false, buttons: 0, enabled: 0, bettingSeen: false, bettingEnabled: 0, orderOk: false }
+  }
+  const panel = stage.querySelector('.crash-bet-panel')
+  if (!panel) issues.push('.crash-bet-panel ausente no palco')
+  const badPanelClasses = hidingClasses.filter((cls) => classTokens(panel).has(cls))
+  if (badPanelClasses.length) issues.push(`.crash-bet-panel com classe que esconde conteúdo (${badPanelClasses.join(', ')})`)
+  if (classTokens(stage).has('overflow-hidden')) issues.push('.game-stage com overflow-hidden (clippa o painel de aposta)')
+
+  const panelIndex = topLevelIndex(stage, panel)
+  const cIndex = topLevelIndex(stage, stage.querySelector('.crash-live'))
+  const dIndex = topLevelIndex(stage, stage.querySelector('.crash-activity'))
+  const orderOk = panelIndex >= 0 && cIndex >= 0 && dIndex >= 0 && panelIndex < cIndex && panelIndex < dIndex
+  if (!orderOk) {
+    if (panelIndex < 0) issues.push('.crash-bet-panel não é filho/descendente directo do Stage')
+    else if (cIndex < 0 && dIndex < 0) issues.push('zonas C/D (.crash-live / .crash-activity) ausentes do Stage')
+    else issues.push(`.crash-bet-panel depois das zonas C/D na ordem de filhos do Stage (painel=${panelIndex}, C=${cIndex}, D=${dIndex})`)
+  }
+
+  const actions = [...(panel?.querySelectorAll('button') || [])]
+    .filter((button) => /apostar|cashout|retirar/i.test(button.textContent || ''))
+  const enabled = actions.filter((button) => !button.disabled).length
+  const bettingSeen = /apostas abertas|a ronda começa|\bbetting\b/i.test(stage.textContent || '')
+  return {
+    issues,
+    apostar: actions.some((button) => /apostar/i.test(button.textContent || '')),
+    cashout: actions.some((button) => /cashout/i.test(button.textContent || '')),
+    buttons: actions.length,
+    enabled,
+    bettingSeen,
+    bettingEnabled: bettingSeen ? enabled : 0,
+    orderOk,
+  }
+}
+const mergeCrashVisibility = (a, b) => ({
+  issues: [...new Set([...a.issues, ...b.issues])],
+  apostar: a.apostar || b.apostar,
+  cashout: a.cashout || b.cashout,
+  buttons: Math.max(a.buttons, b.buttons),
+  enabled: Math.max(a.enabled, b.enabled),
+  bettingSeen: a.bettingSeen || b.bettingSeen,
+  bettingEnabled: Math.max(a.bettingEnabled, b.bettingEnabled),
+  orderOk: a.orderOk || b.orderOk,
+})
+
 for (const game of GAMES) {
   errors.length = 0
   window.localStorage.setItem('blaze.wallet.v1', JSON.stringify({
@@ -223,6 +281,7 @@ for (const game of GAMES) {
     const isCrash = game.engine === 'crash'
     const crashInitial = isCrash ? readCrashUi(stage) : null
     const crashContractInitial = isCrash ? readCrashContract(stage, side) : null
+    const crashVisibilityInitial = isCrash ? readCrashVisibility(stage) : null
     const stageActions = stage.querySelectorAll('.bet-bar').length
     const sideActions = side ? side.querySelectorAll('.bet-bar').length : 0
     const buttons = [...scope.querySelectorAll('button')]
@@ -263,6 +322,9 @@ for (const game of GAMES) {
       crashContract: crashContractInitial
         ? mergeCrashContract(crashContractInitial, readCrashContract(stageAfter, sideAfter))
         : null,
+      crashVisibility: crashVisibilityInitial
+        ? mergeCrashVisibility(crashVisibilityInitial, readCrashVisibility(stageAfter))
+        : null,
       goldButtons: scope.querySelectorAll('button.action-gold, button.btn-gold').length,
     })
   } catch (e) {
@@ -273,6 +335,7 @@ for (const game of GAMES) {
       errors: [...errors],
       crash: null,
       crashContract: null,
+      crashVisibility: null,
       goldButtons: 0,
     })
   }
@@ -326,12 +389,30 @@ for (const r of crashGames) {
 if (!crashGames.some((r) => r.txDelta > 0)) {
   crashProblems.push('crash: nenhum jogo registou aposta; não foi possível validar .crash-bot[data-kind="player"]')
 }
+// Problemas de visibilidade: classes que escondem o painel, clipping no Stage,
+// ordem C/D e ausência de botão habilitado na fase de apostas.
+const visibilityProblems = (r) => {
+  const vis = r.crashVisibility
+  if (!vis) return ['não foi possível inspecionar a visibilidade do painel de aposta']
+  const problems = [...vis.issues]
+  if (!vis.apostar) problems.push('nenhum botão APOSTAR encontrado no painel de aposta')
+  if (!vis.cashout) problems.push('nenhum botão CASHOUT encontrado no painel de aposta')
+  if (!vis.bettingEnabled) {
+    problems.push(`nenhum botão APOSTAR/CASHOUT habilitado na fase de apostas (fase ${vis.bettingSeen ? 'detectada' : 'não detectada no DOM'})`)
+  }
+  return problems
+}
+for (const r of crashGames) {
+  if (r.fatal || r.boundary) continue
+  visibilityProblems(r).forEach((problem) => crashProblems.push(`${r.id}: ${problem}`))
+}
 const goldGames = results.filter((r) => r.goldButtons > 0)
 const contractOk = crashGames.filter((r) => r.crashContract
   && !r.crashContract.missing.length
   && !r.crashContract.sideHits.length
   && (!r.txDelta || r.crashContract.playerBots)).length
-console.log(`\nJogos com motor crash: ${crashGames.length}; contrato DOM completo: ${contractOk}; problemas na UI: ${crashProblems.length}`)
+const visibilityOk = crashGames.filter((r) => !r.fatal && !r.boundary && !visibilityProblems(r).length).length
+console.log(`\nJogos com motor crash: ${crashGames.length}; contrato DOM completo: ${contractOk}; painel visível/operável: ${visibilityOk}; problemas na UI: ${crashProblems.length}`)
 crashProblems.forEach((problem) => console.log(` - ${problem}`))
 console.log(`Botões gold no DOM: ${goldGames.length ? goldGames.map((r) => `${r.id} (${r.goldButtons})`).join(', ') : 'nenhum'}`)
 process.exit(crashProblems.length || goldGames.length ? 1 : 0)

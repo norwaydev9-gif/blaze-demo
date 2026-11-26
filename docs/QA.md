@@ -28,10 +28,29 @@ Estes checks são **estáticos ou jsdom**: não usam browser real, Android/WebVi
 | Contrato DOM do Crash (estático) | No `CrashGame.tsx`: `.crash-history-strip`, `.crash-history-item`/`data-tier` (`low`/`mid`/`high`), `.crash-main` (`.crash-mult`, `.crash-status`, `.crash-timer`, `.crash-fx`), `.crash-live`, `.crash-activity`, `.crash-bet-panel`, `.crash-slot`, `data-kind`, rótulos `LIVE PLAYERS / ALL BETS`, `CASH OUT ACTIVITY`, `DEMONSTRAÇÃO`, valores rápidos/clamps 50/100/200/500 (presença textual; o runtime confirma botões/clamps) e uso de `verifyCrash`; zonas do palco antes de `side={` e ausentes depois | `npm run check` | A análise do JSX é por texto: assume um único `side={` e pode dar falsos positivos com helpers depois do JSX; o DOM no runtime é a prova definitiva |
 | Contrato DOM do Crash (runtime) | Para os 9 jogos com motor `crash`, dentro de `.game-stage`: **histórico de rondas** (`.crash-history-strip` com níveis válidos), **apostas ao vivo** (`.crash-live` com `LIVE PLAYERS`, `ALL BETS`, `DEMONSTRAÇÃO` e bots via `data-kind`), **registo de cashouts** (`.crash-activity` com `CASH OUT ACTIVITY`) e **minhas apostas** (`.crash-bet-panel`/`.crash-slot` com input, rápidos, APOSTAR/CASHOUT, auto cashout e estado/resultado); `.crash-bot[data-kind="bot"]` sempre e `[data-kind="player"]` quando há aposta; `side` sem `.crash-bots`, `.crash-history-strip`, `.crash-activity`, `.bet-bar` ou `.crash-slot` | `npm run check:runtime` | jsdom não valida pintura real; rótulos são procurados por texto e os estados por `data-*`/texto aproximado; os rápidos são aceites como valores ou clamps `min`/`max`/`value` |
 | Tons de botão | Nenhum botão com `tone="gold"` (apenas `bet`/`placed`/`cashout`/`auto`/`ghost`), incluindo classes `action-gold`/`btn-gold` nos jogos | `npm run check` + `npm run check:runtime` (DOM calculado) | `tone` vindos de variáveis não literais (só o DOM os apanha) |
+| Visibilidade do painel de aposta | Estático: `<Stage>` sem `overflow-hidden` (aceita `overflow-x-hidden`), `.game-immersive-engine .game-stage` com `overflow-y:auto` + `overscroll-behavior:contain`, `.crash-main` com `flex:0 0 auto` (nunca `flex:1 1 auto`). Runtime: nos 9 jogos crash, painel sem `hidden`/`sr-only`/`invisible`/`overflow-hidden`, Stage sem `overflow-hidden`, painel antes das zonas C/D na ordem de filhos, botões APOSTAR/CASHOUT presentes e pelo menos um habilitado na fase de apostas | `npm run check` + `npm run check:runtime` | Pintura real, altura calculada, recorte por `overflow` e viewport Android: jsdom não faz layout; ver secção «Visibilidade real» |
 
 As quatro zonas do Crash são verificadas como zonas **distintas**, todas dentro do palco: histórico de rondas, apostas ao vivo, registo de cashouts e minhas apostas. A barra de aposta e os slots devem estar no palco e nunca nos controlos (`side`).
 
-Os checks de crash acumulam falhas e reportam-nas no fim: uma implementação ainda parcial não impede os restantes jogos/checks de correrem. O `npm run check:runtime` termina com código de saída 1 se faltarem elementos/rótulos do contrato, se zonas do palco aparecerem no `side`, se faltar um bot `player` quando há aposta registada ou se aparecerem botões gold.
+Os checks de crash acumulam falhas e reportam-nas no fim: uma implementação ainda parcial não impede os restantes jogos/checks de correrem. O `npm run check:runtime` termina com código de saída 1 se faltarem elementos/rótulos do contrato, se zonas do palco aparecerem no `side`, se faltar um bot `player` quando há aposta registada, se o painel de aposta estiver escondido/clipado/desordenado ou sem botão operável na fase de apostas, ou se aparecerem botões gold.
+
+## Visibilidade real
+
+O utilizador reportou que o painel de apostas do Crash «sumiu»: o elemento existia no DOM, mas o Stage tinha `overflow-hidden` num layout imersivo de altura fixa. **Presença no DOM não é visibilidade.**
+
+O que o jsdom **não** consegue medir:
+
+- layout real (`getBoundingClientRect` devolve zeros/valores simulados): não há motor de pintura, fluxo de texto nem cálculo de alturas responsivas;
+- recorte por `overflow` (o conteúdo continua no DOM mesmo quando está clipado);
+- viewport Android/WebView: `100dvh`, `env(safe-area-inset-*)`, densidade de pixels, teclado virtual, gestos de scroll e `@media`;
+- composição/empilhamento, contraste e legibilidade de pixels.
+
+O que passou a ser verificado automaticamente:
+
+- **Estaticamente** (`npm run check`): `src/games/CrashGame.tsx` não pode ter `<Stage className="overflow-hidden">` e deve ter um `<Stage>` sem `overflow-hidden` (`overflow-x-hidden` é permitido); `src/index.css` deve conter `.game-immersive-engine .game-stage` com `overflow-y:auto` e `overscroll-behavior:contain`; `.crash-main` deve usar `flex:0 0 auto` e nunca `flex:1 1 auto`.
+- **Em runtime** (`npm run check:runtime`, 9 jogos com motor crash): o `.crash-bet-panel` não pode ter directamente as classes `hidden`, `sr-only`, `invisible` ou `overflow-hidden`; o `.game-stage` não pode ter `overflow-hidden`; o painel deve vir **antes** das zonas C (`.crash-live`) e D (`.crash-activity`) na ordem de filhos do Stage; os botões APOSTAR/CASHOUT devem existir no painel e pelo menos um deve estar habilitado na fase de apostas (detectada por `Apostas abertas` / `A ronda começa` no DOM). As falhas são acumuladas e impressas no fim da execução.
+
+Estes checks eliminam as causas conhecidas do desaparecimento e confirmam a estrutura/estado no jsdom, mas **não provam pixels**. A confirmação final — abrir o jogo no telemóvel, scrollar até ao painel e tocar em APOSTAR/CASHOUT num Android/WebView real — depende do utilizador.
 
 ## O que NÃO é testado automaticamente
 
@@ -39,7 +58,7 @@ Os checks de crash acumulam falhas e reportam-nas no fim: uma implementação ai
 - Servidor/backend (`server/`, APIs, persistência remota, rede): nenhum servidor é iniciado e não são feitos pedidos reais; a carteira é simulada em `localStorage` dentro do jsdom.
 - PWA instalada, service worker em condições reais de offline/actualização e notificações.
 - Áudio, animações e canvas com pintura real: o jsdom usa stubs para `getContext`/`requestAnimationFrame`.
-- Layout visual, contraste e legibilidade; o CSS global é verificado apenas por presença de selectores.
+- Layout visual, contraste e legibilidade; o CSS global é verificado apenas por presença de selectores e pelas regras de visibilidade descritas em «Visibilidade real» (ainda sem pintura real).
 - Equidade/estatística dos RNG e comportamento de jogos com configuração inválida.
 - Fluxos multi-sessão, persistência entre dispositivos e recuperação após falha de rede.
 - Testes com dinheiro real: a aplicação é demonstração (B$ virtuais).

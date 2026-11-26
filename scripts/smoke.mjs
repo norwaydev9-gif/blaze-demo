@@ -169,13 +169,52 @@ if (sideMarker > 0) {
   }
 }
 
+/* ------------- visibilidade real: painel de aposta e palco ------------------- */
+
+// O painel "sumiu" num layout imersivo de altura fixa porque o Stage tinha
+// overflow-hidden. Checks de presença no DOM não apanham clipping: validamos
+// a configuração que permite ao palco scrollar e ao painel ocupar a sua altura.
+const stageTags = [...crashSource.matchAll(/<Stage\b[^>]*>/g)].map((m) => m[0])
+const stageClassValue = (tag) => tag.match(/\bclassName\s*=\s*(?:"([^"]*)"|'([^']*)'|`([^`]*)`|\{([^}]*)\})/)?.slice(1).find(Boolean) ?? ''
+// Só a classe exacta overflow-hidden clipa o conteúdo; overflow-x-hidden é permitido.
+const clipsOverflow = (value) => /(?:^|[^\w-])overflow-hidden(?:$|[^\w-])/.test(value)
+check(stageTags.length > 0, 'CrashGame.tsx: não foi possível localizar o <Stage> do palco de crash')
+check(
+  stageTags.some((tag) => stageClassValue(tag) && !clipsOverflow(stageClassValue(tag))),
+  'CrashGame.tsx: deve existir um <Stage> sem overflow-hidden (use overflow-x-hidden se precisar de cortar apenas em X)',
+)
+check(
+  !stageTags.some((tag) => clipsOverflow(stageClassValue(tag))),
+  'CrashGame.tsx: <Stage className="overflow-hidden"> esconde o painel de aposta em ecrãs imersivos de altura fixa — remover overflow-hidden do Stage',
+)
+
+const crashCss = read('src/index.css')
+const immersiveStageBlocks = [...crashCss.matchAll(/\.game-immersive-engine\s+\.game-stage\s*\{([^}]*)\}/g)].map((m) => m[1])
+check(
+  immersiveStageBlocks.some((block) => /\boverflow-y\s*:\s*auto\b/.test(block)),
+  'index.css: .game-immersive-engine .game-stage precisa de overflow-y:auto para o painel de aposta poder ser scrollado no modo imersivo',
+)
+check(
+  immersiveStageBlocks.some((block) => /\boverscroll-behavior\s*:\s*contain\b/.test(block)),
+  'index.css: .game-immersive-engine .game-stage precisa de overscroll-behavior:contain (evita que o scroll do painel mova a página)',
+)
+
+const crashMainBlocks = [...crashCss.matchAll(/\.crash-main\s*\{([^}]*)\}/g)].map((m) => m[1])
+check(
+  !crashMainBlocks.some((block) => /\bflex\s*:\s*1\s+1\s+auto\b/.test(block)),
+  'index.css: .crash-main não pode usar flex:1 1 auto — o crescimento do palco empurra o painel de aposta para fora da viewport',
+)
+check(
+  crashMainBlocks.some((block) => /\bflex\s*:\s*0\s+0\s+auto\b/.test(block)),
+  'index.css: .crash-main deve usar flex:0 0 auto para não roubar altura ao painel de aposta',
+)
+
 /* --------------- fundos próprios e som das variantes crash ------------------ */
 
 const crashVariantIds = [
   'crash', 'aviator', 'space-flight', 'rocket-rush', 'sky-multiplier',
   'cosmic-crash', 'turbo-crash', 'jet-rush', 'crash-deluxe',
 ]
-const crashCss = read('src/index.css')
 crashVariantIds.forEach((id) => {
   check(
     new RegExp(`\\.game-stage\\[data-game\\s*=\\s*['"]${id}['"]\\]`).test(crashCss),
@@ -253,5 +292,5 @@ if (errors.length) {
 }
 
 console.log(
-  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, vectores/acções, marca BLAZE, build, contrato DOM do crash, ${crashVariantIds.length} fundos data-game e sons de crash verificados.`,
+  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, vectores/acções, marca BLAZE, build, contrato DOM do crash, visibilidade do painel de aposta, ${crashVariantIds.length} fundos data-game e sons de crash verificados.`,
 )
