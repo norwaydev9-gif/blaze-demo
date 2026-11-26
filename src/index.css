@@ -347,7 +347,8 @@ body {
   position: relative;
   z-index: 1;
   display: flex;
-  flex: 1 1 auto;
+  /* o voo não pode crescer até empurrar o painel de aposta para fora do palco */
+  flex: 0 0 auto;
   flex-direction: column;
   width: 100%;
   min-height: 0;
@@ -647,15 +648,23 @@ input[type='number'] {
     padding-bottom: 0;
   }
 
-  .game-layout-no-dock .game-side {
+  .game-layout-no-dock .game-side,
+  .game-layout-no-dock .game-side.is-open {
     position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
     transform: none;
+    transition: none;
     max-height: none;
     overflow: visible;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   .game-layout-no-dock .game-side-content {
@@ -784,7 +793,9 @@ input[type='number'] {
 .game-immersive-page {
   position: relative;
   min-height: 100dvh;
-  overflow: hidden;
+  /* só travar o transbordo horizontal: um overflow-y oculto aqui clipava o palco */
+  overflow-x: clip;
+  overflow-y: visible;
   background: #0a0e18;
 }
 .game-immersive-page::before {
@@ -824,6 +835,14 @@ input[type='number'] {
 .game-immersive-engine .game-stage {
   flex: 1;
   min-height: 0;
+  /* o palco é o contentor de scroll: os controlos (bet-bar / crash-bet-panel)
+     continuam no fluxo e são alcançáveis por arrasto, mesmo em Android */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   border-radius: 0 !important;
   border-left: 0 !important;
   border-right: 0 !important;

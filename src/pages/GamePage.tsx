@@ -104,7 +104,7 @@ export function GamePage() {
 
   return (
     <div
-      className="game-immersive-page relative isolate flex min-h-[100dvh] w-full max-w-full touch-pan-y flex-col overflow-hidden"
+      className="game-immersive-page relative isolate flex min-h-[100dvh] w-full max-w-full touch-pan-y flex-col"
       onPointerMove={revealChrome}
       onTouchStart={revealChrome}
     >
@@ -166,7 +166,7 @@ export function GamePage() {
       </div>
 
       <div
-        className="game-immersive-engine h-[100dvh] min-w-0 shrink-0 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(48px+env(safe-area-inset-bottom))] lg:overflow-visible lg:pb-0 [&_.game-layout]:!min-h-0 [&_.game-layout]:h-full [&_.game-stage]:!min-h-0 [&_.game-stage]:!overflow-y-auto [&_.game-stage]:overscroll-contain"
+        className="game-immersive-engine h-[100dvh] min-w-0 shrink-0 touch-pan-y overflow-y-auto overscroll-contain pb-[calc(48px+env(safe-area-inset-bottom))] lg:overflow-visible lg:pb-0 [&_.game-layout]:!min-h-0 [&_.game-layout]:h-full"
       >
         <GameEngine key={game.id} game={game} />
       </div>
