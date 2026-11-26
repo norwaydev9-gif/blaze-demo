@@ -239,6 +239,22 @@ QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam co
   painel visível/operável, zero botões gold. Continua sem medição em Android
   real/browser headless neste ambiente.
 
+## Décima primeira passagem — painel do Crash colado ao fundo
+
+- **Problema:** em Android, os painéis do Crash ficavam empilhados no fluxo e
+  obrigavam a scroll para chegar à aposta — ao contrário de Aviator/JetX, onde
+  os controlos estão sempre visíveis no fundo do ecrã.
+- **Correção:** em `<1024px`, `.crash-bet-panel` passou a
+  `position:sticky; bottom:…`, mantendo o painel de aposta ancorado; os slots
+  passaram a duas colunas (`.crash-slot-grid`), com os botões rápidos e
+  APOSTAR/CASHOUT sempre ao alcance do polegar.
+- **Ficheiros:** `src/index.css` (regras sticky e grelha em mobile) e
+  `src/games/CrashGame.tsx` (marcação do painel e dos slots).
+- **Evidência:** `npm run check` 66/66 jogos, `check:runtime` 9/9 Crash e sonda
+  de visibilidade 8/8 OK.
+- **Limitação:** validação estática/jsdom; sem medição em dispositivo Android
+  real neste ambiente.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.

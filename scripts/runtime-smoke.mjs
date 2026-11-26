@@ -221,6 +221,13 @@ const readCrashVisibility = (stage) => {
   }
   const panel = stage.querySelector('.crash-bet-panel')
   if (!panel) issues.push('.crash-bet-panel ausente no palco')
+  const slotGrid = panel?.querySelector('.crash-slot-grid')
+  const gridSlots = slotGrid ? [...slotGrid.children].filter((node) => classTokens(node).has('crash-slot')) : []
+  if (!slotGrid) {
+    issues.push('grelha .crash-slot-grid ausente — os slots não ficam lado a lado em mobile')
+  } else if (gridSlots.length < 2) {
+    issues.push(`grelha .crash-slot-grid com ${gridSlots.length} slot(s) — esperados pelo menos 2`)
+  }
   const badPanelClasses = hidingClasses.filter((cls) => classTokens(panel).has(cls))
   if (badPanelClasses.length) issues.push(`.crash-bet-panel com classe que esconde conteúdo (${badPanelClasses.join(', ')})`)
   if (classTokens(stage).has('overflow-hidden')) issues.push('.game-stage com overflow-hidden (clippa o painel de aposta)')

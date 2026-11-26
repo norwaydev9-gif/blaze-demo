@@ -314,6 +314,7 @@ export function AutoControl({
   onValueChange,
   active,
   onToggle,
+  className = '',
   label = 'Auto-retirar',
   min = 1.01,
   step = 0.1,
@@ -331,6 +332,8 @@ export function AutoControl({
   step?: number
   suffix?: string
   disabled?: boolean
+  /** Permite empilhar rótulo e input em slots estreitos (ex.: crash em Android). */
+  className?: string
   /** Valor em tempo real (multiplicador, nível, etc.) para mostrar o progresso até ao alvo. */
   current?: number
   currentLabel?: string
@@ -344,7 +347,7 @@ export function AutoControl({
   const reached = current !== undefined && current >= target
 
   return (
-    <div>
+    <div className={className}>
       <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
         <label className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/50">
           <span className="truncate">{label}</span>

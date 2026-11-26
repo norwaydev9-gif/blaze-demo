@@ -742,7 +742,7 @@ export function CrashGame({ game }: { game: Game }) {
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[.14em] text-white/75">Painel de aposta</p>
-                <p className="text-[9px] uppercase tracking-wider text-white/35">
+                <p className="crash-bet-meta text-[9px] uppercase tracking-wider text-white/35">
                   Limites {fmt(min)}–{fmt(max)} B$ · saldo {fmt(balance)} B$ · {slotCount} aposta{slotCount === 1 ? '' : 's'}
                 </p>
               </div>
@@ -802,7 +802,7 @@ export function CrashGame({ game }: { game: Game }) {
               <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             </div>
 
-            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="crash-slot-grid mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {slots.map((s, i) => {
                 const p = playerBets.find((b) => b.idx === i)
                 const wonAt = s.cashedAt ?? p?.cashedAt ?? null
@@ -868,10 +868,11 @@ export function CrashGame({ game }: { game: Game }) {
                         {s.active ? 'APOSTADO' : 'APOSTAR'}
                       </ActionButton>
                       <ActionButton tone="cashout" size="compact" onClick={() => cashout(i)} disabled={phase !== 'flying' || !s.active} className="w-full">
-                        {phase === 'flying' && s.active ? `CASHOUT ${fmtCrash(mult)}` : 'CASHOUT'}
+                        {phase === 'flying' && s.active ? <>CASHOUT <span className="crash-cashout-mult">{fmtCrash(mult)}</span></> : 'CASHOUT'}
                       </ActionButton>
                     </div>
                     <AutoControl
+                      className="crash-auto-compact"
                       value={s.autoCash}
                       onValueChange={(n) => setSlot(i, { autoCash: n })}
                       active={s.auto}
@@ -891,7 +892,7 @@ export function CrashGame({ game }: { game: Game }) {
               <h3 className="text-[11px] font-bold uppercase tracking-[.16em] text-white/75">LIVE PLAYERS / ALL BETS</h3>
               <span className="text-[9px] font-bold uppercase tracking-wider text-gold/80">DEMONSTRAÇÃO · bots sem carteira real</span>
             </div>
-            <div className="crash-bots no-scrollbar max-h-[212px] space-y-1.5 overflow-y-auto pr-1">
+            <div className="crash-bots no-scrollbar space-y-1.5 pr-1">
               {playerBets.length === 0 && bots.length === 0 && (
                 <p className="text-[10px] text-white/30">Sem participantes nesta ronda.</p>
               )}
@@ -960,7 +961,7 @@ export function CrashGame({ game }: { game: Game }) {
               <h3 className="text-[11px] font-bold uppercase tracking-[.16em] text-white/75">CASH OUT ACTIVITY</h3>
               <span className="text-[9px] font-bold uppercase tracking-wider text-gold/80">DEMONSTRAÇÃO para bots</span>
             </div>
-            <div className="no-scrollbar max-h-[190px] space-y-1 overflow-y-auto pr-1">
+            <div className="no-scrollbar space-y-1 pr-1">
               {cashouts.length === 0 && <p className="text-[10px] text-white/30">Ainda sem cashouts nesta sessão.</p>}
               {cashouts.map((c) => (
                 <div key={c.id} className="crash-cashout-item flex animate-riseIn items-center gap-2 rounded-lg border border-line/60 bg-white/[.02] px-2 py-1.5" data-kind={c.kind}>

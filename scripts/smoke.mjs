@@ -209,6 +209,23 @@ check(
   'index.css: .crash-main deve usar flex:0 0 auto para não roubar altura ao painel de aposta',
 )
 
+// Layout Android: os dois painéis de aposta ficam lado a lado e o painel é
+// ancorado ao fundo, para APOSTAR/CASHOUT não exigirem scrolling na primeira ronda.
+check(
+  /crash-slot-grid/.test(crashSource),
+  'CrashGame.tsx: falta a classe crash-slot-grid na grelha de slots (layout de dois painéis em mobile)',
+)
+const mobileBetPanelBlocks = [...crashCss.matchAll(/\.crash-bet-panel\.bet-bar\s*\{([^}]*)\}/g)].map((m) => m[1])
+check(
+  mobileBetPanelBlocks.some((block) => /\bposition\s*:\s*sticky\b/.test(block) && /\bbottom\s*:/.test(block)),
+  'index.css: o painel de aposta do crash deve ficar ancorado ao fundo em mobile (position:sticky + bottom)',
+)
+const crashSlotGridBlocks = [...crashCss.matchAll(/\.crash-slot-grid\s*\{([^}]*)\}/g)].map((m) => m[1])
+check(
+  crashSlotGridBlocks.some((block) => /repeat\(\s*2\s*,/.test(block)),
+  'index.css: .crash-slot-grid deve usar duas colunas em mobile (dois painéis lado a lado)',
+)
+
 /* --------------- fundos próprios e som das variantes crash ------------------ */
 
 const crashVariantIds = [
@@ -280,7 +297,7 @@ if (existsSync(new URL('dist/index.html', root))) {
 
   const manifest = readJson('dist/manifest.webmanifest')
   check(manifest.name.includes('BLAZE'), 'dist/manifest.webmanifest: nome não usa BLAZE')
-  check(read('dist/sw.js').includes('blaze-demo-v7'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v7')
+  check(read('dist/sw.js').includes('blaze-demo-v8'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v8')
 }
 
 /* -------------------------------- resultado ------------------------------- */
