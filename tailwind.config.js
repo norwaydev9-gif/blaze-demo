@@ -46,6 +46,10 @@ export default {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
         },
+        winFlash: {
+          '0%,100%': { filter: 'brightness(1)' },
+          '45%': { filter: 'brightness(1.55) saturate(1.3)' },
+        },
       },
       animation: {
         floaty: 'floaty 6s ease-in-out infinite',
@@ -54,6 +58,7 @@ export default {
         popIn: 'popIn .22s ease-out both',
         riseIn: 'riseIn .3s ease-out both',
         spinSlow: 'spinSlow 9s linear infinite',
+        winFlash: 'winFlash .6s ease-out',
       },
     },
   },

@@ -361,6 +361,8 @@ export function Toasts() {
 
 export function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
+  const route = useRoute()
+  const immersive = route.path.startsWith('/jogo/')
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -370,7 +372,7 @@ export function Layout({ children }: { children: ReactNode }) {
   }, [open])
 
   return (
-    <div className="min-h-screen lg:pl-[236px]">
+    <div className={`${immersive ? 'app-immersive' : ''} min-h-screen lg:pl-[236px]`}>
       <aside className="fixed inset-y-0 left-0 z-50 hidden w-[236px] border-r border-line/70 bg-[#070910]/95 lg:block">
         <SidebarContent />
       </aside>

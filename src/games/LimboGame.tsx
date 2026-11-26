@@ -4,7 +4,7 @@ import { fmt, fmtMult, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 export function LimboGame({ game }: { game: Game }) {
   const min = game.minBet
@@ -64,6 +64,22 @@ export function LimboGame({ game }: { game: Game }) {
         <Stage>
           <div className="relative flex min-h-[380px] flex-col items-center justify-center px-6 py-10 sm:min-h-[440px]">
             <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className={`absolute left-1/2 top-[18%] -translate-x-1/2 ${running ? 'game-float' : ''}`}>
+                <svg viewBox="0 0 48 72" className="h-16 w-12 drop-shadow-[0_0_20px_rgba(255,107,61,.5)]" fill="none">
+                  <path d="M24 4c8 7 12 17 12 30l-12 12-12-12C12 21 16 11 24 4Z" fill="#f4f7ff" stroke="#9fb0d0" strokeWidth="2" />
+                  <circle cx="24" cy="26" r="6" fill="#22d3ee" stroke="#0e7490" strokeWidth="2" />
+                  <path d="M18 48 24 70l6-22Z" fill="#ff6b3d" className="game-pulse" />
+                </svg>
+              </div>
+              {[0, 1, 2, 3].map((p) => (
+                <span
+                  key={p}
+                  className="animate-floaty absolute h-1 w-1 rounded-full bg-gold/70"
+                  style={{ left: `${28 + p * 14}%`, top: `${62 + (p % 2) * 12}%`, animationDelay: `${p * 220}ms` }}
+                />
+              ))}
+            </div>
             <div className="relative text-center">
               <p className="label">Resultado</p>
               <p
@@ -85,6 +101,10 @@ export function LimboGame({ game }: { game: Game }) {
                   {won ? `Atingiste o alvo! +${fmt(amount * target)} B$` : `Ficaste abaixo de ${fmtMult(target)}.`}
                 </p>
               )}
+              <ResultBanner
+                state={result === null ? 'idle' : won ? 'win' : 'lose'}
+                text={won ? `+${fmt(amount * target)} B$` : `Ficaste abaixo de ${fmtMult(target)}.`}
+              />
             </div>
           </div>
         </Stage>
@@ -110,16 +130,15 @@ export function LimboGame({ game }: { game: Game }) {
               />
               <div className="mt-2 grid grid-cols-4 gap-1.5">
                 {[1.5, 2, 5, 10].map((v) => (
-                  <button
+                  <ActionButton
                     key={v}
-                    type="button"
+                    tone="ghost"
+                    size="compact"
                     onClick={() => setTarget(v)}
-                    className={`rounded-lg border py-1.5 text-[10px] font-bold transition ${
-                      target === v ? 'border-gold/50 bg-gold/15 text-gold' : 'border-line text-white/35 hover:text-white'
-                    }`}
+                    className={target === v ? 'border-gold/50 bg-gold/15 text-gold' : ''}
                   >
                     {v}×
-                  </button>
+                  </ActionButton>
                 ))}
               </div>
               <input
@@ -136,9 +155,9 @@ export function LimboGame({ game }: { game: Game }) {
               <Payout label="Ganho potencial" value={`${fmt(amount * target)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={playRound} disabled={running} className="btn-primary mt-3 w-full py-3 text-sm">
+            <ActionButton tone="bet" icon="bolt" loading={running} onClick={playRound} disabled={running} className="mt-3">
               {running ? 'A subir…' : `Jogar · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos multiplicadores">
             <RecentStrip

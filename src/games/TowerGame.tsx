@@ -4,7 +4,8 @@ import { fmt, fmtMult } from '../lib/format'
 import { randInt } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 
 export function TowerGame({ game }: { game: Game }) {
   const rows = Number(game.config.rows ?? 8)
@@ -20,6 +21,9 @@ export function TowerGame({ game }: { game: Game }) {
   const [lost, setLost] = useState(false)
   const [cashed, setCashed] = useState<number | null>(null)
   const [history, setHistory] = useState<string[]>([])
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
   const step = (cols / (cols - 1)) * 0.99
 
   const start = () => {
@@ -75,6 +79,9 @@ export function TowerGame({ game }: { game: Game }) {
     setCashed(null)
   }
 
+  useAutoCashout({ active, value: mult, target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   return (
     <GameLayout
       stage={
@@ -83,7 +90,7 @@ export function TowerGame({ game }: { game: Game }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="label">Multiplicador</p>
-                <p className={`font-display text-2xl font-extrabold tabular ${cashed ? 'text-good' : 'text-white'}`}>{fmtMult(cashed ?? mult)}</p>
+                <p className={`font-display text-2xl font-extrabold tabular ${cashed ? 'text-good animate-pulseGlow' : 'text-white'}`}>{fmtMult(cashed ?? mult)}</p>
               </div>
               <div className="text-right">
                 <p className="label">Andar</p>
@@ -101,7 +108,7 @@ export function TowerGame({ game }: { game: Game }) {
                 const isFuture = row > level
                 const revealed = lost && row >= level
                 return (
-                  <div key={row} className={`flex items-center gap-2 rounded-lg p-1 transition ${isCurrent ? 'bg-brand/[.06]' : ''}`}>
+                  <div key={row} className={`flex items-center gap-2 rounded-lg p-1 transition-all duration-300 ${isCurrent ? 'game-pulse bg-brand/[.08] shadow-[0_0_18px_rgba(255,45,63,.12)]' : ''}`}>
                     <span className={`w-5 text-center text-[9px] font-bold tabular ${isCurrent ? 'text-brand' : 'text-white/20'}`}>{row + 1}</span>
                     <div className="grid flex-1 gap-1.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
                       {Array.from({ length: cols }, (_, col) => {
@@ -138,6 +145,12 @@ export function TowerGame({ game }: { game: Game }) {
           <div className="border-t border-line/70 px-4 py-2.5 text-center text-[10px] text-white/30">
             {lost ? 'Armadilha ativada. A torre caiu.' : cashed ? `Retiraste com ${fmtMult(cashed)} — ${fmt(amount * cashed)} B$` : active ? 'Escolhe um caminho seguro para subir.' : 'Inicia a subida escolhendo a aposta.'}
           </div>
+          <div className="px-3">
+            <ResultBanner
+              state={cashed !== null ? 'win' : lost ? 'lose' : 'idle'}
+              text={cashed !== null ? `+${fmt(amount * cashed)} B$` : lost ? `Perdeste ${fmt(amount)} B$.` : ''}
+            />
+          </div>
         </Stage>
       }
       side={
@@ -150,19 +163,31 @@ export function TowerGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={lost || cashed !== null ? reset : start} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton
+                tone={lost || cashed !== null ? 'ghost' : 'bet'}
+                icon={lost || cashed !== null ? undefined : 'bolt'}
+                onClick={lost || cashed !== null ? reset : start}
+                className="mt-3"
+              >
                 {lost || cashed !== null ? 'Limpar torre' : `Subir · ${fmt(amount)} B$`}
-              </button>
+              </ActionButton>
             ) : (
-              <button type="button" onClick={cashout} disabled={level === 0} className="btn-good mt-3 w-full py-3 text-sm">
+              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-3">
                 Retirar {fmt(amount * mult)} B$
-              </button>
+              </ActionButton>
             )}
             {(lost || cashed !== null) && (
-              <button type="button" onClick={start} className="btn-ghost mt-2 w-full py-2 text-xs">
+              <ActionButton tone="ghost" size="compact" onClick={start} className="mt-2">
                 Jogar novamente
-              </button>
+              </ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('armadilha') ? 'text-brand border-brand/30' : 'text-good border-good/30')} />

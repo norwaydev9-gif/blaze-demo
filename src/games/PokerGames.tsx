@@ -5,7 +5,7 @@ import { bestHand, makeDeck, pokerScore, threeCardScore } from '../lib/cards'
 import type { Card } from '../lib/cards'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 import { CardHand, PlayingCard } from '../components/PlayingCard'
 
 const HAND_PT: Record<string, string> = {
@@ -109,23 +109,26 @@ export function VideoPokerGame({ game }: { game: Game }) {
                   {message || (phase === 'draw' ? 'Escolhe as cartas a manter' : 'Distribui para começar')}
                   {win > 0 && ` · +${fmt(win)} B$`}
                 </p>
+                <ResultBanner
+                  state={phase !== 'done' ? 'idle' : win > 0 ? 'win' : 'lose'}
+                  text={win > 0 ? `+${fmt(win)} B$` : 'Sem prémio nesta mão.'}
+                />
               </div>
               <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                 {Array.from({ length: 5 }, (_, i) => (
                   <div key={i} className="flex flex-col items-center gap-1.5">
-                    <div className="relative">
+                    <div className="relative animate-popIn" style={{ animationDelay: `${i * 90}ms` }}>
                       {cards[i] ? <PlayingCard card={cards[i]} size="lg" highlight={holds[i]} /> : <PlayingCard size="lg" />}
                     </div>
-                    <button
-                      type="button"
+                    <ActionButton
+                      tone="ghost"
+                      size="compact"
                       disabled={phase !== 'draw'}
                       onClick={() => setHolds((h) => h.map((v, idx) => (idx === i ? !v : v)))}
-                      className={`grid h-11 place-items-center rounded-md border px-2 text-[9px] font-bold uppercase transition ${
-                        holds[i] ? 'border-gold/50 bg-gold/20 text-gold' : 'border-line text-white/30'
-                      }`}
+                      className={holds[i] ? 'border-gold/50 bg-gold/20 text-gold' : ''}
                     >
                       {holds[i] ? 'Manter' : 'Trocar'}
-                    </button>
+                    </ActionButton>
                   </div>
                 ))}
               </div>
@@ -144,19 +147,19 @@ export function VideoPokerGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
-              <button type="button" onClick={deal} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             )}
             {phase === 'draw' && (
-              <button type="button" onClick={drawCards} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={drawCards} className="mt-3">
                 Trocar e revelar
-              </button>
+              </ActionButton>
             )}
             {phase === 'done' && (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova mão
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Histórico">
@@ -271,6 +274,10 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
                 {message || (phase === 'decide' ? 'Decide: desistir ou apostar 2×' : 'Faz a tua aposta')}
               </p>
               {win > 0 && <p className="font-display text-xl font-extrabold text-good">+{fmt(win)} B$</p>}
+              <ResultBanner
+                state={phase !== 'done' ? 'idle' : win > 0 ? 'win' : 'lose'}
+                text={win > 0 ? `+${fmt(win)} B$` : 'Sem prémio nesta mão.'}
+              />
             </div>
             <div className="relative">
               <div className="mb-2 flex items-center justify-between">
@@ -294,20 +301,20 @@ export function CaribbeanPokerGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
-              <button type="button" onClick={deal} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             )}
             {phase === 'decide' && (
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => finish(false)} className="btn-ghost py-3 text-xs">Desistir</button>
-                <button type="button" onClick={() => finish(true)} className="btn-primary py-3 text-xs">Apostar 2×</button>
+                <ActionButton tone="ghost" size="half" onClick={() => finish(false)}>Desistir</ActionButton>
+                <ActionButton tone="gold" size="half" onClick={() => finish(true)}>Apostar 2×</ActionButton>
               </div>
             )}
             {phase === 'done' && (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova mão
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Histórico">
@@ -406,6 +413,10 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
                 {message || (phase === 'decide' ? 'Joga ou desiste' : 'Faz a tua aposta')}
               </p>
               {win > 0 && <p className="font-display text-xl font-extrabold text-good">+{fmt(win)} B$</p>}
+              <ResultBanner
+                state={phase !== 'done' ? 'idle' : win > 0 ? 'win' : 'lose'}
+                text={win > 0 ? `+${fmt(win)} B$` : 'Sem prémio nesta mão.'}
+              />
             </div>
             <div className="relative">
               <div className="mb-2 flex items-center justify-between">
@@ -429,20 +440,20 @@ export function ThreeCardPokerGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
-              <button type="button" onClick={deal} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             )}
             {phase === 'decide' && (
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => finish(false)} className="btn-ghost py-3 text-xs">Desistir</button>
-                <button type="button" onClick={() => finish(true)} className="btn-primary py-3 text-xs">Jogar 2×</button>
+                <ActionButton tone="ghost" size="half" onClick={() => finish(false)}>Desistir</ActionButton>
+                <ActionButton tone="gold" size="half" onClick={() => finish(true)}>Jogar 2×</ActionButton>
               </div>
             )}
             {phase === 'done' && (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova mão
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Histórico">
@@ -574,6 +585,10 @@ export function TexasHoldemGame({ game }: { game: Game }) {
             <div className="relative text-center">
               <p className={`text-xs font-bold ${win > 0 ? 'text-good' : 'text-white/40'}`}>{message || (phase === 'play' ? 'Continua ou desiste' : 'Faz a tua aposta')}</p>
               {win > 0 && <p className="font-display text-lg font-extrabold text-good">+{fmt(win)} B$</p>}
+              <ResultBanner
+                state={phase !== 'done' ? 'idle' : win > 0 ? 'win' : 'lose'}
+                text={win > 0 ? `+${fmt(win)} B$` : 'Sem prémio nesta mão.'}
+              />
             </div>
           </div>
         </Stage>
@@ -588,22 +603,22 @@ export function TexasHoldemGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
-              <button type="button" onClick={deal} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             )}
             {phase === 'play' && (
               <div className="mt-3 space-y-2">
-                <button type="button" onClick={advance} className="btn-primary w-full py-3 text-sm">
+                <ActionButton tone="bet" icon="bolt" onClick={advance}>
                   {reveal === 0 ? 'Ver flop' : reveal === 3 ? 'Ver turn' : reveal === 4 ? 'Ver river' : 'Mostrar cartas'}
-                </button>
-                <button type="button" onClick={fold} className="btn-ghost w-full py-2.5 text-xs">Desistir</button>
+                </ActionButton>
+                <ActionButton tone="ghost" size="compact" onClick={fold}>Desistir</ActionButton>
               </div>
             )}
             {phase === 'done' && (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova mão
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Histórico">

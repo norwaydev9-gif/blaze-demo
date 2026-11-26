@@ -51,6 +51,28 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 - O fundo do palco usa `--game-bg`, definido pela página do jogo e removido ao
   sair, para não contaminar outras rotas.
 
+## Terceira passagem — vectores e acções
+
+- Cada motor passou a ter desenho vectorial próprio em `src/components/GameArt.tsx`
+  (Aviator = avião, Limbo = foguetão, Mines = mina, Slots = máquina, Roleta,
+  Plinko, Dados, Keno, Balão, Raspadinha, Torre, Arcade, cartas, moeda).
+  Os vectores aparecem nos cartões, no cabeçalho do jogo, no hero e como marca
+  d'água no palco, sem depender de emojis.
+- `ActionButton` unifica aposta/retirada/dobrar/sair com tons, ícones e estados
+  (`loading`, `disabled`, `active`) mantendo a lógica de cada motor intacta.
+- `AutoControl` + `useAutoCashout` e `AutoBetControl` + `useAutoReplay` dão
+  auto-retirada e auto-aposta reais aos jogos aplicáveis (Crash, Mines, HiLo,
+  Tower, Balloon).
+- `ResultBanner` ganhou confetti e brilho (`animate-winFlash`) para realçar
+  visualmente os ganhos; o Slots mantém o confetti próprio.
+- Os cartões passaram a usar ilustração vectorial em primeiro plano (por motor
+  e com variações por `id`), mantendo a fotografia licenciada como fundo.
+- Cada jogo abre em modo imersivo: `app-immersive` esconde sidebar, topbar e
+  navegação inferior; o tabuleiro ocupa toda a altura da viewport com aurora
+  animada. A barra de controlo só aparece ao tocar/mover o ponteiro, mantendo
+  uma saída discreta e acessível (`Esc` também funciona). Informações,
+  desempenho e jogos semelhantes passaram para um painel `i`.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.

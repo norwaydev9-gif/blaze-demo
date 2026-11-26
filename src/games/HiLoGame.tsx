@@ -5,7 +5,8 @@ import { makeDeck } from '../lib/cards'
 import type { Card } from '../lib/cards'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 import { PlayingCard } from '../components/PlayingCard'
 import { cardText } from '../lib/cards'
 
@@ -20,6 +21,9 @@ export function HiLoGame({ game }: { game: Game }) {
   const [active, setActive] = useState(false)
   const [last, setLast] = useState<Card | null>(null)
   const [history, setHistory] = useState<string[]>([])
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
 
   const stats = useMemo(() => {
     const higher = rest.filter((c) => c.r > current.r).length
@@ -82,6 +86,11 @@ export function HiLoGame({ game }: { game: Game }) {
     play('cashout')
   }
 
+  const roundLost = !active && last !== null && String(history[0] ?? '').includes('→')
+
+  useAutoCashout({ active, value: mult, target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   return (
     <GameLayout
       stage={
@@ -108,25 +117,35 @@ export function HiLoGame({ game }: { game: Game }) {
               )}
             </div>
             <div className="relative mt-6 grid w-full max-w-[360px] grid-cols-2 gap-2">
-              <button
-                type="button"
+              <ActionButton
+                tone="ghost"
+                size="half"
                 disabled={!active || stats.higherPay === 0}
                 onClick={() => guess(true)}
-                className="rounded-xl border border-good/40 bg-good/10 px-3 py-3 text-left transition hover:bg-good/15 disabled:opacity-30"
+                className="border-good/40 bg-good/10 text-left text-good hover:bg-good/15"
               >
-                <span className="block text-xs font-bold text-good">↑ Maior</span>
-                <span className="block text-[10px] text-white/35">{(stats.higher * 100).toFixed(1)}% · paga {stats.higherPay.toFixed(2)}×</span>
-              </button>
-              <button
-                type="button"
+                <span>
+                  <span className="block text-xs font-bold text-good">↑ Maior</span>
+                  <span className="block text-[10px] text-white/35">{(stats.higher * 100).toFixed(1)}% · paga {stats.higherPay.toFixed(2)}×</span>
+                </span>
+              </ActionButton>
+              <ActionButton
+                tone="ghost"
+                size="half"
                 disabled={!active || stats.lowerPay === 0}
                 onClick={() => guess(false)}
-                className="rounded-xl border border-brand/40 bg-brand/10 px-3 py-3 text-left transition hover:bg-brand/15 disabled:opacity-30"
+                className="border-brand/40 bg-brand/10 text-left text-brand hover:bg-brand/15"
               >
-                <span className="block text-xs font-bold text-brand">↓ Menor</span>
-                <span className="block text-[10px] text-white/35">{(stats.lower * 100).toFixed(1)}% · paga {stats.lowerPay.toFixed(2)}×</span>
-              </button>
+                <span>
+                  <span className="block text-xs font-bold text-brand">↓ Menor</span>
+                  <span className="block text-[10px] text-white/35">{(stats.lower * 100).toFixed(1)}% · paga {stats.lowerPay.toFixed(2)}×</span>
+                </span>
+              </ActionButton>
             </div>
+            <ResultBanner
+              state={!active && last ? (roundLost ? 'lose' : 'win') : 'idle'}
+              text={last ? (roundLost ? 'Ronda terminada.' : `+${fmt(amount * (parseFloat(String(history[0] ?? '1')) || 1))} B$`) : ''}
+            />
           </div>
         </Stage>
       }
@@ -140,14 +159,21 @@ export function HiLoGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={start} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
                 {last ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
-              </button>
+              </ActionButton>
             ) : (
-              <button type="button" onClick={cashout} disabled={mult <= 1} className="btn-good mt-3 w-full py-3 text-sm">
+              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={mult <= 1} className="mt-3">
                 Retirar {fmt(amount * mult)} B$
-              </button>
+              </ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('→') ? 'text-brand border-brand/30' : 'text-gold border-gold/30')} />

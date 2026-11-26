@@ -4,6 +4,7 @@ import { clamp, fmt } from '../lib/format'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { Icon } from './Icon'
+import type { IconName } from './Icon'
 
 export function GameLayout({
   stage,
@@ -149,18 +150,27 @@ export function ResultBanner({
   const good = state === 'win'
   return (
     <div
-      className={`mt-3 flex items-center gap-3 rounded-xl border px-3 py-2.5 animate-popIn ${
-        good ? 'border-good/30 bg-good/10' : state === 'push' ? 'border-line bg-white/[.04]' : 'border-brand/30 bg-brand/10'
+      className={`relative mt-3 flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 animate-popIn ${
+        good ? 'border-good/40 bg-gradient-to-r from-good/20 via-good/10 to-gold/10' : state === 'push' ? 'border-line bg-white/[.04]' : 'border-brand/30 bg-brand/10'
       }`}
     >
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${good ? 'bg-good/20 text-good' : state === 'push' ? 'bg-white/10 text-white/60' : 'bg-brand/20 text-brand'}`}>
+      {good && <span className="pointer-events-none absolute inset-0 animate-winFlash bg-gradient-to-r from-good/25 via-gold/20 to-good/25" />}
+      {good &&
+        [6, 18, 30, 42, 54, 66, 78, 90].map((left, i) => (
+          <span
+            key={left}
+            className="confetti"
+            style={{ left: `${left}%`, top: '45%', background: i % 2 ? '#ffc857' : '#22e3a0', animationDelay: `${i * 0.08}s` }}
+          />
+        ))}
+      <span className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-lg ${good ? 'bg-good/20 text-good' : state === 'push' ? 'bg-white/10 text-white/60' : 'bg-brand/20 text-brand'}`}>
         <Icon name={good ? 'trophy' : state === 'push' ? 'info' : 'close'} size={15} />
       </span>
-      <div className="min-w-0 flex-1">
+      <div className="relative z-10 min-w-0 flex-1">
         <p className={`text-xs font-bold ${good ? 'text-good' : state === 'push' ? 'text-white/70' : 'text-brand'}`}>{text}</p>
         {sub && <p className="truncate text-[10px] text-white/40">{sub}</p>}
       </div>
-      {win !== undefined && win > 0 && <span className="shrink-0 text-sm font-extrabold tabular text-good">+{fmt(win)}</span>}
+      {win !== undefined && win > 0 && <span className="relative z-10 shrink-0 text-sm font-extrabold tabular text-good">+{fmt(win)}</span>}
     </div>
   )
 }
@@ -223,6 +233,150 @@ export function BigButton({
     <button type="button" onClick={onClick} disabled={disabled} className={`${cls} w-full py-3 text-sm ${className}`}>
       {children}
     </button>
+  )
+}
+
+export function ActionButton({
+  children,
+  onClick,
+  disabled,
+  loading = false,
+  tone = 'bet',
+  size = 'full',
+  icon,
+  active = false,
+  className = '',
+}: {
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  loading?: boolean
+  tone?: 'bet' | 'cashout' | 'gold' | 'ghost' | 'auto'
+  size?: 'full' | 'half' | 'compact'
+  icon?: IconName
+  active?: boolean
+  className?: string
+}) {
+  const toneClass =
+    tone === 'cashout'
+      ? 'action-cashout'
+      : tone === 'gold'
+        ? 'action-gold'
+        : tone === 'ghost'
+          ? 'action-ghost'
+          : tone === 'auto'
+            ? `action-auto${active ? ' is-active' : ''}`
+            : 'action-bet'
+  const sizeClass =
+    size === 'compact'
+      ? 'w-auto min-h-[44px] rounded-xl px-3 text-xs'
+      : size === 'half'
+        ? 'w-full sm:w-auto'
+        : 'w-full'
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} className={`${toneClass} ${sizeClass} ${className}`}>
+      {loading && <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+      {icon && !loading && (
+        <span className="action-icon">
+          <Icon name={icon} size={16} />
+        </span>
+      )}
+      <span className="min-w-0 truncate">{children}</span>
+    </button>
+  )
+}
+
+export function AutoControl({
+  value,
+  onValueChange,
+  active,
+  onToggle,
+  label = 'Auto-retirar',
+  min = 1.01,
+  step = 0.1,
+  suffix = '×',
+  disabled = false,
+}: {
+  value: number
+  onValueChange: (n: number) => void
+  active: boolean
+  onToggle: () => void
+  label?: string
+  min?: number
+  step?: number
+  suffix?: string
+  disabled?: boolean
+}) {
+  const { play } = useSound()
+  return (
+    <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
+      <label className="flex min-w-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+        <span className="truncate">{label}</span>
+        <span className="relative min-w-0 flex-1">
+          <input
+            type="number"
+            inputMode="decimal"
+            step={step}
+            min={min}
+            value={value}
+            disabled={disabled}
+            onChange={(e) => onValueChange(Number(e.target.value))}
+            className="h-11 w-full min-w-0 rounded-lg border border-line bg-black/30 pl-2 pr-6 text-center text-[11px] font-bold tabular text-white outline-none focus:border-brand/50"
+          />
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/30">{suffix}</span>
+        </span>
+      </label>
+      <ActionButton
+        tone="auto"
+        size="compact"
+        active={active}
+        disabled={disabled}
+        onClick={() => {
+          play('tick')
+          onToggle()
+        }}
+        className="w-auto min-w-[74px] px-2"
+      >
+        AUTO
+      </ActionButton>
+    </div>
+  )
+}
+
+export function AutoBetControl({
+  active,
+  onToggle,
+  disabled = false,
+  label = 'Auto aposta',
+  hint = 'Repete a ronda automaticamente',
+}: {
+  active: boolean
+  onToggle: () => void
+  disabled?: boolean
+  label?: string
+  hint?: string
+}) {
+  const { play } = useSound()
+  return (
+    <div className="mt-2 flex items-center gap-3 rounded-xl border border-line/70 bg-black/20 px-3 py-2">
+      <ActionButton
+        tone="auto"
+        size="compact"
+        active={active}
+        disabled={disabled}
+        onClick={() => {
+          play('tick')
+          onToggle()
+        }}
+        className="w-auto min-w-[74px] px-2"
+      >
+        AUTO
+      </ActionButton>
+      <div className="min-w-0">
+        <p className="text-[11px] font-bold text-white/70">{label}</p>
+        <p className="truncate text-[10px] text-white/30">{hint}</p>
+      </div>
+    </div>
   )
 }
 

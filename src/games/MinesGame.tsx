@@ -4,7 +4,8 @@ import { fmt, fmtMult, clamp } from '../lib/format'
 import { randInt, shuffle } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 import { Icon } from '../components/Icon'
 
 function comb(n: number, k: number): number {
@@ -31,6 +32,9 @@ export function MinesGame({ game }: { game: Game }) {
   const [lost, setLost] = useState(false)
   const [cashed, setCashed] = useState<number | null>(null)
   const [history, setHistory] = useState<string[]>([])
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
 
   const multiplier = useMemo(() => {
     const k = opened.size
@@ -92,6 +96,9 @@ export function MinesGame({ game }: { game: Game }) {
     setCashed(null)
   }
 
+  useAutoCashout({ active, value: multiplier, target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   const revealAll = lost || cashed !== null
   const nextMult = useMemo(() => {
     const k = opened.size + 1
@@ -138,8 +145,8 @@ export function MinesGame({ game }: { game: Game }) {
                     type="button"
                     disabled={!active || isOpen}
                     onClick={() => open(i)}
-                    className={`tile-mines ${isOpen && !isMine ? 'safe' : ''} ${showMine ? 'mine' : ''} ${
-                      !active && !isOpen && !showMine ? 'opacity-60' : ''
+                    className={`tile-mines transition-transform active:scale-95 ${isOpen && !isMine ? 'safe animate-popIn drop-shadow-[0_0_12px_rgba(34,227,160,.45)]' : ''} ${showMine ? 'mine game-pulse' : ''} ${
+                      !active && !isOpen && !showMine ? 'opacity-60 hover:scale-[1.03]' : ''
                     }`}
                     style={{ fontSize: size >= 6 ? 18 : 22 }}
                   >
@@ -165,6 +172,10 @@ export function MinesGame({ game }: { game: Game }) {
                 Define a aposta e o número de minas, depois inicia a ronda.
               </p>
             )}
+            <ResultBanner
+              state={cashed !== null ? 'win' : lost ? 'lose' : 'idle'}
+              text={cashed !== null ? `+${fmt(amount * cashed)} B$` : lost ? `Perdeste ${fmt(amount)} B$.` : ''}
+            />
           </div>
         </Stage>
       }
@@ -179,19 +190,16 @@ export function MinesGame({ game }: { game: Game }) {
               </div>
               <div className="grid grid-cols-4 gap-1.5">
                 {mineOptions.map((m) => (
-                  <button
+                  <ActionButton
                     key={m}
-                    type="button"
+                    tone="ghost"
+                    size="compact"
                     disabled={active}
                     onClick={() => setMinesCount(m)}
-                    className={`rounded-lg border py-2 text-xs font-bold transition ${
-                      minesCount === m
-                        ? 'border-brand/50 bg-brand/15 text-white'
-                        : 'border-line bg-white/[.02] text-white/40 hover:border-white/20 hover:text-white'
-                    }`}
+                    className={minesCount === m ? 'border-brand/50 bg-brand/15 text-white' : ''}
                   >
                     {m}
-                  </button>
+                  </ActionButton>
                 ))}
               </div>
             </div>
@@ -201,24 +209,26 @@ export function MinesGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={start} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
                 {cashed !== null || lost ? 'Nova ronda' : `Jogar · ${fmt(amount)} B$`}
-              </button>
+              </ActionButton>
             ) : (
-              <button
-                type="button"
-                onClick={cashout}
-                disabled={opened.size === 0}
-                className="btn-good mt-3 w-full py-3 text-sm"
-              >
+              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={opened.size === 0} className="mt-3">
                 Retirar {fmt(amount * multiplier)} B$
-              </button>
+              </ActionButton>
             )}
             {(cashed !== null || lost) && (
-              <button type="button" onClick={reset} className="btn-ghost mt-2 w-full py-2 text-xs">
+              <ActionButton tone="ghost" size="compact" onClick={reset} className="mt-2">
                 Limpar grelha
-              </button>
+              </ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).includes('mina') ? 'text-brand border-brand/30' : 'text-good border-good/30')} />

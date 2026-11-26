@@ -4,7 +4,7 @@ import { fmt } from '../lib/format'
 import { randInt, uid } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36])
 
@@ -113,14 +113,14 @@ export function RouletteGame({ game }: { game: Game }) {
                     {american ? '00' : '0'}
                   </div>
                 </div>
-                <div className="absolute left-1/2 top-[-4px] h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-[10px] border-x-transparent border-t-white" />
+                <div className="absolute left-1/2 top-[-4px] h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-[10px] border-x-transparent border-t-white game-pulse" />
               </div>
               <div className="min-w-0 flex-1 text-right">
                 <p className="label">Resultado</p>
                 <p
                   className={`font-display text-3xl font-extrabold tabular sm:text-4xl ${
-                    result === null ? 'text-white/25' : colorOf(result) === 'red' ? 'text-brand' : colorOf(result) === 'green' ? 'text-good' : 'text-white'
-                  }`}
+                    result === null ? 'text-white/25' : colorOf(result) === 'red' ? 'text-brand' : colorOf(result) === 'green' ? 'text-good animate-pulseGlow' : 'text-white'
+                  } ${result !== null && !spinning ? 'animate-popIn' : ''}`}
                 >
                   {result === null ? '—' : labelOf(result)}
                 </p>
@@ -133,49 +133,53 @@ export function RouletteGame({ game }: { game: Game }) {
             </div>
 
             <div className="grid grid-cols-3 gap-1 sm:grid-cols-6">
-              <button
-                type="button"
+              <ActionButton
+                tone="ghost"
+                size="compact"
                 onClick={() => addBet('0', [0], 36)}
-                className="relative grid h-11 place-items-center rounded-md border border-good/40 bg-good/15 text-xs font-bold text-good transition hover:bg-good/25"
+                className="relative border-good/40 bg-good/15 text-good hover:bg-good/25"
               >
                 0
                 {bets.find((b) => b.label === '0') && <span className="absolute -right-1 -top-1 rounded-full bg-gold px-1 text-[8px] text-black">{bets.find((b) => b.label === '0')!.amount}</span>}
-              </button>
+              </ActionButton>
               {numbers.map((n) => {
                 const c = colorOf(n)
                 const bet = bets.find((b) => b.label === String(n))
                 return (
-                  <button
+                  <ActionButton
                     key={n}
-                    type="button"
+                    tone="ghost"
+                    size="compact"
                     onClick={() => addBet(String(n), [n], 36)}
-                    className={`relative grid h-11 place-items-center rounded-md border text-xs font-bold transition hover:brightness-125 ${
+                    className={`relative text-xs hover:brightness-125 ${
                       c === 'red' ? 'border-[#ff5b6b]/30 bg-[#c31226] text-white' : 'border-white/10 bg-[#15181f] text-white/80'
                     }`}
                   >
                     {n}
                     {bet && <span className="absolute -right-1 -top-1 rounded-full bg-gold px-1 text-[8px] font-bold text-black">{bet.amount}</span>}
-                  </button>
+                  </ActionButton>
                 )
               })}
               {american && (
-                <button
-                  type="button"
+                <ActionButton
+                  tone="ghost"
+                  size="compact"
                   onClick={() => addBet('00', [37], 36)}
-                  className="grid h-11 place-items-center rounded-md border border-good/40 bg-good/15 text-xs font-bold text-good transition hover:bg-good/25"
+                  className="border-good/40 bg-good/15 text-good hover:bg-good/25"
                 >
                   00
-                </button>
+                </ActionButton>
               )}
             </div>
 
             <div className="mt-2 grid grid-cols-3 gap-1 sm:grid-cols-6">
               {outside.map((o) => (
-                <button
+                <ActionButton
                   key={o.label}
-                  type="button"
+                  tone="ghost"
+                  size="compact"
                   onClick={() => addBet(o.label, o.numbers, o.pay)}
-                  className={`relative grid h-11 place-items-center rounded-md border border-white/10 text-[10px] font-bold text-white/80 transition hover:border-white/30 ${o.color ?? 'bg-white/[.04]'}`}
+                  className={`relative border-white/10 text-white/80 hover:border-white/30 ${o.color ?? 'bg-white/[.04]'}`}
                 >
                   {o.label}
                   {bets.find((b) => b.label === o.label) && (
@@ -183,9 +187,13 @@ export function RouletteGame({ game }: { game: Game }) {
                       {bets.find((b) => b.label === o.label)!.amount}
                     </span>
                   )}
-                </button>
+                </ActionButton>
               ))}
             </div>
+            <ResultBanner
+              state={result === null || spinning ? 'idle' : lastWin > 0 ? 'win' : 'lose'}
+              text={lastWin > 0 ? `+${fmt(lastWin)} B$` : 'Sem prémio nesta ronda.'}
+            />
           </div>
         </Stage>
       }
@@ -196,16 +204,15 @@ export function RouletteGame({ game }: { game: Game }) {
               <span className="label">Ficha</span>
               <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                 {[10, 50, 100, 500].map((c) => (
-                  <button
+                  <ActionButton
                     key={c}
-                    type="button"
+                    tone="ghost"
+                    size="compact"
                     onClick={() => setChip(c)}
-                    className={`grid h-11 place-items-center rounded-full border text-[10px] font-bold transition ${
-                      chip === c ? 'border-gold/60 bg-gold/20 text-gold' : 'border-line text-white/35 hover:text-white'
-                    }`}
+                    className={chip === c ? 'border-gold/60 bg-gold/20 text-gold' : ''}
                   >
                     {c}
-                  </button>
+                  </ActionButton>
                 ))}
               </div>
             </div>
@@ -214,13 +221,20 @@ export function RouletteGame({ game }: { game: Game }) {
               <Payout label="Apostas" value={String(bets.length)} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={spin} disabled={spinning || total === 0 || total > balance} className="btn-primary mt-3 w-full py-3 text-sm">
+            <ActionButton
+              tone="bet"
+              icon="bolt"
+              loading={spinning}
+              onClick={spin}
+              disabled={spinning || total === 0 || total > balance}
+              className="mt-3"
+            >
               {spinning ? 'A girar…' : total === 0 ? 'Coloca fichas' : `Girar · ${fmt(total)} B$`}
-            </button>
+            </ActionButton>
             {bets.length > 0 && (
-              <button type="button" onClick={clear} disabled={spinning} className="btn-ghost mt-2 w-full py-2 text-xs">
+              <ActionButton tone="ghost" size="compact" onClick={clear} disabled={spinning} className="mt-2">
                 Limpar apostas
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Últimos números">

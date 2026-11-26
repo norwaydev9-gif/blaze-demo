@@ -4,7 +4,7 @@ import { fmt } from '../lib/format'
 import { shuffle, randInt } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 function buildSegments(n: number): number[] {
   const base =
@@ -84,7 +84,7 @@ export function WheelGame({ game }: { game: Game }) {
             <div className="pointer-events-none absolute inset-0 bg-grid opacity-20" />
             <div className="relative" style={{ width: size, height: size }}>
               <div className="absolute left-1/2 top-[-6px] z-20 -translate-x-1/2">
-                <div className="h-0 w-0 border-x-[9px] border-t-[14px] border-x-transparent border-t-white drop-shadow-[0_2px_6px_rgba(0,0,0,.8)]" />
+                <div className="h-0 w-0 border-x-[9px] border-t-[14px] border-x-transparent border-t-white drop-shadow-[0_2px_6px_rgba(0,0,0,.8)] game-pulse" />
               </div>
               <div
                 className="absolute inset-0 rounded-full border-[6px] border-[#221a10] shadow-[0_0_0_2px_rgba(255,200,87,.25),0_24px_60px_rgba(0,0,0,.6)]"
@@ -105,7 +105,7 @@ export function WheelGame({ game }: { game: Game }) {
                     </div>
                   )
                 })}
-                <div className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 border-[#221a10] bg-gradient-to-br from-[#2c3444] to-[#0e121a] text-lg shadow-xl">
+                <div className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 border-[#221a10] bg-gradient-to-br from-[#2c3444] to-[#0e121a] text-lg shadow-xl game-pulse">
                   🎡
                 </div>
               </div>
@@ -122,6 +122,10 @@ export function WheelGame({ game }: { game: Game }) {
                   <p className="mt-1 text-[11px] text-white/35">Segmento sorteado</p>
                 </div>
               )}
+              <ResultBanner
+                state={result === null ? 'idle' : result > 0 ? 'win' : 'lose'}
+                text={result !== null && result > 0 ? `+${fmt(amount * result)} B$` : 'Sem prémio nesta ronda.'}
+              />
             </div>
           </div>
         </Stage>
@@ -135,9 +139,9 @@ export function WheelGame({ game }: { game: Game }) {
               <Payout label="Prémio máximo" value={`${fmt(amount * Math.max(...segments))} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={spin} disabled={spinning} className="btn-primary mt-3 w-full py-3 text-sm">
+            <ActionButton tone="bet" icon="bolt" loading={spinning} onClick={spin} disabled={spinning} className="mt-3">
               {spinning ? 'A girar…' : `Girar · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos resultados">
             <RecentStrip

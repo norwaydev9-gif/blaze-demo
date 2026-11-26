@@ -6,6 +6,7 @@ import { useRecent } from '../lib/favorites'
 import { fmt } from '../lib/format'
 import { GameCard, SectionHead } from '../components/GameCard'
 import { Icon } from '../components/Icon'
+import { GameArt } from '../components/GameArt'
 import { useToast } from '../lib/toast'
 
 const LIVE_WINS = [
@@ -114,7 +115,7 @@ export function HomePage() {
                   <path d="M0 150 C 80 145, 140 120, 190 80 S 260 25, 310 12" fill="none" stroke="#ff3b4d" strokeWidth="3" strokeLinecap="round" />
                   <circle cx="310" cy="12" r="5" fill="#fff" />
                 </svg>
-                <span className="absolute right-0 top-0 -translate-y-1/2 text-2xl">✈️</span>
+                <GameArt game={getGame('crash')!} className="absolute right-0 top-0 h-12 w-20 -translate-y-1/2" />
               </div>
               <div className="mt-2 flex items-end justify-between">
                 <div>
@@ -177,7 +178,9 @@ export function HomePage() {
         <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gold/15 text-2xl">🎁</span>
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gold/15 text-gold">
+              <Icon name="gift" size={28} />
+            </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Bónus de boas-vindas</p>
               <h3 className="font-display text-xl font-bold sm:text-2xl">Começa com 5.000 B$ virtuais</h3>

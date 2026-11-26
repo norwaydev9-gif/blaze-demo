@@ -5,7 +5,7 @@ import { fmt, clamp } from '../lib/format'
 import { rand, randInt } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 const W = 640
 const H = 420
@@ -436,19 +436,30 @@ export function ArcadeGame({ game }: { game: Game }) {
               ref={canvasRef}
               width={W}
               height={H}
-              className="block aspect-[640/420] w-full touch-none"
+              className="block aspect-[640/420] w-full touch-none drop-shadow-[0_0_22px_rgba(34,227,160,.18)]"
               onPointerMove={pointer}
               onPointerDown={pointer}
             />
+            {running && (
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                {[0, 1, 2, 3, 4, 5].map((s) => (
+                  <span
+                    key={s}
+                    className="animate-floaty absolute h-1 w-1 rounded-full bg-white/70 shadow-[0_0_8px_rgba(255,255,255,.9)]"
+                    style={{ left: `${(s * 17 + 8) % 96}%`, top: `${(s * 29 + 12) % 88}%`, animationDelay: `${s * 260}ms` }}
+                  />
+                ))}
+              </div>
+            )}
             {!running && (
               <div className="absolute inset-0 grid place-items-center bg-black/55 backdrop-blur-[2px]">
                 <div className="max-w-sm px-6 text-center">
                   <span className="text-5xl">{game.theme.icon}</span>
                   <h3 className="mt-3 font-display text-xl font-bold">{result ? (result.win > 0 ? 'Boa corrida!' : 'Fim de jogo') : 'Pronto para jogar?'}</h3>
                   <p className="mt-1 text-[11px] leading-relaxed text-white/45">{result ? `${result.text}${result.win > 0 ? ` · +${fmt(result.win)} B$` : ''}` : instructions}</p>
-                  <button type="button" onClick={start} className="btn-primary mt-4 px-6 py-2.5 text-sm">
+                  <ActionButton tone="bet" icon="bolt" size="compact" onClick={start} className="mt-4 px-6">
                     {result ? 'Jogar novamente' : `Começar · ${fmt(amount)} B$`}
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             )}
@@ -471,14 +482,18 @@ export function ArcadeGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {!running ? (
-              <button type="button" onClick={start} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
                 {result ? 'Jogar novamente' : `Começar · ${fmt(amount)} B$`}
-              </button>
+              </ActionButton>
             ) : (
-              <button type="button" onClick={finish} className="btn-ghost mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={finish} className="mt-3">
                 Terminar corrida
-              </button>
+              </ActionButton>
             )}
+            <ResultBanner
+              state={!result ? 'idle' : result.win > 0 ? 'win' : 'lose'}
+              text={result ? `${result.text}${result.win > 0 ? ` · +${fmt(result.win)} B$` : ''}` : ''}
+            />
             <p className="mt-3 text-[10px] leading-relaxed text-white/30">{instructions}</p>
           </SidePanel>
           <SidePanel title="Histórico">

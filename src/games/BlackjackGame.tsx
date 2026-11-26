@@ -5,7 +5,8 @@ import { handValue, isBlackjack, makeDeck } from '../lib/cards'
 import type { Card } from '../lib/cards'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, AutoBetControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { useAutoReplay } from '../lib/autoPlay'
 import { PlayingCard } from '../components/PlayingCard'
 
 type Phase = 'bet' | 'player' | 'done'
@@ -22,6 +23,7 @@ export function BlackjackGame({ game }: { game: Game }) {
   const [result, setResult] = useState<{ text: string; kind: 'win' | 'lose' | 'push' } | null>(null)
   const [bet, setBet] = useState(0)
   const [history, setHistory] = useState<string[]>([])
+  const [autoReplay, setAutoReplay] = useState(false)
   const deck = useRef<Card[]>([])
 
   const draw = (): Card => {
@@ -120,6 +122,8 @@ export function BlackjackGame({ game }: { game: Game }) {
   const pv = handValue(player)
   const dv = handValue(dealer)
 
+  useAutoReplay({ idle: phase === 'done', enabled: autoReplay, onStart: start })
+
   return (
     <GameLayout
       stage={
@@ -133,7 +137,9 @@ export function BlackjackGame({ game }: { game: Game }) {
               </div>
               <div className="flex min-h-[112px] flex-wrap gap-2">
                 {dealer.map((c, i) => (
-                  <PlayingCard key={`d-${i}`} card={i === 1 && phase === 'player' ? undefined : c} size="md" />
+                  <div key={`d-${i}`} className="animate-popIn" style={{ animationDelay: `${i * 110}ms` }}>
+                    <PlayingCard card={i === 1 && phase === 'player' ? undefined : c} size="md" />
+                  </div>
                 ))}
                 {dealer.length === 0 && <p className="text-xs text-white/20">Aguardando ronda…</p>}
               </div>
@@ -141,9 +147,7 @@ export function BlackjackGame({ game }: { game: Game }) {
 
             <div className="relative my-4 flex items-center justify-center">
               {result ? (
-                <div className={`rounded-xl border px-4 py-2.5 text-center animate-popIn ${result.kind === 'win' ? 'border-good/30 bg-good/10' : result.kind === 'push' ? 'border-line bg-white/5' : 'border-brand/30 bg-brand/10'}`}>
-                  <p className={`text-xs font-bold ${result.kind === 'win' ? 'text-good' : result.kind === 'push' ? 'text-white/70' : 'text-brand'}`}>{result.text}</p>
-                </div>
+                <ResultBanner state={result.kind} text={result.text} />
               ) : (
                 <span className="rounded-full border border-line bg-black/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/30">
                   {phase === 'player' ? 'A tua vez' : 'Faz a tua aposta'}
@@ -154,7 +158,9 @@ export function BlackjackGame({ game }: { game: Game }) {
             <div className="relative">
               <div className="flex min-h-[112px] flex-wrap gap-2">
                 {player.map((c, i) => (
-                  <PlayingCard key={`p-${i}`} card={c} size="md" />
+                  <div key={`p-${i}`} className="animate-popIn" style={{ animationDelay: `${i * 110}ms` }}>
+                    <PlayingCard card={c} size="md" />
+                  </div>
                 ))}
                 {player.length === 0 && <p className="text-xs text-white/20">As tuas cartas aparecem aqui.</p>}
               </div>
@@ -176,26 +182,27 @@ export function BlackjackGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' && (
-              <button type="button" onClick={start} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             )}
             {phase === 'player' && (
               <div className="mt-3 space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={hit} className="btn-primary py-3 text-xs">Pedir</button>
-                  <button type="button" onClick={stand} className="btn-ghost py-3 text-xs">Ficar</button>
+                  <ActionButton tone="bet" icon="bolt" size="half" onClick={hit}>Pedir</ActionButton>
+                  <ActionButton tone="cashout" icon="check" size="half" onClick={stand}>Ficar</ActionButton>
                 </div>
-                <button type="button" onClick={double} disabled={player.length !== 2 || balance < bet} className="btn-gold w-full py-2.5 text-xs">
+                <ActionButton tone="gold" onClick={double} disabled={player.length !== 2 || balance < bet}>
                   Dobrar · {fmt(bet)} B$
-                </button>
+                </ActionButton>
               </div>
             )}
             {phase === 'done' && (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova ronda
-              </button>
+              </ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).startsWith('+') ? 'text-good border-good/30' : String(v) === 'Empate' ? 'text-white/50' : 'text-brand border-brand/30')} />

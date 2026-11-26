@@ -4,7 +4,7 @@ import { fmt } from '../lib/format'
 import { rand, randInt, shuffle } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 interface Cell {
   symbol: string
@@ -142,14 +142,18 @@ export function ScratchGame({ game }: { game: Game }) {
                 </div>
               </div>
               <div className="mt-4 flex items-center justify-between">
-                <button type="button" onClick={revealAll} disabled={!active} className="btn-ghost px-3 py-2 text-[11px]">
+                <ActionButton tone="ghost" size="compact" onClick={revealAll} disabled={!active}>
                   Revelar tudo
-                </button>
+                </ActionButton>
                 <div className="text-right">
                   <p className="text-[9px] uppercase tracking-wider text-white/30">Prémio</p>
                   <p className={`text-lg font-extrabold tabular ${win ? 'text-good' : 'text-white/40'}`}>{win ? `${fmt(win)} B$` : '—'}</p>
                 </div>
               </div>
+              <ResultBanner
+                state={win === null ? 'idle' : win > 0 ? 'win' : 'lose'}
+                text={win ? `+${fmt(win)} B$` : 'Sem prémio neste cartão.'}
+              />
             </div>
           </div>
         </Stage>
@@ -162,9 +166,9 @@ export function ScratchGame({ game }: { game: Game }) {
               <Payout label="Prémio máximo" value={`${fmt(amount * 25)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={buy} disabled={active} className="btn-gold mt-3 w-full py-3 text-sm">
+            <ActionButton tone="gold" icon="gift" loading={active} onClick={buy} disabled={active} className="mt-3">
               {active ? 'Raspa os campos…' : `Comprar cartão · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} colorFor={(v) => (String(v).startsWith('+') ? 'text-gold border-gold/30' : 'text-white/30')} />

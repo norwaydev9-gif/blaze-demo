@@ -4,9 +4,10 @@ import { clamp, fmt, fmtMult } from '../lib/format'
 import { pick, rand, randInt } from '../lib/rng'
 import { useSound } from '../lib/sound'
 import {
-  BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage,
+  ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage,
 } from '../components/GameUI'
 import { configList, configNum, Fairness, newSeed, useStake, type Stake } from './helpers'
+import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 
 type Status = 'idle' | 'win' | 'lose' | 'push'
 
@@ -62,9 +63,9 @@ function QuickShell({
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
             <div className="mt-3">{controls}</div>
-            <button type="button" onClick={onPlay} disabled={busy} className="btn-primary mt-4 w-full py-3 text-sm">
+            <ActionButton tone="bet" icon="bolt" loading={busy} onClick={onPlay} disabled={busy} className="mt-4">
               {busy ? 'A processar…' : `${label} · ${fmt(bet.amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Histórico">
             <RecentStrip items={history} />
@@ -198,17 +199,16 @@ export function PlinkoGame({ game }: { game: Game }) {
       controls={
         <div className="grid grid-cols-3 gap-1.5">
           {(['low', 'medium', 'high'] as const).map((r) => (
-            <button
+            <ActionButton
               key={r}
-              type="button"
+              tone="ghost"
+              size="compact"
               disabled={busy}
               onClick={() => setRisk(r)}
-              className={`rounded-lg border py-2 text-[11px] font-bold capitalize transition ${
-                risk === r ? 'border-brand/50 bg-brand/15 text-white' : 'border-line text-white/40 hover:text-white'
-              }`}
+              className={risk === r ? 'border-brand/50 bg-brand/15 text-white' : ''}
             >
               {r === 'low' ? 'Baixo' : r === 'medium' ? 'Médio' : 'Alto'}
-            </button>
+            </ActionButton>
           ))}
         </div>
       }
@@ -458,8 +458,8 @@ export function HiLoGame({ game }: { game: Game }) {
       extra={<Payout label="Sequência" value={String(streak)} />}
       controls={
         <div className="grid grid-cols-2 gap-1.5">
-          <button type="button" onClick={() => setSide('higher')} className={`rounded-lg border py-2.5 text-xs font-bold ${side === 'higher' ? 'border-good/50 bg-good/15 text-good' : 'border-line text-white/40'}`}>↑ Maior</button>
-          <button type="button" onClick={() => setSide('lower')} className={`rounded-lg border py-2.5 text-xs font-bold ${side === 'lower' ? 'border-brand/50 bg-brand/15 text-brand' : 'border-line text-white/40'}`}>↓ Menor</button>
+          <ActionButton tone="ghost" size="half" onClick={() => setSide('higher')} className={side === 'higher' ? 'border-good/50 bg-good/15 text-good' : ''}>↑ Maior</ActionButton>
+          <ActionButton tone="ghost" size="half" onClick={() => setSide('lower')} className={side === 'lower' ? 'border-brand/50 bg-brand/15 text-brand' : ''}>↓ Menor</ActionButton>
         </div>
       }
     />
@@ -524,6 +524,7 @@ export function WheelGame({ game }: { game: Game }) {
         className="wheel-spin h-full w-full rounded-full border-4 border-[#1c2230] shadow-[0_0_50px_rgba(255,45,63,.25)]"
         style={{ background: `conic-gradient(${gradient})`, transform: `rotate(${rotation}deg)` }}
       />
+      <div className="pointer-events-none absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0deg,rgba(255,255,255,.22)_20deg,transparent_44deg)] opacity-70 game-spin" />
       <div className="absolute inset-0 grid place-items-center">
         <span className="grid h-16 w-16 place-items-center rounded-full border-4 border-[#1c2230] bg-[#080b12] font-display text-lg font-black text-white">
           {result === null ? 'B' : String(result)}
@@ -550,14 +551,15 @@ export function WheelGame({ game }: { game: Game }) {
       controls={
         <div className="grid grid-cols-3 gap-1.5">
           {(['red', 'black', 'green'] as const).map((c) => (
-            <button
+            <ActionButton
               key={c}
-              type="button"
+              tone="ghost"
+              size="compact"
               onClick={() => setChoice(c)}
-              className={`rounded-lg border py-2 text-[11px] font-bold capitalize ${choice === c ? 'border-white/50 bg-white/10 text-white' : 'border-line text-white/40'}`}
+              className={choice === c ? 'border-white/50 bg-white/10 text-white' : ''}
             >
               {c === 'red' ? 'Vermelho' : c === 'black' ? 'Preto' : 'Verde'}
-            </button>
+            </ActionButton>
           ))}
         </div>
       }
@@ -629,8 +631,8 @@ export function CoinFlipGame({ game }: { game: Game }) {
       extra={<Payout label="Multiplicador" value={fmtMult(payoutValue)} />}
       controls={
         <div className="grid grid-cols-2 gap-1.5">
-          <button type="button" onClick={() => setSide('heads')} className={`rounded-lg border py-2.5 text-xs font-bold ${side === 'heads' ? 'border-gold/50 bg-gold/15 text-gold' : 'border-line text-white/40'}`}>Cara</button>
-          <button type="button" onClick={() => setSide('tails')} className={`rounded-lg border py-2.5 text-xs font-bold ${side === 'tails' ? 'border-gold/50 bg-gold/15 text-gold' : 'border-line text-white/40'}`}>Coroa</button>
+          <ActionButton tone="ghost" size="half" onClick={() => setSide('heads')} className={side === 'heads' ? 'border-gold/50 bg-gold/15 text-gold' : ''}>Cara</ActionButton>
+          <ActionButton tone="ghost" size="half" onClick={() => setSide('tails')} className={side === 'tails' ? 'border-gold/50 bg-gold/15 text-gold' : ''}>Coroa</ActionButton>
         </div>
       }
     />
@@ -753,15 +755,18 @@ export function ColorPredictionGame({ game }: { game: Game }) {
       controls={
         <div className="flex flex-wrap gap-1.5">
           {colors.map((c) => (
-            <button
+            <ActionButton
               key={c}
-              type="button"
+              tone="ghost"
+              size="compact"
               onClick={() => setChoice(c)}
-              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-[11px] font-bold capitalize ${choice === c ? 'border-white/50 bg-white/10 text-white' : 'border-line text-white/40'}`}
+              className={choice === c ? 'border-white/50 bg-white/10 text-white' : ''}
             >
-              <span className="h-3 w-3 rounded-full border border-white/20" style={{ background: COLOR_HEX[c] ?? '#334' }} />
-              {c}
-            </button>
+              <span>
+                <span className="mr-1.5 inline-block h-3 w-3 rounded-full border border-white/20 align-middle" style={{ background: COLOR_HEX[c] ?? '#334' }} />
+                {c}
+              </span>
+            </ActionButton>
           ))}
         </div>
       }
@@ -783,6 +788,9 @@ export function TowerGame({ game }: { game: Game }) {
   const [message, setMessage] = useState('Sobe a torre escolhendo colunas seguras.')
   const [history, setHistory] = useState<string[]>([])
   const [seed, setSeed] = useState(() => newSeed())
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
   const settled = useRef(false)
 
   const multiplier = (n: number) => Math.pow(1.3, n)
@@ -837,6 +845,9 @@ export function TowerGame({ game }: { game: Game }) {
     play('cashout')
   }
 
+  useAutoCashout({ active, value: multiplier(level), target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   const stage = (
     <div className="mx-auto grid max-w-[420px] gap-1.5" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
       {Array.from({ length: columns * rows }, (_, i) => {
@@ -850,8 +861,8 @@ export function TowerGame({ game }: { game: Game }) {
             type="button"
             disabled={!active || row !== level}
             onClick={() => step(col)}
-            className={`grid aspect-square place-items-center rounded-lg border text-xs font-bold transition ${
-              cleared ? 'border-good/50 bg-good/20 text-good' : row === level && active ? 'border-brand/40 bg-brand/10 text-white hover:bg-brand/25' : 'border-line/60 bg-white/[.02] text-white/15'
+            className={`grid aspect-square place-items-center rounded-lg border text-xs font-bold transition-all duration-200 ${
+              cleared ? 'animate-popIn border-good/50 bg-good/20 text-good shadow-[0_0_14px_rgba(34,227,160,.35)]' : row === level && active ? 'game-pulse border-brand/40 bg-brand/10 text-white hover:-translate-y-0.5 hover:bg-brand/25' : 'border-line/60 bg-white/[.02] text-white/15'
             }`}
           >
             {cleared ? '✓' : trap ? '?' : '·'}
@@ -879,10 +890,17 @@ export function TowerGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={start} className="btn-primary mt-4 w-full py-3 text-sm">Iniciar torre</button>
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-4">Iniciar torre</ActionButton>
             ) : (
-              <button type="button" onClick={cashout} disabled={level === 0} className="btn-good mt-4 w-full py-3 text-sm">Retirar {fmt(bet.amount * multiplier(level))} B$</button>
+              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={level === 0} className="mt-4">Retirar {fmt(bet.amount * multiplier(level))} B$</ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Rondas">
             <RecentStrip items={history} />
@@ -907,6 +925,9 @@ export function BalloonGame({ game }: { game: Game }) {
   const [message, setMessage] = useState('Enche o balão e retira antes de rebentar.')
   const [history, setHistory] = useState<string[]>([])
   const [seed, setSeed] = useState(() => newSeed())
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
   const valueRef = useRef(1)
   const settled = useRef(false)
@@ -963,9 +984,12 @@ export function BalloonGame({ game }: { game: Game }) {
     play('cashout')
   }
 
+  useAutoCashout({ active, value, target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   const stage = (
     <div className="flex flex-col items-center">
-      <span className="text-[90px] leading-none drop-shadow-[0_12px_30px_rgba(255,45,63,.35)]" style={{ transform: `scale(${Math.min(1.6, 0.8 + value / 120)})` }}>🎈</span>
+      <span className={`text-[90px] leading-none drop-shadow-[0_12px_30px_rgba(255,45,63,.35)] game-pulse ${active ? 'game-float' : ''}`} style={{ transform: `scale(${Math.min(1.6, 0.8 + value / 120)})` }}>🎈</span>
       <div className="mt-3 h-2.5 w-64 overflow-hidden rounded-full bg-white/10">
         <div className="h-full rounded-full bg-gradient-to-r from-good via-gold to-brand transition-all" style={{ width: `${Math.min(100, (value / maxMult) * 100)}%` }} />
       </div>
@@ -989,10 +1013,17 @@ export function BalloonGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={start} className="btn-primary mt-4 w-full py-3 text-sm">Encher balão</button>
+              <ActionButton tone="bet" icon="bolt" onClick={start} className="mt-4">Encher balão</ActionButton>
             ) : (
-              <button type="button" onClick={cashout} className="btn-good mt-4 w-full py-3 text-sm">Retirar {fmt(bet.amount * value)} B$</button>
+              <ActionButton tone="cashout" icon="check" onClick={cashout} className="mt-4">Retirar {fmt(bet.amount * value)} B$</ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Rondas">
             <RecentStrip items={history} />
@@ -1019,6 +1050,9 @@ export function ScratchGame({ game }: { game: Game }) {
   const [message, setMessage] = useState('Revela os quadrados para encontrar prémios.')
   const [history, setHistory] = useState<string[]>([])
   const [seed, setSeed] = useState(() => newSeed())
+  const [autoReplay, setAutoReplay] = useState(false)
+  const [autoCash, setAutoCash] = useState(false)
+  const [autoTarget, setAutoTarget] = useState(2)
   const settled = useRef(false)
 
   const prizes = cells.filter((c) => c === '💎' || c === '7️⃣' || c === '⭐').length
@@ -1067,6 +1101,9 @@ export function ScratchGame({ game }: { game: Game }) {
     settle()
   }
 
+  useAutoCashout({ active, value: multiplier, target: autoTarget, enabled: autoCash, onCashout: cashout })
+  useAutoReplay({ idle: !active, enabled: autoReplay, onStart: start })
+
   const stage = (
     <div className="mx-auto grid max-w-[420px] grid-cols-3 gap-2">
       {cells.length === 0
@@ -1102,10 +1139,17 @@ export function ScratchGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(bet.balance)} B$`} />
             </div>
             {!active ? (
-              <button type="button" onClick={start} className="btn-gold mt-4 w-full py-3 text-sm">Comprar cartão</button>
+              <ActionButton tone="gold" icon="gift" onClick={start} className="mt-4">Comprar cartão</ActionButton>
             ) : (
-              <button type="button" onClick={cashout} disabled={revealed.length === 0} className="btn-good mt-4 w-full py-3 text-sm">Retirar agora</button>
+              <ActionButton tone="cashout" icon="check" onClick={cashout} disabled={revealed.length === 0} className="mt-4">Retirar agora</ActionButton>
             )}
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
+            <AutoControl
+              value={autoTarget}
+              onValueChange={setAutoTarget}
+              active={autoCash}
+              onToggle={() => setAutoCash((v) => !v)}
+            />
           </SidePanel>
           <SidePanel title="Tabela">
             <div className="space-y-1.5 text-[11px]">

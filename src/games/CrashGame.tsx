@@ -4,7 +4,8 @@ import { fmt, fmtMult, clamp } from '../lib/format'
 import { crashFromSeed, hashHex, uid } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, AutoBetControl, AutoControl, BetInput, GameLayout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
+import { useAutoCashout, useAutoReplay } from '../lib/autoPlay'
 import { Icon } from '../components/Icon'
 
 type Phase = 'betting' | 'flying' | 'crashed'
@@ -32,6 +33,7 @@ export function CrashGame({ game }: { game: Game }) {
   const [mult, setMult] = useState(1)
   const [slots, setSlots] = useState<Slot[]>([EMPTY_SLOT(min), EMPTY_SLOT(min)])
   const [history, setHistory] = useState<number[]>([])
+  const [autoReplay, setAutoReplay] = useState(false)
   const [seed, setSeed] = useState(() => hashHex(uid()))
   const seedRef = useRef(seed)
 
@@ -289,6 +291,18 @@ export function CrashGame({ game }: { game: Game }) {
     setSlots((prev) => prev.map((x, i) => (i === idx ? { ...x, ...patch } : x)))
   }
 
+  useAutoCashout({ active: slots[0].active, value: mult, target: slots[0].autoCash, enabled: slots[0].auto, onCashout: () => cashout(0) })
+  useAutoCashout({ active: slots[1].active, value: mult, target: slots[1].autoCash, enabled: slots[1].auto, onCashout: () => cashout(1) })
+  useAutoReplay({
+    idle: phase === 'betting',
+    enabled: autoReplay,
+    onStart: () => {
+      slotsRef.current.forEach((s, idx) => {
+        if (!s.active) bet(idx)
+      })
+    },
+  })
+
   const proof = phase === 'crashed' ? seed : hashHex(seed)
   const statusColor = phase === 'crashed' ? 'text-brand' : phase === 'flying' ? 'text-good' : 'text-gold'
 
@@ -300,7 +314,7 @@ export function CrashGame({ game }: { game: Game }) {
             <canvas ref={canvasRef} className="block aspect-[4/3] w-full sm:aspect-[16/9]" />
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
-                <p className={`font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
+                <p className={`font-display text-[clamp(38px,8vw,72px)] font-extrabold leading-none tabular ${statusColor} ${phase === 'flying' ? 'animate-pulseGlow' : ''} drop-shadow-[0_4px_24px_rgba(0,0,0,.7)]`}>
                   {phase === 'betting' ? `${countdown}s` : fmtMult(phase === 'crashed' ? crashRef.current : mult)}
                 </p>
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-[.22em] text-white/40">
@@ -308,6 +322,21 @@ export function CrashGame({ game }: { game: Game }) {
                 </p>
               </div>
             </div>
+            {(phase === 'flying' || phase === 'crashed') && (
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className={`absolute left-[16%] top-[42%] ${phase === 'flying' ? 'game-float' : ''}`}>
+                  <svg viewBox="0 0 64 64" className={`h-10 w-10 drop-shadow-[0_0_18px_rgba(255,107,61,.65)] ${phase === 'crashed' ? 'opacity-40' : ''}`} fill="none">
+                    <path d="M4 34 60 12 44 56 35 38 18 52 22 34Z" fill="#ff6b3d" stroke="#ffd0a8" strokeWidth="2" />
+                    <path d="M22 34 44 56 35 38Z" fill="#c50b20" opacity=".7" />
+                  </svg>
+                  <div className="absolute -left-9 top-6 flex gap-1">
+                    {[0, 1, 2].map((p) => (
+                      <span key={p} className="animate-floaty h-1.5 w-1.5 rounded-full bg-orange-200/80" style={{ animationDelay: `${p * 180}ms` }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="absolute left-3 top-3 flex items-center gap-2">
               <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                 phase === 'betting' ? 'border-gold/30 bg-gold/10 text-gold' : phase === 'flying' ? 'border-good/30 bg-good/10 text-good' : 'border-brand/30 bg-brand/10 text-brand'
@@ -338,15 +367,13 @@ export function CrashGame({ game }: { game: Game }) {
                     onChange={(e) => setSlot(i, { amount: clamp(Number(e.target.value), min, max) })}
                     className="input py-2 text-center text-sm tabular"
                   />
-                  <button
-                    type="button"
+                  <ActionButton
+                    tone={phase === 'flying' && s.active ? 'cashout' : 'bet'}
+                    icon={phase === 'flying' && s.active ? 'check' : 'bolt'}
+                    size="compact"
                     onClick={() => (phase === 'flying' ? cashout(i) : bet(i))}
                     disabled={phase === 'crashed' || (phase === 'flying' && !s.active) || (phase === 'betting' && s.active)}
-                    className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition disabled:opacity-40 ${
-                      phase === 'flying' && s.active
-                        ? 'bg-good text-[#03140e] hover:brightness-105'
-                        : 'bg-gradient-to-br from-[#ff3b4d] to-[#c50b20] text-white hover:brightness-110'
-                    }`}
+                    className="flex-1"
                   >
                     {phase === 'flying'
                       ? s.active
@@ -355,31 +382,28 @@ export function CrashGame({ game }: { game: Game }) {
                       : s.active
                         ? 'Apostado'
                         : 'Apostar'}
-                  </button>
+                  </ActionButton>
                 </div>
-                <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2">
-                  <label className="flex min-w-0 items-center gap-1.5 text-[10px] text-white/35">
-                    Auto-retirar
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="1.01"
-                      value={s.autoCash}
-                      onChange={(e) => setSlot(i, { autoCash: Number(e.target.value) })}
-                      className="h-11 w-full min-w-0 rounded-md border border-line bg-black/30 px-1.5 text-center text-[10px] font-bold text-white outline-none focus:border-brand/50"
-                    />
-                    ×
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setSlot(i, { auto: !s.auto })}
-                    className={`h-11 rounded-md border px-3 text-[10px] font-bold transition ${s.auto ? 'border-good/40 bg-good/15 text-good' : 'border-line text-white/30'}`}
-                  >
-                    AUTO
-                  </button>
-                </div>
+                <AutoControl
+                  value={s.autoCash}
+                  onValueChange={(n) => setSlot(i, { autoCash: n })}
+                  active={s.auto}
+                  onToggle={() => setSlot(i, { auto: !s.auto })}
+                />
               </div>
             ))}
+          </div>
+          <div className="px-3">
+            <ResultBanner
+              state={phase !== 'crashed' ? 'idle' : slots.some((s) => s.cashedAt !== null) ? 'win' : 'lose'}
+              text={
+                phase === 'crashed'
+                  ? slots.some((s) => s.cashedAt !== null)
+                    ? `+${fmt(slots.reduce((sum, s) => sum + (s.cashedAt !== null ? s.amount * s.cashedAt : 0), 0))} B$`
+                    : 'O avião caiu. Sem retirada.'
+                  : ''
+              }
+            />
           </div>
         </Stage>
       }
@@ -405,6 +429,7 @@ export function CrashGame({ game }: { game: Game }) {
                 }}
               />
             </div>
+            <AutoBetControl active={autoReplay} onToggle={() => setAutoReplay((v) => !v)} />
             <div className="mt-4 rounded-xl border border-line/60 bg-black/20 p-3">
               <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-white/40">
                 <Icon name="shield" size={12} /> Prova da ronda

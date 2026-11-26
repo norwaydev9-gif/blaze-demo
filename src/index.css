@@ -70,6 +70,41 @@ body {
   .btn-good {
     @apply btn bg-gradient-to-br from-[#2af0b0] to-[#0fa87a] text-[#03140e] shadow-[0_8px_24px_rgba(34,227,160,.22)] hover:brightness-105;
   }
+  .action-btn {
+    @apply relative inline-flex min-h-[52px] select-none items-center justify-center gap-2 overflow-hidden rounded-2xl px-4 text-sm font-extrabold tracking-tight transition-all duration-150 active:scale-[.98] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .action-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 22%, rgba(255, 255, 255, 0.32) 48%, transparent 74%);
+    transform: translateX(-120%);
+    transition: transform 0.65s ease;
+  }
+  .action-btn:hover::after {
+    transform: translateX(120%);
+  }
+  .action-bet {
+    @apply action-btn bg-gradient-to-r from-[#ff5b6b] via-[#ff2d3f] to-[#bd0a1f] text-white shadow-[0_14px_32px_rgba(255,45,63,.34)];
+  }
+  .action-cashout {
+    @apply action-btn bg-gradient-to-r from-[#6dffd0] via-[#22e3a0] to-[#08a878] text-[#03150f] shadow-[0_14px_32px_rgba(34,227,160,.3)];
+  }
+  .action-gold {
+    @apply action-btn bg-gradient-to-r from-[#ffe7a3] via-[#ffc857] to-[#df9012] text-[#241702] shadow-[0_14px_32px_rgba(255,200,87,.3)];
+  }
+  .action-ghost {
+    @apply action-btn border border-line bg-white/[.04] text-white/65 hover:border-white/20 hover:text-white;
+  }
+  .action-auto {
+    @apply action-btn border border-violet-400/40 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20;
+  }
+  .action-auto.is-active {
+    @apply border-good/50 bg-good/15 text-good shadow-[0_0_24px_rgba(34,227,160,.28)];
+  }
+  .action-icon {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-black/20;
+  }
   .input {
     @apply w-full rounded-xl border border-line bg-black/30 px-3 py-2.5 text-sm font-semibold text-white outline-none transition placeholder:font-normal placeholder:text-white/30 focus:border-brand/60 focus:ring-2 focus:ring-brand/20;
   }
@@ -402,4 +437,146 @@ input[type='number'] {
   .game-stage .card-back {
     max-width: 24vw;
   }
+}
+
+/* ------- jogo imersivo (ecrã inteiro) ------- */
+.app-immersive {
+  --mobile-nav-h: env(safe-area-inset-bottom);
+  padding-left: 0 !important;
+}
+.app-immersive > aside,
+.app-immersive > header,
+.app-immersive > nav {
+  display: none !important;
+}
+.app-immersive > main {
+  max-width: none;
+  padding: 0 !important;
+  min-height: 100dvh;
+}
+
+.game-immersive-page {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #05060a;
+}
+.game-immersive-page::before {
+  content: '';
+  position: fixed;
+  inset: -30%;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 32% at 18% 12%, rgba(255, 45, 63, 0.2), transparent 70%),
+    radial-gradient(34% 30% at 84% 20%, rgba(120, 70, 255, 0.16), transparent 70%),
+    radial-gradient(38% 34% at 50% 96%, rgba(34, 227, 160, 0.13), transparent 70%);
+  filter: blur(28px);
+  animation: auroraDrift 14s ease-in-out infinite alternate;
+}
+@keyframes auroraDrift {
+  0% {
+    transform: translate3d(-2%, 0, 0) rotate(-2deg) scale(1);
+  }
+  100% {
+    transform: translate3d(2%, -3%, 0) rotate(2deg) scale(1.08);
+  }
+}
+
+.game-immersive-engine {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+}
+.game-immersive-engine .game-layout {
+  min-height: 100dvh;
+  grid-template-rows: minmax(0, 1fr);
+}
+.game-immersive-engine .game-stage-wrap {
+  display: flex;
+  min-height: 0;
+}
+.game-immersive-engine .game-stage {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-top: 0 !important;
+}
+.game-immersive-engine > div > .pointer-events-none {
+  z-index: 1;
+}
+
+.game-immersive-chrome {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  background: linear-gradient(180deg, rgba(5, 6, 10, 0.92), rgba(5, 6, 10, 0));
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.game-immersive-chrome.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.game-immersive-chrome button {
+  min-width: 40px;
+  min-height: 40px;
+}
+.game-chrome-exit {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+}
+.game-chrome-exit:hover,
+.game-chrome-exit:focus-visible {
+  border-color: rgba(255, 45, 63, 0.5);
+  color: #fff;
+  background: rgba(255, 45, 63, 0.16);
+}
+
+.game-immersive-info {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow-y: auto;
+  background: rgba(5, 6, 10, 0.94);
+  backdrop-filter: blur(16px);
+  padding: calc(env(safe-area-inset-top) + 64px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  animation: riseIn 0.24s ease-out both;
+}
+
+/* feedback de vitória e movimento nos tabuleiros */
+.game-float {
+  animation: floaty 5s ease-in-out infinite;
+}
+.game-spin {
+  animation: gameSpin 12s linear infinite;
+}
+@keyframes gameSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.game-pulse {
+  animation: pulseGlow 2.2s ease-in-out infinite;
+}
+.game-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.45);
+}
+.game-immersive-engine .game-stage::after {
+  border-radius: 0;
 }

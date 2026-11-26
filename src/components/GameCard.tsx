@@ -4,6 +4,7 @@ import { navigate } from '../lib/router'
 import { useFavorites } from '../lib/favorites'
 import { Icon } from './Icon'
 import type { IconName } from './Icon'
+import { GameArt } from './GameArt'
 import { categoryLabel, gameImage } from '../lib/games'
 
 export function GameCard({ game, compact = false }: { game: Game; compact?: boolean }) {
@@ -40,12 +41,10 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
         <div
           className={`absolute inset-0 grid place-items-center transition-transform duration-300 ${hover ? 'scale-110 -rotate-3' : ''}`}
         >
-          <span
-            className={`drop-shadow-[0_12px_24px_rgba(0,0,0,.55)] ${compact ? 'text-4xl' : 'text-5xl'}`}
-            style={{ filter: 'saturate(1.1)' }}
-          >
-            {game.theme.icon}
-          </span>
+          <GameArt
+            game={game}
+            className={`${compact ? 'h-[80%] w-[88%]' : 'h-[84%] w-[92%]'} drop-shadow-[0_14px_22px_rgba(0,0,0,.55)] transition-transform duration-300`}
+          />
         </div>
         <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5">
           <span className="rounded-md bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/75 backdrop-blur">

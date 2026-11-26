@@ -57,6 +57,16 @@ npm run check
   `safe-area`, os canvas mantêm a proporção e os botões têm no mínimo 44px.
 - **Arte original/licenciada**: 15 imagens com capas por motor/categoria no
   catálogo, na página do jogo e no palco; créditos em `docs/IMAGE_CREDITS.md`.
+- **Vectores por jogo**: avião no Aviator/Crash, foguetão no Limbo, mina no
+  Mines, máquina no Slots, roleta, dados, cartas, balões, torre, arcade, etc.
+  (`src/components/GameArt.tsx`), com marca d'água no palco.
+- **Acções consistentes**: botões de aposta/retirada com ícones e estados
+  (`ActionButton`), auto-aposta e auto-retirada (`AutoControl`/`AutoBetControl`),
+  banners de ganho com confetti e brilho animado.
+- **Jogo em ecrã inteiro**: ao entrar num jogo a navegação desaparece e o tabuleiro
+  ocupa a janela toda. A barra discreta (aparece ao tocar/mover o rato) esconde
+  o botão de saída; `Esc` também volta ao catálogo. O botão `i` abre regras,
+  histórico e jogos semelhantes.
 - **Sons** gerados por WebAudio (com mute) e notificações toast.
 - **Persistência local** de carteira, favoritos, jogos recentes e preferência de
   som, com exportação/apagamento dos dados no perfil.

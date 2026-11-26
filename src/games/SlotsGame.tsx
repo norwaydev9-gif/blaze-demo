@@ -4,7 +4,7 @@ import { fmt, clamp } from '../lib/format'
 import { randInt, pick } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 const LINE_PATTERNS: number[][] = [
   [1, 1, 1],
@@ -138,7 +138,11 @@ export function SlotsGame({ game }: { game: Game }) {
                       {col.map((sym, r) => {
                         const isWin = winLines.some((li) => lines[li][c] === r)
                         return (
-                          <div key={r} className={`reel ${isWin ? 'border-gold/60 bg-gold/10 shadow-[0_0_22px_rgba(255,200,87,.28)]' : ''}`}>
+                          <div
+                            key={r}
+                            className={`reel ${isWin ? 'animate-winFlash border-gold/60 bg-gold/10 shadow-[0_0_22px_rgba(255,200,87,.28)]' : ''} ${spinning ? '' : 'animate-popIn'}`}
+                            style={spinning ? undefined : { animationDelay: `${(c * 3 + r) * 45}ms` }}
+                          >
                             {sym}
                           </div>
                         )
@@ -148,7 +152,7 @@ export function SlotsGame({ game }: { game: Game }) {
                 </div>
                 {win > 0 && (
                   <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                    <div className="rounded-xl border border-gold/40 bg-black/80 px-5 py-3 text-center shadow-2xl animate-popIn">
+                    <div className="animate-winFlash rounded-xl border border-gold/40 bg-black/80 px-5 py-3 text-center shadow-2xl">
                       <p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Ganhaste</p>
                       <p className="font-display text-2xl font-extrabold text-white">{fmt(win)} B$</p>
                     </div>
@@ -169,9 +173,9 @@ export function SlotsGame({ game }: { game: Game }) {
               </div>
 
               <div className="mt-4 flex items-center justify-between gap-3">
-                <button type="button" onClick={() => setShowPay((v) => !v)} className="btn-ghost px-3 py-2 text-[11px]">
+                <ActionButton tone="ghost" size="compact" onClick={() => setShowPay((v) => !v)}>
                   Tabela de prémios
-                </button>
+                </ActionButton>
                 <div className="text-right">
                   <p className="text-[9px] uppercase tracking-wider text-white/30">Ganho</p>
                   <p className={`text-lg font-extrabold tabular ${win > 0 ? 'text-gold' : 'text-white/40'}`}>{fmt(win)} B$</p>
@@ -187,6 +191,10 @@ export function SlotsGame({ game }: { game: Game }) {
                   ))}
                 </div>
               )}
+              <ResultBanner
+                state={win > 0 ? 'win' : history.length > 0 ? 'lose' : 'idle'}
+                text={win > 0 ? `+${fmt(win)} B$` : 'Sem ganho neste giro.'}
+              />
             </div>
           </div>
         </Stage>
@@ -200,9 +208,9 @@ export function SlotsGame({ game }: { game: Game }) {
               <Payout label="Linhas ativas" value={String(linesCount)} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={spin} disabled={spinning} className="btn-gold mt-3 w-full py-3.5 text-sm">
+            <ActionButton tone="gold" icon="gift" loading={spinning} onClick={spin} disabled={spinning} className="mt-3">
               {spinning ? 'A girar…' : `Girar · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos giros">
             <RecentStrip

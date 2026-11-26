@@ -4,7 +4,7 @@ import { fmt } from '../lib/format'
 import { randInt, shuffle } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 import { Icon } from '../components/Icon'
 
 function paytable(pick: number): number[] {
@@ -97,21 +97,21 @@ export function KenoGame({ game }: { game: Game }) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={randomPick} disabled={drawing} className="chip">
-                  <Icon name="spark" size={12} /> Aleatório
-                </button>
-                <button
-                  type="button"
+                <ActionButton tone="ghost" size="compact" icon="spark" onClick={randomPick} disabled={drawing}>
+                  Aleatório
+                </ActionButton>
+                <ActionButton
+                  tone="ghost"
+                  size="compact"
                   onClick={() => {
                     setPicked(new Set())
                     setDrawn(new Set())
                     setSettled(false)
                   }}
                   disabled={drawing}
-                  className="chip"
                 >
                   Limpar
-                </button>
+                </ActionButton>
               </div>
             </div>
             <div className="grid grid-cols-10 gap-1 sm:gap-1.5">
@@ -125,14 +125,14 @@ export function KenoGame({ game }: { game: Game }) {
                     type="button"
                     onClick={() => toggle(n)}
                     disabled={drawing}
-                    className={`aspect-square rounded-md border text-[9px] font-bold tabular transition sm:text-[11px] ${
+                    className={`aspect-square rounded-md border text-[9px] font-bold tabular transition-transform duration-200 sm:text-[11px] ${
                       both
-                        ? 'border-good/70 bg-good/30 text-good shadow-[0_0_12px_rgba(34,227,160,.25)]'
+                        ? 'animate-popIn border-good/70 bg-good/30 text-good shadow-[0_0_18px_rgba(34,227,160,.5)] game-pulse'
                         : isDrawn
-                          ? 'border-white/40 bg-white/15 text-white'
+                          ? 'animate-popIn border-white/40 bg-white/15 text-white shadow-[0_0_12px_rgba(255,255,255,.2)]'
                           : isPicked
-                            ? 'border-gold/60 bg-gold/15 text-gold'
-                            : 'border-line/60 bg-white/[.02] text-white/35 hover:border-white/20 hover:text-white'
+                            ? 'border-gold/60 bg-gold/15 text-gold shadow-[0_0_10px_rgba(255,200,87,.2)] hover:scale-105'
+                            : 'border-line/60 bg-white/[.02] text-white/35 hover:scale-105 hover:border-white/20 hover:text-white'
                     }`}
                   >
                     {n}
@@ -155,6 +155,10 @@ export function KenoGame({ game }: { game: Game }) {
                 </span>
               )}
             </div>
+            <ResultBanner
+              state={!settled ? 'idle' : lastWin > 0 ? 'win' : 'lose'}
+              text={lastWin > 0 ? `+${fmt(lastWin)} B$` : 'Sem prémio neste sorteio.'}
+            />
           </div>
         </Stage>
       }
@@ -168,14 +172,16 @@ export function KenoGame({ game }: { game: Game }) {
               <Payout label={`${pickCount} acertos`} value={`${table[pickCount]}×`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button
-              type="button"
+            <ActionButton
+              tone="bet"
+              icon="bolt"
+              loading={drawing}
               onClick={start}
               disabled={drawing || picked.size !== pickCount}
-              className="btn-primary mt-3 w-full py-3 text-sm"
+              className="mt-3"
             >
               {drawing ? 'A sortear…' : picked.size !== pickCount ? `Faltam ${pickCount - picked.size} números` : `Jogar · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Tabela de prémios">
             <div className="grid grid-cols-2 gap-1">

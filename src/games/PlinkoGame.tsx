@@ -4,7 +4,7 @@ import { fmt, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 function comb(n: number, k: number): number {
   if (k < 0 || k > n) return 0
@@ -71,6 +71,7 @@ export function PlinkoGame({ game }: { game: Game }) {
   )
 
   const draw = useCallback(() => {
+    const now = performance.now()
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
@@ -96,13 +97,14 @@ export function PlinkoGame({ game }: { game: Game }) {
       for (let k = 0; k <= r; k++) {
         const x = xAt(k, r)
         const y = yAt(r)
+        const pulse = 0.28 + Math.sin(now / 520 + r * 0.7 + k) * 0.1
         ctx.beginPath()
         ctx.arc(x, y, 2.6, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255,255,255,.32)'
+        ctx.fillStyle = `rgba(255,255,255,${pulse.toFixed(2)})`
         ctx.fill()
         ctx.beginPath()
-        ctx.arc(x, y, 5, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255,255,255,.04)'
+        ctx.arc(x, y, 6.5, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(255,200,87,${(pulse * 0.22).toFixed(2)})`
         ctx.fill()
       }
     }
@@ -132,7 +134,6 @@ export function PlinkoGame({ game }: { game: Game }) {
     }
 
     // balls
-    const now = performance.now()
     ballsRef.current = ballsRef.current.filter((ball) => {
       const t = clamp((now - ball.start) / ball.duration, 0, 1)
       const eased = t
@@ -211,6 +212,12 @@ export function PlinkoGame({ game }: { game: Game }) {
               </span>
             )}
           </div>
+          <div className="px-3">
+            <ResultBanner
+              state={history.length === 0 ? 'idle' : parseFloat(String(history[0])) > 1 ? 'win' : 'lose'}
+              text={history.length > 0 && parseFloat(String(history[0])) > 1 ? `+${fmt(amount * parseFloat(String(history[0])))} B$` : 'Sem ganho neste lançamento.'}
+            />
+          </div>
         </Stage>
       }
       side={
@@ -221,16 +228,15 @@ export function PlinkoGame({ game }: { game: Game }) {
               <span className="label">Risco</span>
               <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                 {(['low', 'medium', 'high'] as const).map((r) => (
-                  <button
+                  <ActionButton
                     key={r}
-                    type="button"
+                    tone="ghost"
+                    size="compact"
                     onClick={() => setRisk(r)}
-                    className={`rounded-lg border py-2 text-[10px] font-bold uppercase tracking-wide transition ${
-                      risk === r ? 'border-brand/50 bg-brand/15 text-white' : 'border-line bg-white/[.02] text-white/35 hover:text-white'
-                    }`}
+                    className={risk === r ? 'border-brand/50 bg-brand/15 text-white' : ''}
                   >
                     {r === 'low' ? 'Baixo' : r === 'medium' ? 'Médio' : 'Alto'}
-                  </button>
+                  </ActionButton>
                 ))}
               </div>
             </div>
@@ -239,9 +245,9 @@ export function PlinkoGame({ game }: { game: Game }) {
               <Payout label="Multiplicador máx." value={`${Math.max(...table)}×`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={drop} className="btn-primary mt-3 w-full py-3 text-sm">
+            <ActionButton tone="bet" icon="bolt" onClick={drop} className="mt-3">
               Largar bola · {fmt(amount)} B$
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos prémios">
             <RecentStrip

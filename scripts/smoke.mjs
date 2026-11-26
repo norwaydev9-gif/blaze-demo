@@ -65,6 +65,17 @@ imageNames.forEach((name) => {
 check(gamesLib.includes('gameImage'), 'games.ts: falta o helper gameImage para as capas')
 check(existsSync(new URL('docs/IMAGE_CREDITS.md', root)), 'Falta docs/IMAGE_CREDITS.md com os créditos das imagens')
 
+/* -------------------------------- vectors / acções ------------------------ */
+
+check(existsSync(new URL('src/components/GameArt.tsx', root)), 'Falta src/components/GameArt.tsx com os vectores dos jogos')
+check(existsSync(new URL('src/lib/autoPlay.ts', root)), 'Falta src/lib/autoPlay.ts com os hooks de auto aposta/retirada')
+const gameUi = read('src/components/GameUI.tsx')
+for (const component of ['ActionButton', 'AutoControl', 'AutoBetControl']) {
+  check(gameUi.includes(`export function ${component}`), `GameUI.tsx: falta o componente ${component}`)
+}
+check(read('src/index.css').includes('.app-immersive'), 'index.css: falta o modo jogo em ecrã inteiro')
+check(read('src/pages/GamePage.tsx').includes('game-immersive-engine'), 'GamePage.tsx: falta o palco imersivo')
+
 /* -------------------------------- marca ---------------------------------- */
 
 const walk = (dir) =>
@@ -136,5 +147,5 @@ if (errors.length) {
 }
 
 console.log(
-  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, marca BLAZE e build verificados.`,
+  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, ${imageNames.length} imagens, vectores/acções, marca BLAZE e build verificados.`,
 )

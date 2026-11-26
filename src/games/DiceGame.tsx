@@ -4,7 +4,7 @@ import { fmt, clamp } from '../lib/format'
 import { rand } from '../lib/rng'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 
 export function DiceGame({ game }: { game: Game }) {
   const min = game.minBet
@@ -110,22 +110,38 @@ export function DiceGame({ game }: { game: Game }) {
                 </div>
               </div>
 
+              <div className="relative mx-auto mt-8 flex h-24 w-24 items-center justify-center">
+                <div className={`absolute inset-0 rounded-2xl blur-2xl ${lastWin === true ? 'bg-good/25' : lastWin === false ? 'bg-brand/25' : 'bg-white/10'}`} />
+                <div
+                  className={`relative grid h-20 w-20 place-items-center rounded-2xl border border-white/20 bg-gradient-to-br from-white/15 to-white/[.02] font-display text-2xl font-black text-white shadow-[0_12px_30px_rgba(0,0,0,.5)] transition-transform duration-200 ${rolling ? 'game-spin' : 'animate-popIn'}`}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
+                  ⚄
+                </div>
+              </div>
+
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
+                <ActionButton
+                  tone="ghost"
+                  size="half"
                   onClick={() => setOver(true)}
-                  className={`rounded-xl border py-3 text-sm font-bold transition ${over ? 'border-good/50 bg-good/15 text-good' : 'border-line text-white/40 hover:text-white'}`}
+                  className={over ? 'border-good/50 bg-good/15 text-good hover:bg-good/20' : ''}
                 >
                   ↑ Acima
-                </button>
-                <button
-                  type="button"
+                </ActionButton>
+                <ActionButton
+                  tone="ghost"
+                  size="half"
                   onClick={() => setOver(false)}
-                  className={`rounded-xl border py-3 text-sm font-bold transition ${!over ? 'border-brand/50 bg-brand/15 text-brand' : 'border-line text-white/40 hover:text-white'}`}
+                  className={!over ? 'border-brand/50 bg-brand/15 text-brand hover:bg-brand/20' : ''}
                 >
                   ↓ Abaixo
-                </button>
+                </ActionButton>
               </div>
+              <ResultBanner
+                state={lastWin === null ? 'idle' : lastWin ? 'win' : 'lose'}
+                text={lastWin ? `+${fmt(amount * payoutMult - amount)} B$` : 'Sem ganho nesta ronda.'}
+              />
             </div>
           </div>
         </Stage>
@@ -159,9 +175,9 @@ export function DiceGame({ game }: { game: Game }) {
               <Payout label="Ganho potencial" value={`${fmt(amount * payoutMult)} B$`} />
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
-            <button type="button" onClick={roll} disabled={rolling} className="btn-primary mt-3 w-full py-3 text-sm">
+            <ActionButton tone="bet" icon="bolt" loading={rolling} onClick={roll} disabled={rolling} className="mt-3">
               {rolling ? 'A rolar…' : `Jogar · ${fmt(amount)} B$`}
-            </button>
+            </ActionButton>
           </SidePanel>
           <SidePanel title="Últimos dados">
             <RecentStrip items={history.map((n) => n.toFixed(2))} colorFor={(v) => recentColor(Number(v))} />

@@ -5,7 +5,7 @@ import { makeDeck } from '../lib/cards'
 import type { Card } from '../lib/cards'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
-import { BetInput, GameLayout, Payout, RecentStrip, SidePanel, Stage } from '../components/GameUI'
+import { ActionButton, BetInput, GameLayout, Payout, RecentStrip, ResultBanner, SidePanel, Stage } from '../components/GameUI'
 import { CardHand } from '../components/PlayingCard'
 
 function baccaratTotal(cards: Card[]): number {
@@ -91,7 +91,7 @@ export function BaccaratGame({ game }: { game: Game }) {
                 <span className="text-sm font-bold tabular text-gold">{banker.length ? baccaratTotal(banker) : '—'}</span>
               </div>
               <div className="flex min-h-[96px] items-center">
-                {banker.length ? <CardHand cards={banker} size="md" /> : <span className="text-xs text-white/20">—</span>}
+                {banker.length ? <div className="animate-popIn"><CardHand cards={banker} size="md" /></div> : <span className="text-xs text-white/20">—</span>}
               </div>
             </div>
             <div className="relative text-center">
@@ -105,6 +105,10 @@ export function BaccaratGame({ game }: { game: Game }) {
                 </span>
               )}
               {message && <p className="mt-1 text-[11px] text-white/35">{message}</p>}
+              <ResultBanner
+                state={!message ? 'idle' : win > 0 ? 'win' : 'lose'}
+                text={win > 0 ? `+${fmt(win)} B$` : 'Sem prémio nesta ronda.'}
+              />
             </div>
             <div className="relative rounded-2xl border border-line/60 bg-black/20 p-4">
               <div className="mb-2 flex items-center justify-between">
@@ -112,7 +116,7 @@ export function BaccaratGame({ game }: { game: Game }) {
                 <span className="text-sm font-bold tabular text-white">{player.length ? baccaratTotal(player) : '—'}</span>
               </div>
               <div className="flex min-h-[96px] items-center">
-                {player.length ? <CardHand cards={player} size="md" /> : <span className="text-xs text-white/20">—</span>}
+                {player.length ? <div className="animate-popIn"><CardHand cards={player} size="md" /></div> : <span className="text-xs text-white/20">—</span>}
               </div>
             </div>
           </div>
@@ -124,16 +128,15 @@ export function BaccaratGame({ game }: { game: Game }) {
             <BetInput value={amount} onChange={setAmount} min={game.minBet} max={game.maxBet} disabled={phase === 'done'} />
             <div className="mt-3 grid grid-cols-3 gap-1.5">
               {(['player', 'banker', 'tie'] as const).map((c) => (
-                <button
+                <ActionButton
                   key={c}
-                  type="button"
+                  tone="ghost"
+                  size="compact"
                   onClick={() => setChoice(c)}
-                  className={`rounded-lg border py-2.5 text-[10px] font-bold uppercase transition ${
-                    choice === c ? 'border-gold/50 bg-gold/15 text-gold' : 'border-line text-white/35 hover:text-white'
-                  }`}
+                  className={choice === c ? 'border-gold/50 bg-gold/15 text-gold' : ''}
                 >
                   {c === 'player' ? 'Jogador' : c === 'banker' ? 'Banqueiro' : 'Empate'}
-                </button>
+                </ActionButton>
               ))}
             </div>
             <div className="mt-3 space-y-1.5">
@@ -142,13 +145,13 @@ export function BaccaratGame({ game }: { game: Game }) {
               <Payout label="Saldo" value={`${fmt(balance)} B$`} />
             </div>
             {phase === 'bet' ? (
-              <button type="button" onClick={deal} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="bet" icon="bolt" onClick={deal} className="mt-3">
                 Distribuir · {fmt(amount)} B$
-              </button>
+              </ActionButton>
             ) : (
-              <button type="button" onClick={() => setPhase('bet')} className="btn-primary mt-3 w-full py-3 text-sm">
+              <ActionButton tone="ghost" onClick={() => setPhase('bet')} className="mt-3">
                 Nova ronda
-              </button>
+              </ActionButton>
             )}
           </SidePanel>
           <SidePanel title="Histórico">
