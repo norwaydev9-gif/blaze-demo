@@ -7,8 +7,9 @@
   --brand: #ff2d3f;
   --gold: #ffc857;
   --good: #22e3a0;
-  --ink: #05060a;
-  --panel: #0b0e15;
+  /* hierarquia: página (mais escura) < painel < superfície de jogo (iluminada) */
+  --ink: #0b101b;
+  --panel: #1a2130;
 }
 
 * {
@@ -20,10 +21,13 @@ html {
 }
 
 body {
-  @apply bg-ink font-sans text-white antialiased;
+  @apply font-sans text-white antialiased;
+  background-color: var(--ink);
   background-image:
-    radial-gradient(900px 500px at 18% -10%, rgba(255, 45, 63, 0.13), transparent 60%),
-    radial-gradient(800px 600px at 100% 0%, rgba(120, 60, 255, 0.08), transparent 55%);
+    radial-gradient(880px 520px at 14% -12%, rgba(255, 45, 63, 0.1), transparent 62%),
+    radial-gradient(760px 560px at 96% -4%, rgba(124, 92, 255, 0.11), transparent 58%),
+    radial-gradient(900px 620px at 50% 110%, rgba(34, 227, 160, 0.05), transparent 60%),
+    linear-gradient(180deg, #101725 0%, #0b101b 48%, #090d16 100%);
   background-attachment: fixed;
   min-height: 100vh;
 }
@@ -50,10 +54,15 @@ body {
 
 @layer components {
   .panel {
-    @apply rounded-2xl border border-line/80 bg-panel/90 shadow-card backdrop-blur;
+    @apply rounded-2xl border backdrop-blur;
+    border-color: rgba(156, 178, 220, 0.18);
+    background: linear-gradient(180deg, rgba(30, 38, 55, 0.96), rgba(20, 26, 39, 0.96));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 14px 34px rgba(3, 6, 13, 0.42);
   }
   .panel-soft {
-    @apply rounded-xl border border-line/60 bg-panel2/70;
+    @apply rounded-xl border;
+    border-color: rgba(156, 178, 220, 0.14);
+    background: rgba(28, 35, 51, 0.72);
   }
   .btn {
     @apply inline-flex select-none items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[.98] disabled:pointer-events-none disabled:opacity-40;
@@ -126,7 +135,7 @@ body {
     @apply grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-black/20;
   }
   .input {
-    @apply w-full rounded-xl border border-line bg-black/30 px-3 py-2.5 text-sm font-semibold text-white outline-none transition placeholder:font-normal placeholder:text-white/30 focus:border-brand/60 focus:ring-2 focus:ring-brand/20;
+    @apply w-full rounded-xl border border-line bg-black/30 px-3 py-2.5 text-sm font-semibold text-white outline-none transition placeholder:font-normal placeholder:text-white/50 focus:border-brand/60 focus:ring-2 focus:ring-brand/20;
   }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[.03] px-3 py-1.5 text-xs font-semibold text-white/65 transition hover:border-white/20 hover:text-white;
@@ -135,13 +144,13 @@ body {
     @apply border-brand/40 bg-brand/10 text-white;
   }
   .label {
-    @apply text-[11px] font-semibold uppercase tracking-[.14em] text-white/40;
+    @apply text-[11px] font-semibold uppercase tracking-[.14em] text-white/60;
   }
   .stat-value {
     @apply font-display text-lg font-bold tabular-nums;
   }
   .divider {
-    @apply h-px w-full bg-line/70;
+    @apply h-px w-full bg-white/10;
   }
   .text-gradient {
     @apply bg-gradient-to-r from-[#ff5b6b] via-[#ff2d3f] to-[#ff9a3d] bg-clip-text text-transparent;
@@ -177,14 +186,99 @@ body {
   }
 }
 
+/* ------- tons por categoria (cartões, hero e palcos) ------- */
+.tone-crash,
+.game-stage[data-category='crash'] {
+  --cat-base: #1d1219;
+  --cat-glow-a: rgba(255, 77, 94, 0.26);
+  --cat-glow-b: rgba(255, 154, 61, 0.13);
+  --cat-edge: rgba(255, 77, 94, 0.3);
+}
+.tone-mines,
+.game-stage[data-category='mines'] {
+  --cat-base: #101f1d;
+  --cat-glow-a: rgba(34, 227, 160, 0.2);
+  --cat-glow-b: rgba(120, 200, 255, 0.1);
+  --cat-edge: rgba(34, 227, 160, 0.28);
+}
+.tone-slots,
+.game-stage[data-category='slots'] {
+  --cat-base: #241a10;
+  --cat-glow-a: rgba(255, 200, 87, 0.22);
+  --cat-glow-b: rgba(255, 91, 107, 0.12);
+  --cat-edge: rgba(255, 200, 87, 0.3);
+}
+.tone-instant,
+.game-stage[data-category='instant'] {
+  --cat-base: #101a2b;
+  --cat-glow-a: rgba(106, 168, 255, 0.22);
+  --cat-glow-b: rgba(167, 139, 250, 0.12);
+  --cat-edge: rgba(106, 168, 255, 0.28);
+}
+.tone-card,
+.game-stage[data-category='card'] {
+  --cat-base: #102220;
+  --cat-glow-a: rgba(79, 209, 197, 0.2);
+  --cat-glow-b: rgba(255, 200, 87, 0.1);
+  --cat-edge: rgba(79, 209, 197, 0.28);
+}
+.tone-arcade,
+.game-stage[data-category='arcade'] {
+  --cat-base: #19122c;
+  --cat-glow-a: rgba(167, 107, 255, 0.24);
+  --cat-glow-b: rgba(56, 189, 248, 0.12);
+  --cat-edge: rgba(167, 107, 255, 0.3);
+}
+.tone-deluxe,
+.game-stage[data-category='deluxe'] {
+  --cat-base: #241d0e;
+  --cat-glow-a: rgba(255, 212, 122, 0.24);
+  --cat-glow-b: rgba(255, 45, 63, 0.1);
+  --cat-edge: rgba(255, 212, 122, 0.34);
+}
+
+/* roleta e keno vivem dentro de outras categorias, mas merecem o seu próprio tom */
+.game-stage[data-game*='roulette'],
+.game-stage[data-game='wheel'],
+.game-stage[data-game='color-prediction'],
+.game-stage[data-game='treasure-wheel'],
+.tone-roulette {
+  --cat-base: #251114;
+  --cat-glow-a: rgba(255, 61, 77, 0.24);
+  --cat-glow-b: rgba(255, 200, 87, 0.14);
+  --cat-edge: rgba(255, 77, 94, 0.34);
+}
+.game-stage[data-game='keno'],
+.game-stage[data-game='keno-deluxe'],
+.game-stage[data-game='lucky-number'],
+.tone-keno {
+  --cat-base: #121a2c;
+  --cat-glow-a: rgba(96, 165, 250, 0.24);
+  --cat-glow-b: rgba(167, 139, 250, 0.16);
+  --cat-edge: rgba(96, 165, 250, 0.32);
+}
+
+/* superfície partilhada por cartões, hero e palco: nunca preto sobre preto */
+.cat-surface,
+.game-stage {
+  background-color: var(--cat-base, #161d2b);
+  background-image:
+    radial-gradient(120% 90% at 50% -14%, var(--cat-glow-a, rgba(255, 45, 63, 0.14)), transparent 64%),
+    radial-gradient(90% 78% at 100% 108%, var(--cat-glow-b, rgba(124, 92, 255, 0.1)), transparent 62%),
+    linear-gradient(180deg, var(--cat-base, #161d2b) 0%, #101624 130%);
+  border-color: var(--cat-edge, rgba(255, 255, 255, 0.14));
+}
+.cat-card-shell {
+  border-color: var(--cat-edge, rgba(255, 255, 255, 0.14));
+}
+.cat-card-shell:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
 /* ------- game surfaces ------- */
 .game-stage {
-  @apply relative overflow-hidden rounded-2xl border border-line/70;
-  background-color: #070910;
-  background-image:
-    linear-gradient(0deg, rgba(3, 4, 7, 0.9), transparent 32%),
-    radial-gradient(120% 90% at 50% -10%, rgba(255, 45, 63, 0.12), transparent 55%),
-    linear-gradient(180deg, rgba(10, 13, 20, 0.92), rgba(5, 6, 10, 0.98));
+  @apply relative overflow-hidden rounded-2xl border;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 18px 46px rgba(3, 6, 13, 0.42);
 }
 
 .reel {
@@ -417,6 +511,17 @@ input[type='number'] {
     scroll-behavior: auto;
   }
 
+  html,
+  body {
+    overflow-x: clip;
+  }
+
+  .cat-surface,
+  .game-stage,
+  .cat-card-shell {
+    min-width: 0;
+  }
+
   main {
     padding-top: 12px;
   }
@@ -476,7 +581,7 @@ input[type='number'] {
   position: relative;
   min-height: 100dvh;
   overflow: hidden;
-  background: #05060a;
+  background: #0a0e18;
 }
 .game-immersive-page::before {
   content: '';
@@ -528,7 +633,7 @@ input[type='number'] {
   align-items: center;
   gap: 10px;
   padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
-  background: linear-gradient(180deg, rgba(5, 6, 10, 0.92), rgba(5, 6, 10, 0));
+  background: linear-gradient(180deg, rgba(10, 14, 24, 0.92), rgba(10, 14, 24, 0));
   opacity: 0;
   transform: translateY(-8px);
   pointer-events: none;
@@ -561,7 +666,7 @@ input[type='number'] {
   inset: 0;
   z-index: 80;
   overflow-y: auto;
-  background: rgba(5, 6, 10, 0.94);
+  background: rgba(9, 13, 22, 0.95);
   backdrop-filter: blur(16px);
   padding: calc(env(safe-area-inset-top) + 64px) 16px calc(env(safe-area-inset-bottom) + 24px);
   animation: riseIn 0.24s ease-out both;
@@ -588,7 +693,7 @@ input[type='number'] {
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.16);
 }
 .game-immersive-engine .game-stage::after {
   border-radius: 0;

@@ -7,6 +7,19 @@ import type { IconName } from './Icon'
 import { GameArt } from './GameArt'
 import { categoryLabel } from '../lib/games'
 
+/** Categoria primeiro; roleta e keno têm tom próprio dentro das suas categorias. */
+const ENGINE_TONES: Record<string, string> = {
+  roulette: 'tone-roulette',
+  wheel: 'tone-roulette',
+  colorPrediction: 'tone-roulette',
+  keno: 'tone-keno',
+  luckyNumber: 'tone-keno',
+}
+
+function toneClass(game: Game): string {
+  return ENGINE_TONES[game.engine] ?? `tone-${game.category}`
+}
+
 export function GameCard({ game, compact = false }: { game: Game; compact?: boolean }) {
   const { isFav, toggle } = useFavorites()
   const fav = isFav(game.id)
@@ -14,7 +27,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
 
   return (
     <div
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line/70 bg-panel transition-all duration-200 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_18px_40px_rgba(0,0,0,.45)]"
+      className={`group relative min-w-0 cursor-pointer overflow-hidden rounded-2xl border bg-[#161d2b] cat-card-shell shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(3,6,13,.55)] ${toneClass(game)}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={() => navigate(`/jogo/${game.id}`)}
@@ -24,13 +37,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
         if (e.key === 'Enter' || e.key === ' ') navigate(`/jogo/${game.id}`)
       }}
     >
-      <div
-        className={`relative overflow-hidden ${compact ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}
-        style={{
-          backgroundColor: '#080a10',
-          backgroundImage: `radial-gradient(110% 80% at 50% 0%, ${game.theme.from}66, transparent 62%), linear-gradient(160deg, ${game.theme.to}33, #05060a 92%)`,
-        }}
-      >
+      <div className={`cat-surface relative overflow-hidden ${compact ? 'aspect-[16/10]' : 'aspect-[4/3]'}`}>
         <div className="absolute inset-0 bg-grid opacity-40" />
         <div
           className="absolute -bottom-10 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full blur-2xl transition-opacity duration-300"
@@ -45,7 +52,7 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
           />
         </div>
         <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5">
-          <span className="rounded-md bg-black/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/75 backdrop-blur">
+          <span className="rounded-md bg-[#0b0f19]/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur">
             {categoryLabel(game.category)}
           </span>
           {game.category === 'deluxe' && (
@@ -64,22 +71,22 @@ export function GameCard({ game, compact = false }: { game: Game; compact?: bool
           className={`absolute right-2.5 top-2.5 grid h-11 w-11 place-items-center rounded-lg border backdrop-blur transition ${
             fav
               ? 'border-brand/50 bg-brand/20 text-brand'
-              : 'border-white/10 bg-black/30 text-white/50 hover:text-white'
+              : 'border-white/15 bg-[#0b0f19]/70 text-white/70 hover:text-white'
           }`}
         >
           <Icon name="heart" size={15} />
         </button>
-        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-3 pt-10">
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-[#090d16]/92 via-[#090d16]/45 to-transparent p-3 pt-10">
           <div className="min-w-0">
             <h3 className="truncate font-display text-[15px] font-bold leading-tight text-white">{game.name}</h3>
-            {!compact && <p className="mt-0.5 truncate text-[11px] text-white/45">{game.tagline}</p>}
+            {!compact && <p className="mt-0.5 truncate text-[11px] text-white/70">{game.tagline}</p>}
           </div>
-          <span className="shrink-0 rounded-lg bg-white/10 px-2 py-1 text-[10px] font-bold text-white/80">
+          <span className="shrink-0 rounded-lg bg-white/15 px-2 py-1 text-[10px] font-bold text-white">
             {game.minBet}–{game.maxBet >= 1000 ? `${game.maxBet / 1000}k` : game.maxBet}
           </span>
         </div>
         <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2 transition-opacity duration-200 ${hover ? 'opacity-100' : 'opacity-0'}`}
+          className={`pointer-events-none absolute inset-x-0 bottom-0 hidden justify-center pb-2 transition-opacity duration-200 sm:flex ${hover ? 'opacity-100' : 'opacity-0'}`}
         >
           <span className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-extrabold text-black shadow-lg">Jogar agora →</span>
         </div>
@@ -111,15 +118,15 @@ export function SectionHead({
 }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <h2 className="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-white/40">{subtitle}</p>}
+      <div className="min-w-0">
+        <h2 className="truncate font-display text-xl font-bold tracking-tight text-white sm:text-2xl">{title}</h2>
+        {subtitle && <p className="mt-1 truncate text-sm text-white/65">{subtitle}</p>}
       </div>
       {action && (
         <button
           type="button"
           onClick={onAction}
-          className="flex shrink-0 items-center gap-1 text-xs font-semibold text-white/50 transition hover:text-white"
+          className="flex shrink-0 items-center gap-1 text-xs font-semibold text-white/70 transition hover:text-white"
         >
           {action}
           <Icon name="chevron" size={14} />
@@ -132,11 +139,11 @@ export function SectionHead({
 export function EmptyState({ title, text, icon = 'grid' }: { title: string; text?: string; icon?: IconName }) {
   return (
     <div className="panel grid place-items-center px-6 py-16 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-2xl border border-line bg-white/[.03] text-white/30">
+      <div className="grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/[.06] text-white/60">
         <Icon name={icon} size={24} />
       </div>
       <h3 className="mt-4 font-display text-lg font-bold">{title}</h3>
-      {text && <p className="mt-1 max-w-sm text-sm text-white/40">{text}</p>}
+      {text && <p className="mt-1 max-w-sm text-sm text-white/65">{text}</p>}
       <button type="button" className="btn-primary mt-5" onClick={() => navigate('/jogos')}>
         Explorar jogos
       </button>

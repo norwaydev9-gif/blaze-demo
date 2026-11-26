@@ -63,13 +63,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
                   active
                     ? 'bg-gradient-to-r from-brand/20 to-brand/[.03] text-white shadow-[inset_2px_0_0_#ff2d3f]'
-                    : 'text-white/55 hover:bg-white/[.04] hover:text-white'
+                    : 'text-white/70 hover:bg-white/[.06] hover:text-white'
                 }`}
               >
-                <Icon name={item.icon} size={18} className={active ? 'text-brand' : 'text-white/35 group-hover:text-white/70'} />
+                <Icon name={item.icon} size={18} className={active ? 'text-brand' : 'text-white/55 group-hover:text-white/80'} />
                 {item.label}
                 {item.to === '/promocoes' && (
-                  <span className="ml-auto rounded bg-gold/20 px-1.5 py-0.5 text-[9px] font-bold text-gold">BÓNUS</span>
+                  <span className="ml-auto rounded bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold text-gold">BÓNUS</span>
                 )}
               </button>
             )
@@ -86,12 +86,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 type="button"
                 onClick={() => go(`/jogos/${item.cat}`)}
                 className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition ${
-                  active ? 'bg-white/[.06] text-white' : 'text-white/45 hover:bg-white/[.04] hover:text-white'
+                  active ? 'bg-white/[.08] text-white' : 'text-white/65 hover:bg-white/[.06] hover:text-white'
                 }`}
               >
-                <Icon name={item.icon} size={16} className={active ? 'text-brand' : 'text-white/25'} />
+                <Icon name={item.icon} size={16} className={active ? 'text-brand' : 'text-white/45'} />
                 {item.label}
-                <span className="ml-auto text-[10px] tabular text-white/25">
+                <span className="ml-auto text-[11px] tabular text-white/50">
                   {GAMES.filter((g) => g.category === item.cat).length}
                 </span>
               </button>
@@ -109,7 +109,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             </span>
             <div>
               <p className="text-xs font-bold text-gold">Bónus de 4 horas</p>
-              <p className="text-[10px] text-white/40">+500 B$ grátis</p>
+              <p className="text-[11px] text-white/60">+500 B$ grátis</p>
             </div>
           </div>
           <button
@@ -127,16 +127,16 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {bonusReady ? 'Receber bónus' : 'Já recebido'}
           </button>
         </div>
-        <div className="mt-3 flex items-center justify-between rounded-xl border border-line/60 bg-black/25 px-3 py-2.5">
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[.05] px-3 py-2.5">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/30">Saldo demo</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Saldo demo</p>
             <p className="text-sm font-bold tabular text-white">{fmt(balance)} B$</p>
           </div>
           <button type="button" className="grid h-7 w-7 place-items-center rounded-lg bg-brand/15 text-brand" onClick={() => go('/carteira')}>
             <Icon name="plus" size={15} />
           </button>
         </div>
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-[9px] font-medium text-white/25">
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-medium text-white/50">
           <Icon name="shield" size={11} /> Jogo responsável · +18
         </p>
       </div>
@@ -161,7 +161,7 @@ function SearchBox() {
 
   return (
     <div ref={ref} className="relative w-full max-w-[340px]">
-      <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+      <Icon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/55" />
       <input
         value={q}
         onChange={(e) => {
@@ -177,11 +177,11 @@ function SearchBox() {
           }
         }}
         placeholder="Procurar jogos…"
-        className="h-9 w-full rounded-xl border border-line bg-white/[.03] pl-9 pr-3 text-[13px] text-white outline-none transition placeholder:text-white/30 focus:border-brand/50 focus:bg-black/30"
+        className="h-10 w-full rounded-xl border border-white/10 bg-white/[.05] pl-9 pr-3 text-[13px] text-white outline-none transition placeholder:text-white/50 focus:border-brand/50 focus:bg-black/25"
       />
       {open && q && (
-        <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-xl border border-line bg-[#0c1017] p-1.5 shadow-2xl">
-          {results.length === 0 && <p className="px-3 py-4 text-center text-xs text-white/35">Sem resultados para “{q}”.</p>}
+        <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-white/10 bg-[#182030] p-1.5 shadow-2xl">
+          {results.length === 0 && <p className="px-3 py-4 text-center text-xs text-white/60">Sem resultados para “{q}”.</p>}
           {results.map((g) => (
             <button
               key={g.id}
@@ -201,14 +201,14 @@ function SearchBox() {
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-xs font-semibold">{g.name}</span>
-                <span className="block text-[10px] text-white/35">{categoryLabel(g.category)}</span>
+                <span className="block text-[11px] text-white/55">{categoryLabel(g.category)}</span>
               </span>
             </button>
           ))}
           {matches.length > 0 && (
             <button
               type="button"
-              className="mt-1 w-full rounded-lg border-t border-line/60 px-3 py-2 text-[11px] font-semibold text-white/45 transition hover:bg-white/[.06] hover:text-white"
+              className="mt-1 w-full rounded-lg border-t border-white/10 px-3 py-2 text-[11px] font-semibold text-white/65 transition hover:bg-white/[.06] hover:text-white"
               onClick={() => {
                 navigate(`/jogos?q=${encodeURIComponent(q.trim())}`)
                 setQ('')
@@ -230,9 +230,9 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
   const { push } = useToast()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/60 bg-[#05060a]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0d121d]/90 backdrop-blur-xl">
       <div className="flex h-14 items-center gap-2.5 px-3 sm:h-16 sm:gap-3 sm:px-6">
-        <button type="button" className="grid h-9 w-9 place-items-center rounded-lg border border-line text-white/70 lg:hidden" onClick={onMenu} aria-label="Abrir menu">
+        <button type="button" className="grid h-9 w-9 place-items-center rounded-lg border border-white/15 text-white/75 lg:hidden" onClick={onMenu} aria-label="Abrir menu">
           <Icon name="menu" size={18} />
         </button>
         <div className="hidden flex-1 md:block">
@@ -253,9 +253,9 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
           <button
             type="button"
             onClick={() => navigate('/carteira')}
-            className="flex items-center gap-2 rounded-xl border border-line bg-white/[.04] py-1.5 pl-3 pr-1.5 transition hover:border-white/20"
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[.06] py-1.5 pl-3 pr-1.5 transition hover:border-white/25"
           >
-            <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-white/35 sm:block">Saldo</span>
+            <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-white/60 sm:block">Saldo</span>
             <span className="text-[13px] font-bold tabular text-white">{fmt(balance)}</span>
             <span className="rounded-lg bg-gradient-to-br from-brand to-[#b3061a] px-2 py-1 text-[10px] font-extrabold text-white">B$</span>
           </button>
@@ -263,7 +263,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
             type="button"
             onClick={toggle}
             aria-label="Som"
-            className="hidden h-9 w-9 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white sm:grid"
+            className="hidden h-9 w-9 place-items-center rounded-lg border border-white/10 text-white/70 transition hover:text-white sm:grid"
           >
             <Icon name={enabled ? 'sound' : 'mute'} size={16} />
           </button>
@@ -274,7 +274,7 @@ function Topbar({ onMenu }: { onMenu: () => void }) {
                 ? push('info', 'Bónus disponível', 'Tens +500 B$ prontos a receber nas promoções.')
                 : push('info', 'Sem notificações novas', 'O próximo bónus fica disponível mais tarde.')
             }
-            className="relative hidden h-11 w-11 place-items-center rounded-lg border border-line text-white/50 transition hover:text-white sm:grid"
+            className="relative hidden h-11 w-11 place-items-center rounded-lg border border-white/10 text-white/70 transition hover:text-white sm:grid"
             aria-label="Notificações"
           >
             <Icon name="bell" size={16} />
@@ -304,7 +304,7 @@ function MobileNav() {
     { to: '/perfil', label: 'Perfil', icon: 'user', match: (p) => p === '/perfil' },
   ]
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line/70 bg-[#070910]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0d121d]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
       <div className="grid grid-cols-5">
         {items.map((it) => {
           const active = it.match(route.path)
@@ -313,7 +313,7 @@ function MobileNav() {
               key={it.to}
               type="button"
               onClick={() => navigate(it.to)}
-              className={`flex min-h-[48px] flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold transition ${active ? 'text-brand' : 'text-white/40'}`}
+              className={`flex min-h-[48px] flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-semibold transition ${active ? 'text-brand' : 'text-white/65'}`}
             >
               <Icon name={it.icon} size={19} />
               {it.label}
@@ -339,7 +339,7 @@ export function Toasts() {
               ? 'border-good/30 bg-[#071a14]/95'
               : t.kind === 'error'
                 ? 'border-brand/30 bg-[#1a070a]/95'
-                : 'border-line bg-[#0c1017]/95'
+                : 'border-white/15 bg-[#182030]/95'
           }`}
         >
           <span
@@ -351,7 +351,7 @@ export function Toasts() {
           </span>
           <span className="min-w-0">
             <span className="block text-xs font-bold text-white">{t.title}</span>
-            {t.text && <span className="mt-0.5 block text-[11px] leading-snug text-white/50">{t.text}</span>}
+            {t.text && <span className="mt-0.5 block text-[11px] leading-snug text-white/70">{t.text}</span>}
           </span>
         </button>
       ))}
@@ -373,15 +373,15 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className={`${immersive ? 'app-immersive' : ''} min-h-screen lg:pl-[236px]`}>
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-[236px] border-r border-line/70 bg-[#070910]/95 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-[236px] border-r border-white/10 bg-[#0d121d]/95 lg:block">
         <SidebarContent />
       </aside>
 
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-[270px] border-r border-line bg-[#070910] animate-riseIn">
-            <button type="button" className="absolute right-2 top-3 z-10 grid h-11 w-11 place-items-center rounded-lg text-white/40" onClick={() => setOpen(false)}>
+          <div className="absolute inset-y-0 left-0 w-[270px] border-r border-white/10 bg-[#0d121d] animate-riseIn">
+            <button type="button" className="absolute right-2 top-3 z-10 grid h-11 w-11 place-items-center rounded-lg text-white/70" onClick={() => setOpen(false)}>
               <Icon name="close" size={18} />
             </button>
             <SidebarContent onNavigate={() => setOpen(false)} />
@@ -408,12 +408,12 @@ export function CategoryPills({ active, onChange, counts }: { active: string; on
           className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
             active === c.id
               ? 'border-brand/50 bg-brand/15 text-white shadow-[0_0_20px_rgba(255,45,63,.15)]'
-              : 'border-line bg-white/[.02] text-white/50 hover:border-white/20 hover:text-white'
+              : 'border-white/10 bg-white/[.05] text-white/70 hover:border-white/25 hover:text-white'
           }`}
         >
           <span className="mr-1.5">{c.icon}</span>
           {c.label}
-          {counts && <span className="ml-1.5 text-[10px] text-white/30">{counts[c.id] ?? 0}</span>}
+          {counts && <span className="ml-1.5 text-[11px] text-white/55">{counts[c.id] ?? 0}</span>}
         </button>
       ))}
     </div>
