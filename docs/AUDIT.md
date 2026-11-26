@@ -184,6 +184,28 @@ QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam co
    compromisso/revelação verificável. Um servidor autoritativo só existiria num operador
    licenciado; esta demo continuará a ser explicitamente fictícia (B$).
 
+## Nona passagem — reconstrução integral dos 9 jogos Crash
+
+- **Zonas distintas dentro do palco:** faixa superior de histórico
+  (`.crash-history-strip`, mais recente primeiro, tiers low/mid/high, persistida
+  em `blaze.crash.history.<game>`), voo dominante (`.crash-main` com canvas,
+  multiplicador, estado, timer e `.crash-fx`), participantes ao vivo
+  (`.crash-live` com `LIVE PLAYERS / ALL BETS`, bots DEMO e apostas «Tu»), e
+  registo de saídas (`.crash-activity` com `CASH OUT ACTIVITY`).
+- **Fim da confusão:** bots, histórico e cashouts saíram do painel lateral; o
+  `side` ficou só com compromisso/revelação verificável e regras. superfícies
+  mais claras que o fundo e nove ambientes `data-game` próprios.
+- **Controlos:** painel de aposta separado no palco, com rápidos
+  50/100/200/500, 1–3 slots independentes, auto-cashout por slot, estados
+  APOSTAR/CASHOUT/GANHO CONFIRMADO/APOSTA PERDIDA e só vermelho/verde.
+- **Motor:** `crashFromSeed(semente, 0.03, teto)` continua a ser o único ponto
+  de decisão; `verifyCrash` valida a semente revelada; bots são visuais e
+  nunca movem a carteira; timers/RAF limpos no unmount.
+- **Identidade:** nove glifos, curvas, efeitos, perk/drawback e assinaturas
+  sonoras próprias (`crashSound.ts`), sem recursos de terceiros.
+- **QA:** contrato DOM verificado estaticamente e em jsdom nos 9 jogos;
+  66/66 jogos, 9/9 contrato completo, zero botões gold.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.
