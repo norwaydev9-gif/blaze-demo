@@ -1,0 +1,1502 @@
+{
+  "version": 1,
+  "count": 66,
+  "games": [
+    {
+      "id": "crash",
+      "name": "Crash",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "O clássico: sobe e salta antes do crash",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#2a0d12",
+        "to": "#ff5b45",
+        "icon": "✈️"
+      },
+      "config": {
+        "growth": 0.085,
+        "maxMult": 5000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "aviator",
+      "name": "Aviator",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "O avião descola e o multiplicador dispara",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241026",
+        "to": "#ff4d6d",
+        "icon": "🛩️"
+      },
+      "config": {
+        "growth": 0.09,
+        "maxMult": 5000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "space-flight",
+      "name": "Space Flight",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Voo espacial com aceleração irregular",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1230",
+        "to": "#5b8cff",
+        "icon": "🚀"
+      },
+      "config": {
+        "growth": 0.075,
+        "maxMult": 2500,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "rocket-rush",
+      "name": "Rocket Rush",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Foguetão de subida rápida e volátil",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#301006",
+        "to": "#ff8a2b",
+        "icon": "🚀"
+      },
+      "config": {
+        "growth": 0.12,
+        "maxMult": 1000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "sky-multiplier",
+      "name": "Sky Multiplier",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Curva suave, subida constante",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0d1a2b",
+        "to": "#4fd1ff",
+        "icon": "☁️"
+      },
+      "config": {
+        "growth": 0.06,
+        "maxMult": 3000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "cosmic-crash",
+      "name": "Cosmic Crash",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Órbita cósmica com quedas bruscas",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#120a2e",
+        "to": "#a76bff",
+        "icon": "🛸"
+      },
+      "config": {
+        "growth": 0.1,
+        "maxMult": 4000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "turbo-crash",
+      "name": "Turbo Crash",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Motor turbo: rápido e imprevisível",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#260a0a",
+        "to": "#ff3d4d",
+        "icon": "🏎️"
+      },
+      "config": {
+        "growth": 0.15,
+        "maxMult": 800,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "jet-rush",
+      "name": "Jet Rush",
+      "category": "crash",
+      "engine": "crash",
+      "tagline": "Jato original com dois slots independentes",
+      "rules": "Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#101d2e",
+        "to": "#ffb347",
+        "icon": "🛫"
+      },
+      "config": {
+        "growth": 0.095,
+        "maxMult": 5000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "mines",
+      "name": "Mines",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "O clássico campo minado",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#071a16",
+        "to": "#22e3a0",
+        "icon": "💣"
+      },
+      "config": {
+        "grid": 5,
+        "mineOptions": [
+          3,
+          5,
+          8,
+          10
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "treasure-mines",
+      "name": "Treasure Mines",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "Caça ao tesouro escondido",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1c1405",
+        "to": "#ffc857",
+        "icon": "🗝️"
+      },
+      "config": {
+        "grid": 5,
+        "mineOptions": [
+          3,
+          5,
+          8,
+          10
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "gold-hunter",
+      "name": "Gold Hunter",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "Encontra o ouro, evita as minas",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241704",
+        "to": "#ffb300",
+        "icon": "⛏️"
+      },
+      "config": {
+        "grid": 5,
+        "mineOptions": [
+          4,
+          6,
+          9,
+          12
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "diamond-field",
+      "name": "Diamond Field",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "Campo de diamantes reluzentes",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#071a24",
+        "to": "#5ee7ff",
+        "icon": "💎"
+      },
+      "config": {
+        "grid": 6,
+        "mineOptions": [
+          5,
+          8,
+          12,
+          16
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "lucky-grid",
+      "name": "Lucky Grid",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "Grelha da sorte com mais minas",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0c1b10",
+        "to": "#7ee787",
+        "icon": "🍀"
+      },
+      "config": {
+        "grid": 5,
+        "mineOptions": [
+          5,
+          8,
+          11,
+          14
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "hidden-gems",
+      "name": "Hidden Gems",
+      "category": "mines",
+      "engine": "mines",
+      "tagline": "Gemas escondidas sob os campos",
+      "rules": "Escolhe o número de minas e abre campos seguros. Cada campo seguro aumenta o multiplicador; uma mina perde a aposta. Podes retirar a qualquer momento.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#160b24",
+        "to": "#c084fc",
+        "icon": "🔮"
+      },
+      "config": {
+        "grid": 4,
+        "mineOptions": [
+          2,
+          4,
+          6,
+          8
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "fortune-spin",
+      "name": "Fortune Spin",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Rolos clássicos com prémios rápidos",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241205",
+        "to": "#ffb347",
+        "icon": "🎰"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🍒",
+          "🍋",
+          "🍊",
+          "🍇",
+          "🔔",
+          "⭐",
+          "7️⃣"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "golden-pharaoh",
+      "name": "Golden Pharaoh",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Tesouro faraónico em cinco linhas",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#251a04",
+        "to": "#ffd166",
+        "icon": "🦁"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🪲",
+          "👁️",
+          "🏺",
+          "🐍",
+          "👑",
+          "💎",
+          "🔱"
+        ],
+        "volatility": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "royal-reels",
+      "name": "Royal Reels",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Naipes reais e coroa de prémio",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0f22",
+        "to": "#e5a1ff",
+        "icon": "👑"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "♠️",
+          "♥️",
+          "♦️",
+          "♣️",
+          "👑",
+          "🏆",
+          "💎"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "wild-jungle",
+      "name": "Wild Jungle",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Selva selvagem com multiplicadores",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1a0e",
+        "to": "#7ee787",
+        "icon": "🌴"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🦁",
+          "🐒",
+          "🦜",
+          "🐘",
+          "🌴",
+          "🔥",
+          "💎"
+        ],
+        "volatility": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "lucky-fruits",
+      "name": "Lucky Fruits",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Frutas da sorte, jogo direto",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#26090c",
+        "to": "#ff6b6b",
+        "icon": "🍒"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 3,
+        "symbols": [
+          "🍒",
+          "🍋",
+          "🍊",
+          "🍇",
+          "🔔",
+          "⭐",
+          "7️⃣"
+        ],
+        "volatility": "low"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "mega-diamonds",
+      "name": "Mega Diamonds",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Diamantes gigantes, alta volatilidade",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#071a24",
+        "to": "#5ee7ff",
+        "icon": "💎"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🪐",
+          "🚀",
+          "🌟",
+          "🛸",
+          "🌙",
+          "☄️",
+          "💎"
+        ],
+        "volatility": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "dragon-treasure",
+      "name": "Dragon Treasure",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "O tesouro do dragão",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1c0610",
+        "to": "#ff4d6d",
+        "icon": "🐉"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🐉",
+          "🔥",
+          "⚔️",
+          "🏯",
+          "🧧",
+          "💎",
+          "👑"
+        ],
+        "volatility": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "mystic-fortune",
+      "name": "Mystic Fortune",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Mistério e fortuna em cada giro",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#120a24",
+        "to": "#b07cff",
+        "icon": "🔮"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🪲",
+          "👁️",
+          "🏺",
+          "🐍",
+          "👑",
+          "💎",
+          "🔱"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "ocean-riches",
+      "name": "Ocean Riches",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Riquezas do fundo do mar",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#04182a",
+        "to": "#38bdf8",
+        "icon": "🐠"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🐠",
+          "🐙",
+          "🦀",
+          "🐚",
+          "🌊",
+          "⭐",
+          "💎"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "fire-temple",
+      "name": "Fire Temple",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Templo em chamas",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#270a04",
+        "to": "#ff7a3d",
+        "icon": "🔥"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🐉",
+          "🔥",
+          "⚔️",
+          "🏯",
+          "🧧",
+          "💎",
+          "👑"
+        ],
+        "volatility": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "neon-slots",
+      "name": "Neon Slots",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Rolos neon de alta energia",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0a0a26",
+        "to": "#a76bff",
+        "icon": "⚡"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🔴",
+          "🟣",
+          "🔵",
+          "🟢",
+          "🟡",
+          "⚡",
+          "💎"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "golden-empire",
+      "name": "Golden Empire",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Império de ouro, nove linhas",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241703",
+        "to": "#ffd166",
+        "icon": "🏆"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 9,
+        "symbols": [
+          "♠️",
+          "♥️",
+          "♦️",
+          "♣️",
+          "👑",
+          "🏆",
+          "💎"
+        ],
+        "volatility": "low"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "magic-seven",
+      "name": "Magic Seven",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "O mágico número sete",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0a12",
+        "to": "#ff5b8a",
+        "icon": "7️⃣"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 3,
+        "symbols": [
+          "🍒",
+          "🍋",
+          "🍊",
+          "🍇",
+          "🔔",
+          "⭐",
+          "7️⃣"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "treasure-island",
+      "name": "Treasure Island",
+      "category": "slots",
+      "engine": "slots",
+      "tagline": "Ilha do tesouro escondido",
+      "rules": "Gira os rolos e alinha símbolos iguais nas linhas de pagamento. Cada símbolo tem um multiplicador próprio. Aposta dividida pelas linhas ativas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#061c1a",
+        "to": "#2dd4bf",
+        "icon": "🏝️"
+      },
+      "config": {
+        "reels": 3,
+        "rows": 3,
+        "lines": 5,
+        "symbols": [
+          "🦁",
+          "🐒",
+          "🦜",
+          "🐘",
+          "🌴",
+          "🔥",
+          "💎"
+        ],
+        "volatility": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "dice",
+      "name": "Dice",
+      "category": "instant",
+      "engine": "dice",
+      "tagline": "O dado clássico com alvo ajustável",
+      "rules": "Escolhe acima ou abaixo e define o alvo. O dado de 0 a 100 decide o resultado.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#081426",
+        "to": "#3d8bff",
+        "icon": "🎲"
+      },
+      "config": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+      },
+      "status": "playable"
+    },
+    {
+      "id": "plinko",
+      "name": "Plinko",
+      "category": "instant",
+      "engine": "plinko",
+      "tagline": "Bola, pinos e prémios",
+      "rules": "Lança a bola pela pirâmide; o prémio depende do compartimento onde cair.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1426",
+        "to": "#60a5fa",
+        "icon": "🔵"
+      },
+      "config": {
+        "rows": 12,
+        "risk": "medium"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "limbo",
+      "name": "Limbo",
+      "category": "instant",
+      "engine": "limbo",
+      "tagline": "Sobe até ao teu alvo",
+      "rules": "Define um multiplicador alvo. A subida tem de o atingir antes do crash.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1a12",
+        "to": "#22e3a0",
+        "icon": "📈"
+      },
+      "config": {
+        "maxMult": 1000
+      },
+      "status": "playable"
+    },
+    {
+      "id": "keno",
+      "name": "Keno",
+      "category": "instant",
+      "engine": "keno",
+      "tagline": "Sorteia os teus números",
+      "rules": "Escolhe números e o sorteio retira os vencedores. Prémio proporcional aos acertos.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#161024",
+        "to": "#a78bfa",
+        "icon": "🔢"
+      },
+      "config": {
+        "pick": 10,
+        "draw": 20,
+        "pool": 80
+      },
+      "status": "playable"
+    },
+    {
+      "id": "hi-lo",
+      "name": "Hi-Lo",
+      "category": "instant",
+      "engine": "hiLo",
+      "tagline": "Maior ou menor?",
+      "rules": "A carta seguinte é maior ou menor que a atual? Acerta e multiplica.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0a0e",
+        "to": "#ff6b6b",
+        "icon": "🃏"
+      },
+      "config": {
+        "deck": 1
+      },
+      "status": "playable"
+    },
+    {
+      "id": "wheel",
+      "name": "Wheel",
+      "category": "instant",
+      "engine": "wheel",
+      "tagline": "A roda da sorte",
+      "rules": "Gira a roda e acerta na cor ou no número.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1d1030",
+        "to": "#c084fc",
+        "icon": "🎡"
+      },
+      "config": {
+        "segments": 15
+      },
+      "status": "playable"
+    },
+    {
+      "id": "coin-flip",
+      "name": "Coin Flip",
+      "category": "instant",
+      "engine": "coinFlip",
+      "tagline": "Cara ou coroa",
+      "rules": "Cara ou coroa. 50/50 com multiplicador fixo.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241a04",
+        "to": "#ffd166",
+        "icon": "🪙"
+      },
+      "config": {
+        "payout": 1.98
+      },
+      "status": "playable"
+    },
+    {
+      "id": "lucky-number",
+      "name": "Lucky Number",
+      "category": "instant",
+      "engine": "luckyNumber",
+      "tagline": "Número da sorte",
+      "rules": "Escolhe um número de 1 a 50 e espera pelo sorteio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1a10",
+        "to": "#7ee787",
+        "icon": "🍀"
+      },
+      "config": {
+        "pool": 50
+      },
+      "status": "playable"
+    },
+    {
+      "id": "color-prediction",
+      "name": "Color Prediction",
+      "category": "instant",
+      "engine": "colorPrediction",
+      "tagline": "Vermelho, preto ou branco",
+      "rules": "Prevê a cor do próximo resultado",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0a0a",
+        "to": "#ff4d5e",
+        "icon": "🎨"
+      },
+      "config": {
+        "colors": [
+          "red",
+          "black",
+          "white"
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "tower",
+      "name": "Tower",
+      "category": "instant",
+      "engine": "tower",
+      "tagline": "Sobe sem cair",
+      "rules": "Sobe a torre escolhendo os caminhos seguros; uma armadilha termina o jogo.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#101a2b",
+        "to": "#5ee7ff",
+        "icon": "🗼"
+      },
+      "config": {
+        "rows": 8,
+        "columns": 3
+      },
+      "status": "playable"
+    },
+    {
+      "id": "balloon-pop",
+      "name": "Balloon Pop",
+      "category": "instant",
+      "engine": "balloon",
+      "tagline": "Enche e retira a tempo",
+      "rules": "Enche o balão e retira antes de ele rebentar.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#260d1a",
+        "to": "#ff8ac0",
+        "icon": "🎈"
+      },
+      "config": {
+        "maxMult": 200
+      },
+      "status": "playable"
+    },
+    {
+      "id": "scratch-cards",
+      "name": "Scratch Cards",
+      "category": "instant",
+      "engine": "scratch",
+      "tagline": "Raspa e descobre",
+      "rules": "Raspa o cartão e revela os prémios escondidos.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#241205",
+        "to": "#ffb347",
+        "icon": "🎟️"
+      },
+      "config": {
+        "grid": 9
+      },
+      "status": "playable"
+    },
+    {
+      "id": "blackjack",
+      "name": "Blackjack",
+      "category": "card",
+      "engine": "blackjack",
+      "tagline": "21 é o objetivo",
+      "rules": "Chega o mais perto de 21 sem ultrapassar. O dealer joga depois de tu.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b2416",
+        "to": "#22e3a0",
+        "icon": "🃏"
+      },
+      "config": {
+        "decks": 6,
+        "dealerHits17": false
+      },
+      "status": "playable"
+    },
+    {
+      "id": "european-roulette",
+      "name": "European Roulette",
+      "category": "card",
+      "engine": "roulette",
+      "tagline": "Roda europeia com zero único",
+      "rules": "Aposta em cores ou números. A roda decide o resultado.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0808",
+        "to": "#ff3d4d",
+        "icon": "🎡"
+      },
+      "config": {
+        "type": "european"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "american-roulette",
+      "name": "American Roulette",
+      "category": "card",
+      "engine": "roulette",
+      "tagline": "Roda americana com 00",
+      "rules": "Aposta em cores ou números. A roda decide o resultado.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0808",
+        "to": "#ff7a3d",
+        "icon": "🎡"
+      },
+      "config": {
+        "type": "american"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "baccarat",
+      "name": "Baccarat",
+      "category": "card",
+      "engine": "baccarat",
+      "tagline": "Jogador, Banqueiro ou Empate",
+      "rules": "Regras do jogo de cartas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#121a2b",
+        "to": "#e5c07b",
+        "icon": "♠️"
+      },
+      "config": {
+        "decks": 8
+      },
+      "status": "playable"
+    },
+    {
+      "id": "video-poker",
+      "name": "Video Poker",
+      "category": "card",
+      "engine": "videoPoker",
+      "tagline": "Troca cartas para a melhor mão",
+      "rules": "Regras do jogo de cartas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0a1a24",
+        "to": "#4fd1ff",
+        "icon": "🃏"
+      },
+      "config": {
+        "variant": "jacksOrBetter"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "caribbean-poker",
+      "name": "Caribbean Poker",
+      "category": "card",
+      "engine": "caribbeanPoker",
+      "tagline": "Póquer contra a casa",
+      "rules": "Regras do jogo de cartas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0a1c",
+        "to": "#ff8ac0",
+        "icon": "♥️"
+      },
+      "config": {
+        "variant": "fiveCard"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "three-card-poker",
+      "name": "Three Card Poker",
+      "category": "card",
+      "engine": "threeCardPoker",
+      "tagline": "Três cartas, cabeça a cabeça",
+      "rules": "Regras do jogo de cartas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a1406",
+        "to": "#ffd166",
+        "icon": "♦️"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "texas-holdem",
+      "name": "Texas Hold'em",
+      "category": "card",
+      "engine": "texasHoldem",
+      "tagline": "Póquer com cartas comunitárias",
+      "rules": "Regras do jogo de cartas.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1a12",
+        "to": "#7ee787",
+        "icon": "♣️"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "neon-runner",
+      "name": "Neon Runner",
+      "category": "arcade",
+      "engine": "arcadeRunner",
+      "tagline": "Corre e desvia dos obstáculos",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0a0a26",
+        "to": "#a76bff",
+        "icon": "🏃"
+      },
+      "config": {
+        "speed": 1.0
+      },
+      "status": "playable"
+    },
+    {
+      "id": "space-defender",
+      "name": "Space Defender",
+      "category": "arcade",
+      "engine": "arcadeShooter",
+      "tagline": "Defende a base dos invasores",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#06182a",
+        "to": "#38bdf8",
+        "icon": "👾"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "fruit-catcher",
+      "name": "Fruit Catcher",
+      "category": "arcade",
+      "engine": "arcadeCatcher",
+      "tagline": "Apanha frutas, evita bombas",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a0a0c",
+        "to": "#ff6b6b",
+        "icon": "🍎"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "treasure-quest",
+      "name": "Treasure Quest",
+      "category": "arcade",
+      "engine": "arcadeQuest",
+      "tagline": "Explora e recolhe tesouros",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1a1404",
+        "to": "#ffb347",
+        "icon": "🗺️"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "lucky-tower",
+      "name": "Lucky Tower",
+      "category": "arcade",
+      "engine": "tower",
+      "tagline": "Escolhe a porta segura",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#101a2b",
+        "to": "#5ee7ff",
+        "icon": "🗼"
+      },
+      "config": {
+        "rows": 6,
+        "columns": 3
+      },
+      "status": "playable"
+    },
+    {
+      "id": "dragon-flight",
+      "name": "Dragon Flight",
+      "category": "arcade",
+      "engine": "arcadeRunner",
+      "tagline": "Voa com o dragão e desvia",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#1c0610",
+        "to": "#ff4d6d",
+        "icon": "🐉"
+      },
+      "config": {
+        "speed": 1.2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "cyber-race",
+      "name": "Cyber Race",
+      "category": "arcade",
+      "engine": "arcadeRace",
+      "tagline": "Corrida futurista",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0a1426",
+        "to": "#60a5fa",
+        "icon": "🏎️"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "jungle-adventure",
+      "name": "Jungle Adventure",
+      "category": "arcade",
+      "engine": "arcadeQuest",
+      "tagline": "Aventura na selva",
+      "rules": "Jogo de arcade com controlos táteis. A tua pontuação determina o prémio.",
+      "minBet": 10,
+      "maxBet": 10000,
+      "theme": {
+        "from": "#0b1a0e",
+        "to": "#7ee787",
+        "icon": "🌴"
+      },
+      "config": {},
+      "status": "playable"
+    },
+    {
+      "id": "mines-deluxe",
+      "name": "Mines Deluxe",
+      "category": "deluxe",
+      "engine": "mines",
+      "tagline": "Minas com grelha maior",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#071a16",
+        "to": "#22e3a0",
+        "icon": "💣"
+      },
+      "config": {
+        "grid": 6,
+        "mineOptions": [
+          4,
+          7,
+          11,
+          15
+        ]
+      },
+      "status": "playable"
+    },
+    {
+      "id": "plinko-deluxe",
+      "name": "Plinko Deluxe",
+      "category": "deluxe",
+      "engine": "plinko",
+      "tagline": "Mais linhas e prémios maiores",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#0b1426",
+        "to": "#60a5fa",
+        "icon": "🔵"
+      },
+      "config": {
+        "rows": 16,
+        "risk": "high"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "dice-deluxe",
+      "name": "Dice Deluxe",
+      "category": "deluxe",
+      "engine": "dice",
+      "tagline": "Dado com multiplicadores ampliados",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#081426",
+        "to": "#3d8bff",
+        "icon": "🎲"
+      },
+      "config": {
+        "min": 0,
+        "max": 100,
+        "step": 0.5
+      },
+      "status": "playable"
+    },
+    {
+      "id": "crash-deluxe",
+      "name": "Crash Deluxe",
+      "category": "deluxe",
+      "engine": "crash",
+      "tagline": "Curva lenta e teto elevado",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados. Faz uma aposta antes da descolagem e retira antes do crash. O multiplicador sobe com o tempo; se o avião cair antes de retirares, perdes a aposta.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#2a0d12",
+        "to": "#ff5b45",
+        "icon": "✈️"
+      },
+      "config": {
+        "growth": 0.055,
+        "maxMult": 10000,
+        "autoCash": true,
+        "slots": 2
+      },
+      "status": "playable"
+    },
+    {
+      "id": "roulette-deluxe",
+      "name": "Roulette Deluxe",
+      "category": "deluxe",
+      "engine": "roulette",
+      "tagline": "Roda premium com mais mercados",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#1a0808",
+        "to": "#ff3d4d",
+        "icon": "🎡"
+      },
+      "config": {
+        "type": "european"
+      },
+      "status": "playable"
+    },
+    {
+      "id": "blackjack-deluxe",
+      "name": "Blackjack Deluxe",
+      "category": "deluxe",
+      "engine": "blackjack",
+      "tagline": "Blackjack com regras premium",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#0b2416",
+        "to": "#22e3a0",
+        "icon": "🃏"
+      },
+      "config": {
+        "decks": 8,
+        "dealerHits17": true
+      },
+      "status": "playable"
+    },
+    {
+      "id": "keno-deluxe",
+      "name": "Keno Deluxe",
+      "category": "deluxe",
+      "engine": "keno",
+      "tagline": "Mais números e prémios",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#161024",
+        "to": "#a78bfa",
+        "icon": "🔢"
+      },
+      "config": {
+        "pick": 15,
+        "draw": 25,
+        "pool": 100
+      },
+      "status": "playable"
+    },
+    {
+      "id": "treasure-wheel",
+      "name": "Treasure Wheel",
+      "category": "deluxe",
+      "engine": "wheel",
+      "tagline": "Roda do tesouro",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#241704",
+        "to": "#ffc857",
+        "icon": "🎡"
+      },
+      "config": {
+        "segments": 24
+      },
+      "status": "playable"
+    },
+    {
+      "id": "mega-tower",
+      "name": "Mega Tower",
+      "category": "deluxe",
+      "engine": "tower",
+      "tagline": "Torre com mais andares",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#101a2b",
+        "to": "#5ee7ff",
+        "icon": "🗼"
+      },
+      "config": {
+        "rows": 12,
+        "columns": 4
+      },
+      "status": "playable"
+    },
+    {
+      "id": "cosmic-runner",
+      "name": "Cosmic Runner",
+      "category": "deluxe",
+      "engine": "arcadeRunner",
+      "tagline": "Corrida cósmica",
+      "rules": "Versão deluxe com regras ajustadas e multiplicadores melhorados.",
+      "minBet": 20,
+      "maxBet": 20000,
+      "theme": {
+        "from": "#0a0a26",
+        "to": "#a76bff",
+        "icon": "🌌"
+      },
+      "config": {
+        "speed": 1.4
+      },
+      "status": "playable"
+    }
+  ]
+}

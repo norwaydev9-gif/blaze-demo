@@ -1,0 +1,115 @@
+/**
+ * Verificação rápida sem dependências: catálogo, marca, rotas e build.
+ * Uso: npm run check
+ */
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+
+const root = new URL('..', import.meta.url)
+const read = (file) => readFileSync(new URL(file, root), 'utf8')
+const readJson = (file) => JSON.parse(read(file))
+
+const errors = []
+const check = (ok, message) => {
+  if (!ok) errors.push(message)
+}
+
+/* ------------------------------- catálogo -------------------------------- */
+
+const catalog = readJson('src/data/games.json')
+const games = catalog.games
+const ids = games.map((g) => g.id)
+check(games.length === catalog.count, `games.json: count=${catalog.count} mas há ${games.length} jogos`)
+check(new Set(ids).size === ids.length, 'games.json: existem IDs duplicados')
+
+const types = read('src/lib/types.ts')
+const categoryBlock = types.match(/export type GameCategory =([\s\S]*?)\n\n/)?.[1] ?? ''
+const categories = [...categoryBlock.matchAll(/'([^']+)'/g)].map((m) => m[1])
+check(categories.length > 0, 'types.ts: não foi possível ler as categorias')
+games.forEach((g) => check(categories.includes(g.category), `Jogo ${g.id}: categoria desconhecida (${g.category})`))
+
+const registry = read('src/games/registry.tsx')
+const engines = [...registry.matchAll(/^  ([A-Za-z]\w*):\s*\w+,$/gm)].map((m) => m[1])
+check(engines.length > 0, 'registry.tsx: não foi possível ler os motores')
+games.forEach((g) => check(engines.includes(g.engine), `Jogo ${g.id}: motor ${g.engine} não está registado`))
+
+const gamesLib = read('src/lib/games.ts')
+for (const name of ['FEATURED_IDS', 'POPULAR_IDS']) {
+  const block = gamesLib.match(new RegExp(`export const ${name} = \\[([\\s\\S]*?)\\]`))?.[1]
+  check(Boolean(block), `games.ts: não foi possível ler ${name}`)
+  const list = [...(block ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1])
+  list.forEach((id) => check(ids.includes(id), `${name}: o jogo ${id} não existe no catálogo`))
+}
+
+/* -------------------------------- marca ---------------------------------- */
+
+const walk = (dir) =>
+  readdirSync(new URL(dir, root), { withFileTypes: true }).flatMap((entry) => {
+    const path = `${dir}/${entry.name}`
+    return entry.isDirectory() ? walk(path) : [path]
+  })
+
+const brandFiles = [
+  'index.html',
+  'package.json',
+  'README.md',
+  'public/manifest.webmanifest',
+  'start.sh',
+  ...walk('src'),
+  ...walk('public'),
+]
+brandFiles.forEach((file) => {
+  check(!/BLASE/.test(read(file)), `${file}: ainda contém a marca antiga BLASE`)
+})
+
+const packageJson = readJson('package.json')
+check(packageJson.name === 'blaze', `package.json: nome é ${packageJson.name}, esperado blaze`)
+
+/* -------------------------------- rotas ---------------------------------- */
+
+const app = read('src/App.tsx')
+const routes = new Set([...app.matchAll(/root === '([^']+)'/g)].map((m) => m[1]))
+routes.add('')
+
+const layout = read('src/components/Layout.tsx')
+const menuTargets = [...layout.matchAll(/to: '([^']+)'/g)].map((m) => m[1].slice(1))
+menuTargets.forEach((target) => check(routes.has(target), `Menu: /${target} não tem rota no App.tsx`))
+
+const pages = [...walk('src')].filter((file) => file.startsWith('src/pages/') || file.startsWith('src/components/'))
+pages.forEach((file) => {
+  const staticTargets = [...read(file).matchAll(/navigate\('([^']+)'/g)].map((m) => m[1])
+  staticTargets.forEach((target) => {
+    const section = target.split('/').filter(Boolean)[0] ?? ''
+    check(routes.has(section), `${file}: navigate('${target}') não tem rota no App.tsx`)
+  })
+})
+
+/* -------------------------------- build ---------------------------------- */
+
+check(existsSync(new URL('dist/index.html', root)), 'Falta dist/index.html — corre npm run build primeiro')
+if (existsSync(new URL('dist/index.html', root))) {
+  const html = read('dist/index.html')
+  check(html.includes('<title>BLAZE'), 'dist/index.html: o título não usa BLAZE')
+  const assets = [...html.matchAll(/(?:href|src)="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((path) => path.startsWith('./') || path.startsWith('/'))
+  assets.forEach((path) => {
+    const local = path.replace(/^\.\//, '').replace(/^\//, '')
+    check(existsSync(new URL(`dist/${local}`, root)), `dist: falta o ficheiro ${path}`)
+  })
+
+  const manifest = readJson('dist/manifest.webmanifest')
+  check(manifest.name.includes('BLAZE'), 'dist/manifest.webmanifest: nome não usa BLAZE')
+  check(read('dist/sw.js').includes('blaze-demo-v2'), 'dist/sw.js: cache não foi atualizado para blaze-demo-v2')
+}
+
+/* -------------------------------- resultado ------------------------------- */
+
+if (errors.length) {
+  console.error(`Check falhou com ${errors.length} problema(s):`)
+  errors.forEach((error) => console.error(` - ${error}`))
+  process.exit(1)
+}
+
+console.log(
+  `OK — ${games.length} jogos, ${engines.length} motores, ${routes.size} rotas, marca BLAZE e build verificados.`,
+)
