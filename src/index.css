@@ -237,6 +237,62 @@ body {
   --cat-edge: rgba(255, 212, 122, 0.34);
 }
 
+/* cada variante Crash tem ambiente e paleta próprios — nunca preto sobre preto */
+.game-stage[data-game='crash'] {
+  --cat-base: #251411;
+  --cat-glow-a: rgba(255, 107, 61, 0.2);
+  --cat-glow-b: rgba(255, 200, 87, 0.1);
+  --cat-edge: rgba(255, 107, 61, 0.34);
+}
+.game-stage[data-game='aviator'] {
+  --cat-base: #14202e;
+  --cat-glow-a: rgba(120, 180, 255, 0.2);
+  --cat-glow-b: rgba(255, 100, 130, 0.11);
+  --cat-edge: rgba(140, 190, 255, 0.32);
+}
+.game-stage[data-game='space-flight'] {
+  --cat-base: #141931;
+  --cat-glow-a: rgba(91, 140, 255, 0.22);
+  --cat-glow-b: rgba(154, 212, 255, 0.1);
+  --cat-edge: rgba(120, 160, 255, 0.34);
+}
+.game-stage[data-game='rocket-rush'] {
+  --cat-base: #2a1a10;
+  --cat-glow-a: rgba(255, 138, 43, 0.22);
+  --cat-glow-b: rgba(255, 210, 122, 0.12);
+  --cat-edge: rgba(255, 170, 70, 0.34);
+}
+.game-stage[data-game='sky-multiplier'] {
+  --cat-base: #14252c;
+  --cat-glow-a: rgba(79, 209, 255, 0.2);
+  --cat-glow-b: rgba(208, 244, 255, 0.1);
+  --cat-edge: rgba(120, 220, 255, 0.32);
+}
+.game-stage[data-game='cosmic-crash'] {
+  --cat-base: #241636;
+  --cat-glow-a: rgba(167, 107, 255, 0.22);
+  --cat-glow-b: rgba(230, 205, 255, 0.1);
+  --cat-edge: rgba(190, 140, 255, 0.34);
+}
+.game-stage[data-game='turbo-crash'] {
+  --cat-base: #2b1218;
+  --cat-glow-a: rgba(255, 61, 77, 0.22);
+  --cat-glow-b: rgba(255, 177, 153, 0.1);
+  --cat-edge: rgba(255, 100, 110, 0.34);
+}
+.game-stage[data-game='jet-rush'] {
+  --cat-base: #1d2133;
+  --cat-glow-a: rgba(255, 179, 71, 0.2);
+  --cat-glow-b: rgba(255, 226, 168, 0.1);
+  --cat-edge: rgba(255, 190, 100, 0.34);
+}
+.game-stage[data-game='crash-deluxe'] {
+  --cat-base: #222a24;
+  --cat-glow-a: rgba(255, 215, 106, 0.2);
+  --cat-glow-b: rgba(255, 154, 213, 0.09);
+  --cat-edge: rgba(255, 215, 130, 0.34);
+}
+
 /* roleta e keno vivem dentro de outras categorias, mas merecem o seu próprio tom */
 .game-stage[data-game*='roulette'],
 .game-stage[data-game='wheel'],
