@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { clamp, fmt, fmtMult } from '../lib/format'
 import { useRoute } from '../lib/router'
+import { getGame } from '../lib/games'
 import { useWallet } from '../lib/wallet'
 import { useSound } from '../lib/sound'
 import { Icon } from './Icon'
@@ -53,7 +54,17 @@ export function GameLayout({
 }
 
 export function Stage({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`game-stage ${className}`}>{children}</div>
+  const route = useRoute()
+  const game = route.segments[0] === 'jogo' ? getGame(route.segments[1]) : undefined
+  return (
+    <div
+      className={`game-stage ${className}`}
+      data-category={game?.category ?? 'instant'}
+      data-game={game?.id ?? undefined}
+    >
+      {children}
+    </div>
+  )
 }
 
 export function SidePanel({ children, title, icon = 'wallet' }: { children: ReactNode; title?: string; icon?: 'wallet' | 'info' }) {

@@ -118,6 +118,29 @@ referenciam 27 motores existentes. Os problemas encontrados eram sobretudo de
 - **Contraste:** fundo escuro sólido atrás dos controlos, labels/inputs com mais brilho
   e gradiente escuro na base do tabuleiro — a aposta deixa de se confundir com a arte.
 
+## Sexta passagem — auditoria multi-agente (Fase 1)
+
+**Stack confirmada:** React 18, TypeScript 5.6, Vite 5.4, Tailwind 3.4, React Query e
+Framer Motion. Sem backend: carteira, histórico e resultados vivem no navegador, com
+créditos fictícios **B$** — a demo não aceita dinheiro real nem simula depósitos/levantamentos.
+
+**Estado dos jogos:** 66 jogos, 27 motores, 16 rotas. Os 9 jogos Crash
+(`crash`, `aviator`, `space-flight`, `rocket-rush`, `sky-multiplier`, `cosmic-crash`,
+`turbo-crash`, `jet-rush`, `crash-deluxe`) partilhavam **o mesmo componente**, com o mesmo
+gráfico e as mesmas animações — sem identidade própria, sem participantes simulados e sem
+lista de apostas/cashouts. As rondas já eram contínuas (contagem de 7s), mas sem bots
+não havia actividade visível quando o utilizador não apostava.
+
+**Problemas visuais:** `--ink: #05060a`, painéis `#0b0e15` e palco `#070910` — três
+superfícies escuras demasiado próximas, com gradientes fracos. Hierarquia fundo → painel
+→ tabuleiro insuficiente, sobretudo em Android 360–412px.
+
+**Distribuição (agentes reais, ficheiros exclusivos):** UI/UX (`index.css`, `Layout`,
+`GameCard`, `Home`), Crash (`CrashGame.tsx`, `crashBots.ts`), Casino (6 jogos de mesa),
+Motor (`rng.ts`, `wallet.ts`, `storage.ts`, `ENGINE.md`), Mobile (`GamePage`, `GameArt`),
+QA (`scripts/*.mjs`, `QA.md`). Integração, `GameUI.tsx` e checkpoints ficam com o agente principal.
+`Stage` passou a expor `data-category`/`data-game` para fundos próprios por categoria.
+
 ## Verificações feitas
 
 - `npx tsc --noEmit` — sem erros.
