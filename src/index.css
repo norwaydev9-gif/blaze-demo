@@ -293,6 +293,129 @@ body {
   --cat-edge: rgba(255, 215, 130, 0.34);
 }
 
+/* ------- crash: zonas A–D partilhadas pelas 9 variantes ------- */
+/* A: faixa de histórico no topo — só resultados de rondas concluídas */
+.crash-history-strip {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 8, 15, 0.38);
+}
+.crash-history-strip::-webkit-scrollbar {
+  display: none;
+}
+.crash-history-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.crash-history-item[data-tier='low'] {
+  color: #ffb08a;
+  border-color: rgba(255, 122, 74, 0.42);
+  background: rgba(255, 94, 58, 0.14);
+}
+.crash-history-item[data-tier='mid'] {
+  color: #a9c8ff;
+  border-color: rgba(118, 150, 255, 0.44);
+  background: rgba(90, 120, 255, 0.14);
+}
+.crash-history-item[data-tier='high'] {
+  color: #8af0bd;
+  border-color: rgba(60, 220, 150, 0.46);
+  background: rgba(30, 200, 130, 0.15);
+}
+
+/* B: voo dominate, sem listas ou botões sobre o gráfico */
+.crash-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+.crash-main canvas {
+  display: block;
+  width: 100%;
+}
+.crash-fx {
+  pointer-events: none;
+}
+
+/* C/D: participantes e cashouts com altura controlada e scroll interno */
+.crash-live,
+.crash-activity {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  background: rgba(5, 8, 15, 0.5);
+  backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
+}
+.crash-live {
+  max-height: clamp(150px, 26vh, 240px);
+  overflow-y: auto;
+}
+.crash-activity {
+  max-height: clamp(110px, 18vh, 170px);
+  overflow-y: auto;
+}
+.crash-bots {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.crash-bot,
+.crash-cashout-item {
+  animation: crash-row-in 0.28s ease both;
+}
+.crash-live .crash-bot[data-status='cashed'] {
+  border-color: rgba(34, 227, 160, 0.45);
+  animation: crash-cashout-pulse 0.5s ease;
+}
+.crash-live .crash-bot[data-status='crashed'] {
+  opacity: 0.72;
+}
+
+/* painel de aposta separado do palco e das listas */
+.crash-bet-panel.bet-bar {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(5, 8, 15, 0.92);
+}
+.crash-slot {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+@keyframes crash-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes crash-cashout-pulse {
+  0% { box-shadow: 0 0 0 rgba(34, 227, 160, 0); }
+  45% { box-shadow: 0 0 18px rgba(34, 227, 160, 0.28); }
+  100% { box-shadow: 0 0 0 rgba(34, 227, 160, 0); }
+}
+
 /* roleta e keno vivem dentro de outras categorias, mas merecem o seu próprio tom */
 .game-stage[data-game*='roulette'],
 .game-stage[data-game='wheel'],
@@ -608,6 +731,29 @@ input[type='number'] {
     min-height: 360px;
     padding-top: 14px;
     padding-bottom: 14px;
+  }
+
+  /* crash em Android: histórico no topo, voo grande, listas com scroll interno */
+  .crash-history-strip {
+    min-height: 40px;
+    padding: 6px 10px;
+  }
+  .crash-history-item {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  .crash-main canvas {
+    max-height: 48vh;
+  }
+  .crash-live {
+    max-height: 190px;
+  }
+  .crash-activity {
+    max-height: 130px;
+  }
+  .crash-bet-panel.bet-bar {
+    padding: 10px;
   }
 
   /* evita que cartas largas empurrem o tabuleiro para fora do ecrã */
